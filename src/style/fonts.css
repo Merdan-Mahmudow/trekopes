@@ -1,0 +1,26 @@
+@font-face {
+    font-family: "Bicubic";
+    src: url(/public/Bicubik.OTF) format("opentype");
+    font-weight: normal;
+}
+@font-face {
+    font-family: "ALC";
+    src: url(/public/alk-life-webfont.ttf) format("truetype");
+    font-weight: normal;
+}
+@font-face {
+    font-family: "Doloman";
+    src: url(/public/DolomanPavljenko.otf) format("opentype");
+    font-weight: normal;
+}
+@font-face {
+    font-family: "YellowPeas";
+    src: url(/public/YellowPeas-Regular.woff) format("woff");
+    font-weight: normal;
+}
+
+/* font utility classes */
+.font-bicubic { font-family: "Bicubic", sans-serif; }
+.font-alc     { font-family: "ALC", sans-serif; }
+.font-doloman { font-family: "Doloman", serif; }
+.font-yellowpeas { font-family: "YellowPeas", sans-serif; }
