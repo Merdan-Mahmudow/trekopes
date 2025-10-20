@@ -2,11 +2,11 @@ import { Text, Grid, GridItem, VStack, Box, Button } from '@chakra-ui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import '../style/fonts.css'
 
-import { BsMagic, BsPeople } from "react-icons/bs";
+import {  BsPeople } from "react-icons/bs";
 import { LuBaby } from "react-icons/lu";
-import { RiHomeHeartLine, RiShieldStarLine } from "react-icons/ri";
+import { RiHomeHeartLine } from "react-icons/ri";
 import { FaRegFaceSmile } from "react-icons/fa6";
-import { TbHeartBroken, TbHeart, TbConfetti } from "react-icons/tb";
+import { TbHeartBroken, TbHeart} from "react-icons/tb";
 import { COLOR } from '../components/ui/colors';
 import { PawIcon } from '../assets/svg/paw';
 import { useState } from 'react';
@@ -69,9 +69,9 @@ function RouteComponent() {
         { icon: <TbHeart style={{ marginRight: "7px" }} />, title: "Для любимого человека", category: 'love' },
         { icon: <RiHomeHeartLine style={{ marginRight: "7px" }} />, title: "Для близких", category: 'relation' },
         { icon: <LuBaby style={{ marginRight: "7px" }} />, title: "Про ребёнка", category: 'baby' },
-        { icon: <RiShieldStarLine style={{ marginRight: "7px" }} />, title: "О герое или солдате", category: 'hero' },
-        { icon: <TbConfetti style={{ marginRight: "7px" }} />, title: "Для поздравления", category: 'congrats' },
-        { icon: <BsMagic style={{ marginRight: "7px" }} />, title: "Другое", category: 'others' },
+        // { icon: <RiShieldStarLine style={{ marginRight: "7px" }} />, title: "О герое или солдате", category: 'hero' },
+        // { icon: <TbConfetti style={{ marginRight: "7px" }} />, title: "Для поздравления", category: 'congrats' },
+        // { icon: <BsMagic style={{ marginRight: "7px" }} />, title: "Другое", category: 'others' },
     ];
 
     return <>
@@ -115,7 +115,7 @@ function RouteComponent() {
             <Grid
                 pt={1}
                 px={"5"}
-                gap={4}
+                gap={2}
                 w={"full"}
             >
                 {buttonData.map((button) => (
