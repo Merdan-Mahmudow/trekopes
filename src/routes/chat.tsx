@@ -1,5 +1,5 @@
 import { ChatInput } from '../components/Input'
-import { ChatList, type MessageProps } from '../components/Message'
+import { ChatList, MessageHelpBox, type MessageProps } from '../components/Message'
 import { Avatar, AvatarImage, Box, Circle, Flex, Float, Grid, Text } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
@@ -12,7 +12,7 @@ export const Route = createFileRoute('/chat')({
 function RouteComponent() {
   const [messages, addMessage] = useState<MessageProps[]>([])
   useEffect(() => {
-    setTimeout(() => addMessage(prev => [...prev, {role: "assistant", content: "HELP MESSAGE"}]), 725)
+    setTimeout(() => addMessage(prev => [...prev, {role: "assistant", content: <MessageHelpBox />, isHelpBox: true}]), 725)
   }, [addMessage])
 
   const handleSend = (content: string) => {

@@ -1,4 +1,4 @@
-import { Image, Grid, Box } from "@chakra-ui/react";
+import { Image, Grid, Box, GridItem } from "@chakra-ui/react";
 import { Balance } from "../Balance";
 
 export default function Header() {
@@ -15,7 +15,10 @@ export default function Header() {
                     ml={5}
                 />
             </Box>
-            <Box></Box>
+            <GridItem
+            justifyContent={"flex-end"}>
+                
+            </GridItem>
             <Balance />
         </Grid>
 

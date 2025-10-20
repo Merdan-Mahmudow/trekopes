@@ -1,4 +1,4 @@
-import { Text, Grid, GridItem, VStack, Box, Button, For, HStack, Span } from '@chakra-ui/react'
+import { Text, Grid, GridItem, VStack, Box, Button } from '@chakra-ui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import '../style/fonts.css'
 
@@ -9,6 +9,7 @@ import { FaRegFaceSmile } from "react-icons/fa6";
 import { TbHeartBroken, TbHeart, TbConfetti } from "react-icons/tb";
 import { COLOR } from '../components/ui/colors';
 import { PawIcon } from '../assets/svg/paw';
+import { useState } from 'react';
 
 export const Route = createFileRoute('/create')({
     component: RouteComponent,
@@ -28,34 +29,49 @@ const buttonStyle = {
     rounded: "2xl",
     border: "1px solid rgba(255, 255, 255, 0.4)"
 }
-
-const ChangeButton = ({ icon, title }: { icon: any, title: string }) => {
-    return <Button
-        py={buttonStyle.py}
-        justifyContent={buttonStyle.justifyContent}
-        w={buttonStyle.w}
-        className={buttonStyle.className}
-        fontSize={buttonStyle.fontSize}
-        bg={buttonStyle.bg}
-        mixBlendMode={buttonStyle.mixBlendMode}
-        backdropFilter={buttonStyle.backdropFilter}
-        boxShadow={buttonStyle.boxShadow}
-        color={buttonStyle.color}
-        rounded={buttonStyle.rounded}
-        border={buttonStyle.border}>{icon} {title}</Button>
+type ChangeButtonProps = {
+    icon: any,
+    title: string,
+    category: 'self' | 'friend' | 'broken-heart' | 'love' | 'relation' | 'baby' | 'hero' | 'congrats' | 'others',
+    onClick?: () => void,
+    isSelected?: boolean
+}
+const ChangeButton = ({ icon, title, category, onClick, isSelected }: ChangeButtonProps) => {
+    return (
+        <Button
+            py={buttonStyle.py}
+            justifyContent={buttonStyle.justifyContent}
+            w={buttonStyle.w}
+            className={buttonStyle.className}
+            fontSize={buttonStyle.fontSize}
+            bg={isSelected ? "rgba(57,139,216,0.35)" : buttonStyle.bg}
+            mixBlendMode={buttonStyle.mixBlendMode}
+            backdropFilter={buttonStyle.backdropFilter}
+            boxShadow={buttonStyle.boxShadow}
+            color={buttonStyle.color}
+            rounded={buttonStyle.rounded}
+            border={buttonStyle.border}
+            onClick={onClick}
+        >
+            {icon} {title} {category}
+        </Button>
+    )
 }
 
 function RouteComponent() {
-    const buttonData = [
-        { icon: <FaRegFaceSmile style={{ marginRight: "7px" }} />, title: "Про себя" },
-        { icon: <BsPeople style={{ marginRight: "7px" }} />, title: "Для друзей и для коллег" },
-        { icon: <TbHeartBroken style={{ marginRight: "7px" }} />, title: "Для разбитого сердца" },
-        { icon: <TbHeart style={{ marginRight: "7px" }} />, title: "Для любимого человека" },
-        { icon: <RiHomeHeartLine style={{ marginRight: "7px" }} />, title: "Для близких" },
-        { icon: <LuBaby style={{ marginRight: "7px" }} />, title: "Про ребёнка" },
-        { icon: <RiShieldStarLine style={{ marginRight: "7px" }} />, title: "О герое или солдате" },
-        { icon: <TbConfetti style={{ marginRight: "7px" }} />, title: "Для поздравления" },
-        { icon: <BsMagic style={{ marginRight: "7px" }} />, title: "Другое" },
+    // const categories = ['self', 'friend', 'broken-heart', 'love', 'relation', 'baby', 'hero', 'congrats', 'others']
+    const [selectedCategory, setSelectedCategory] = useState< 'self' | 'friend' | 'broken-heart' | 'love' | 'relation' | 'baby' | 'hero' | 'congrats' | 'others' | null>(null);
+    
+    const buttonData: ChangeButtonProps[] = [
+        { icon: <FaRegFaceSmile style={{ marginRight: "7px" }} />, title: "Про себя", category: 'self' },
+        { icon: <BsPeople style={{ marginRight: "7px" }} />, title: "Для друзей и для коллег", category: 'friend' },
+        { icon: <TbHeartBroken style={{ marginRight: "7px" }} />, title: "Для разбитого сердца", category: 'broken-heart' },
+        { icon: <TbHeart style={{ marginRight: "7px" }} />, title: "Для любимого человека", category: 'love' },
+        { icon: <RiHomeHeartLine style={{ marginRight: "7px" }} />, title: "Для близких", category: 'relation' },
+        { icon: <LuBaby style={{ marginRight: "7px" }} />, title: "Про ребёнка", category: 'baby' },
+        { icon: <RiShieldStarLine style={{ marginRight: "7px" }} />, title: "О герое или солдате", category: 'hero' },
+        { icon: <TbConfetti style={{ marginRight: "7px" }} />, title: "Для поздравления", category: 'congrats' },
+        { icon: <BsMagic style={{ marginRight: "7px" }} />, title: "Другое", category: 'others' },
     ];
 
     return <>
@@ -102,13 +118,17 @@ function RouteComponent() {
                 gap={4}
                 w={"full"}
             >
-                <For each={buttonData}>
-                    {(button) => (
-                        <GridItem key={button.title}>
-                            <ChangeButton icon={button.icon} title={button.title} />
-                        </GridItem>
-                    )}
-                </For>
+                {buttonData.map((button) => (
+                    <GridItem key={button.title}>
+                        <ChangeButton
+                            icon={button.icon}
+                            title={button.title}
+                            category={button.category}
+                            isSelected={selectedCategory === button.category}
+                            onClick={() => setSelectedCategory(button.category)}
+                        />
+                    </GridItem>
+                ))}
             </Grid>
             <Grid
             templateColumns={"130px 1fr"}
@@ -134,8 +154,15 @@ function RouteComponent() {
                 className={buttonStyle.className}
                 fontWeight={"bold"}
                 letterSpacing={2}
-                justifyContent={"flex-center"}>
-                    Далее — 1 <Span mb={1} ml={-1}><PawIcon fill={COLOR.text.primary} size={"14"}/></Span>
+                justifyContent={"center"}
+                disabled={selectedCategory === null}>
+                    {selectedCategory ? (
+                        <Link to="/question" search={{ category: selectedCategory }}>
+                            Далее — 1 <Box as="span" mb={1} ml={-1}><PawIcon fill={COLOR.text.primary} size={"14"}/></Box>
+                        </Link>
+                    ) : (
+                        <>Далее — 1 <Box as="span" mb={1} ml={-1}><PawIcon fill={COLOR.text.primary} size={"14"}/></Box></>
+                    )}
                 </Button>
             </Grid>
         </VStack>

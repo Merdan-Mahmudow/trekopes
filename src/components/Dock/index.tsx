@@ -3,9 +3,8 @@ import { motion, type Variants } from 'framer-motion';
 import { Link } from '@tanstack/react-router';
 import { PawIcon } from '../../assets/svg/paw';
 import MusicIcon from '../../assets/img/music.svg';
-import { FaNewspaper } from 'react-icons/fa6';
-import { LiaBoneSolid } from 'react-icons/lia';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { MdGroup } from 'react-icons/md';
 
 const MotionBox = motion(Box as any);
 
@@ -15,12 +14,8 @@ const dropVariants: Variants = {
     scale: 1,
     y: 0,
     opacity: 1,
-    transition: { type: 'spring', stiffness: 260, damping: 20 },
   },
-  hover: { scale: 1.08, y: -6, opacity: 0.9, transition: { duration: 0.18 } },
 };
-
-const btnHover = { y: -6, scale: 1.06, transition: { type: 'spring', stiffness: 350, damping: 20 } };
 
 const bubbleVariants: Variants = {
   initial: {
@@ -34,18 +29,22 @@ const bubbleVariants: Variants = {
       "0 4px 10px rgba(255, 243, 243, 0.48) inset",
       "0 4px 10px rgba(244, 146, 49, 1) inset",
     ],
-    transition: { duration: 0.6, ease: "linear" },
+    transition: { duration: .1 },
   },
 };
 
 const Dock: React.FC = () => {
-  const dockHidePaths = ['/chat', '/create'];
-  const activePath = window.location.pathname;
-  
-  if (dockHidePaths.includes(window.location.pathname)) {
-    console.log('Dock hidden on this route');
-    return null
-  }
+
+  const [activePath, setActivePath] = useState<string>(window.location.pathname);
+
+  useEffect(() => {
+    const update = () => setActivePath(window.location.pathname);
+
+    // initial
+    update();
+
+    console.log("Dock mounted, current path:", window.location.pathname);
+  }, []);
 
   // храним id кнопки, на которую кликнули — анимация будет только у неё
   const [clickedId, setClickedId] = useState<string | null>(null);
@@ -74,32 +73,12 @@ const Dock: React.FC = () => {
       overflow="visible" // важно чтобы выпирающая кнопка не обрезалась
     >
       <HStack align="center" justify="space-around" h="100%" px={6}>
-        {/* App 1 (news) */}
-        <MotionBox
-          as="button"
-          aria-label="App 1"
-          whileHover={btnHover}
-          w="48px"
-          h="48px"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          borderRadius="full"
-          bgGradient="linear(to-b, gray.100, gray.200)"
-          variants={bubbleVariants}
-          initial="initial"
-          animate={activePath === '/news' ? 'active' : (clickedId === 'news' ? 'clicked' : 'initial')}
-          onClick={() => handleClick('news')}
-          onBlur={() => { if (clickedId === 'news') setClickedId(null) }}
-        >
-          <Text userSelect="none" fontSize="18px"><FaNewspaper /></Text>
-        </MotionBox>
+
 
         {/* App 2 (chat) */}
         <MotionBox
           as="button"
           aria-label="App 2"
-          whileHover={btnHover}
           w="48px"
           h="48px"
           display="flex"
@@ -113,8 +92,8 @@ const Dock: React.FC = () => {
           onClick={() => handleClick('chat')}
           onBlur={() => { if (clickedId === 'chat') setClickedId(null) }}
         >
-          <Link to="/chat">
-            <Text userSelect="none" fontSize="18px">B</Text>
+          <Link to="/referral">
+            <Text userSelect="none"><MdGroup size={"27px"}/></Text>
           </Link>
         </MotionBox>
 
@@ -189,26 +168,6 @@ const Dock: React.FC = () => {
               objectFit={"contain"}
              w={"20px"}
              h={"20px"}/>
-        </MotionBox>
-
-        {/* App 5 (bone) */}
-        <MotionBox
-          as="button"
-          aria-label="App 5"
-          w="48px"
-          h="48px"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          borderRadius="full"
-          bgGradient="linear(to-b, gray.100, gray.200)"
-          variants={bubbleVariants}
-          initial="initial"
-          animate={activePath === '/dsfs' ? 'active' : (clickedId === 'bone' ? 'clicked' : 'initial')}
-          onClick={() => handleClick('bone')}
-          onBlur={() => { if (clickedId === 'bone') setClickedId(null) }}
-        >
-          <Text userSelect="none" fontSize="18px"><LiaBoneSolid /></Text>
         </MotionBox>
       </HStack>
     </MotionBox>

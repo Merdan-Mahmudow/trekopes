@@ -1,4 +1,7 @@
 import { Flex, Image, Text } from "@chakra-ui/react";
+import { Link } from "@tanstack/react-router";
+import { BsChatDots } from "react-icons/bs";
+import { COLOR } from "../ui/colors";
 // import { useState, useEffect } from "react";
 
 export function Balance() {
@@ -8,10 +11,12 @@ export function Balance() {
     // })
     return <>
         <Flex
-            flexDir={"column"}
+        
             justifyContent={"space-arond"}
             pt={"9px"}
+            gap={6}
             alignItems={"center"}>
+                <Link to="/chat"><BsChatDots size={"22px"} color={COLOR.brand.orange}/></Link>
             <Flex
                 w={"fit"}
                 borderRadius={"full"}
