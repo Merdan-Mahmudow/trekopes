@@ -1,0 +1,8 @@
+@keyframes bubble {
+    from {
+        box-shadow: 0 4px 10px rgba(244, 146, 49, 1) inset;
+    }
+    to {
+        box-shadow: 0 4px 10px rgba(255, 243, 243, 0.48) inset;
+    }
+}

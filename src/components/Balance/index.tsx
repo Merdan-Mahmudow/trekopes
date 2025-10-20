@@ -1,11 +1,11 @@
-import { Flex, IconButton, Image, Text, Clipboard } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { Flex, Image, Text } from "@chakra-ui/react";
+// import { useState, useEffect } from "react";
 
 export function Balance() {
-    const [chatID, setChatID] = useState<string>()
-    useEffect(() => {
-        setChatID("735673465")
-    })
+    // const [chatID, setChatID] = useState<string>()
+    // useEffect(() => {
+    //     setChatID("735673465")
+    // })
     return <>
         <Flex
             flexDir={"column"}
@@ -14,7 +14,6 @@ export function Balance() {
             alignItems={"center"}>
             <Flex
                 w={"fit"}
-                border={"rgb(245, 118, 7) solid 2px"}
                 borderRadius={"full"}
                 p={"3px 6px"}
                 alignItems={"center"}
