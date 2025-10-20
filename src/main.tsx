@@ -15,14 +15,6 @@ declare module "@tanstack/react-router" {
     router: typeof router;
   }
 }
-
-function setVh() {
-  document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-}
-setVh();
-window.addEventListener('resize', setVh);
-
-// Render the app
 const rootElement = document.getElementById("root")!;
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
