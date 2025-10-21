@@ -10,9 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReferralRouteImport } from './routes/referral'
+import { Route as QuestionsFinishRouteImport } from './routes/questionsFinish'
 import { Route as QuestionRouteImport } from './routes/question'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as NewsRouteImport } from './routes/news'
+import { Route as GenerateRouteImport } from './routes/generate'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const ReferralRoute = ReferralRouteImport.update({
   id: '/referral',
   path: '/referral',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestionsFinishRoute = QuestionsFinishRouteImport.update({
+  id: '/questionsFinish',
+  path: '/questionsFinish',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuestionRoute = QuestionRouteImport.update({
@@ -32,9 +38,9 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NewsRoute = NewsRouteImport.update({
-  id: '/news',
-  path: '/news',
+const GenerateRoute = GenerateRouteImport.update({
+  id: '/generate',
+  path: '/generate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateRoute = CreateRouteImport.update({
@@ -57,18 +63,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
-  '/news': typeof NewsRoute
+  '/generate': typeof GenerateRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
+  '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
-  '/news': typeof NewsRoute
+  '/generate': typeof GenerateRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
+  '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRoutesById {
@@ -76,9 +84,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
-  '/news': typeof NewsRoute
+  '/generate': typeof GenerateRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
+  '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
 }
 export interface FileRouteTypes {
@@ -87,27 +96,30 @@ export interface FileRouteTypes {
     | '/'
     | '/chat'
     | '/create'
-    | '/news'
+    | '/generate'
     | '/profile'
     | '/question'
+    | '/questionsFinish'
     | '/referral'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/chat'
     | '/create'
-    | '/news'
+    | '/generate'
     | '/profile'
     | '/question'
+    | '/questionsFinish'
     | '/referral'
   id:
     | '__root__'
     | '/'
     | '/chat'
     | '/create'
-    | '/news'
+    | '/generate'
     | '/profile'
     | '/question'
+    | '/questionsFinish'
     | '/referral'
   fileRoutesById: FileRoutesById
 }
@@ -115,9 +127,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRoute
   CreateRoute: typeof CreateRoute
-  NewsRoute: typeof NewsRoute
+  GenerateRoute: typeof GenerateRoute
   ProfileRoute: typeof ProfileRoute
   QuestionRoute: typeof QuestionRoute
+  QuestionsFinishRoute: typeof QuestionsFinishRoute
   ReferralRoute: typeof ReferralRoute
 }
 
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/referral'
       fullPath: '/referral'
       preLoaderRoute: typeof ReferralRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/questionsFinish': {
+      id: '/questionsFinish'
+      path: '/questionsFinish'
+      fullPath: '/questionsFinish'
+      preLoaderRoute: typeof QuestionsFinishRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/question': {
@@ -144,11 +164,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/news': {
-      id: '/news'
-      path: '/news'
-      fullPath: '/news'
-      preLoaderRoute: typeof NewsRouteImport
+    '/generate': {
+      id: '/generate'
+      path: '/generate'
+      fullPath: '/generate'
+      preLoaderRoute: typeof GenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create': {
@@ -179,9 +199,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRoute,
   CreateRoute: CreateRoute,
-  NewsRoute: NewsRoute,
+  GenerateRoute: GenerateRoute,
   ProfileRoute: ProfileRoute,
   QuestionRoute: QuestionRoute,
+  QuestionsFinishRoute: QuestionsFinishRoute,
   ReferralRoute: ReferralRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,6 +1,6 @@
 import { Box, HStack, Text, Image } from '@chakra-ui/react';
 import { motion, type Variants } from 'framer-motion';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { PawIcon } from '../../assets/svg/paw';
 import MusicIcon from '../../assets/img/music.svg';
 import React, { useEffect, useState } from 'react';
@@ -34,6 +34,7 @@ const bubbleVariants: Variants = {
 };
 
 const Dock: React.FC = () => {
+  const navigate = useNavigate()
 
   const [activePath, setActivePath] = useState<string>(window.location.pathname);
 
@@ -140,7 +141,7 @@ const Dock: React.FC = () => {
             zIndex={2}
             _hover={{ cursor: 'pointer' }}
           >
-            <Link to="/create" onClick={() => handleClick('create', 500)}>
+            <Link to="/generate" onClick={() => handleClick('create', 500)}>
               <Text userSelect="none"><PawIcon /></Text>
             </Link>
           </Box>
@@ -160,7 +161,7 @@ const Dock: React.FC = () => {
           variants={bubbleVariants}
           initial="initial"
           animate={activePath === '/' ? 'active' : (clickedId === 'music' ? 'clicked' : 'initial')}
-          onClick={() => handleClick('music')}
+          onClick={() => {handleClick('music'); navigate({ to: '/profile' });}}
           onBlur={() => { if (clickedId === 'music') setClickedId(null) }}
         >
             <Image

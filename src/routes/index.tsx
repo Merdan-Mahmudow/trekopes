@@ -1,4 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react';
+import type { Telegram } from 'telegram-web-app'
 
 
 export const Route = createFileRoute('/')({
@@ -6,6 +8,12 @@ export const Route = createFileRoute('/')({
 })
 
 function Index() {
+    const tg: Telegram = window.Telegram;
+    const navigate = useNavigate();
+    useEffect(() => {
+        tg.WebApp.BackButton.hide()
+        navigate({ to: '/referral' })
+    }, [tg]);
     return <>
         
     </>

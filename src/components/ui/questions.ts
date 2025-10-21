@@ -2,223 +2,160 @@ export const questions = [
     {
         category: 'self',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What are my strengths and weaknesses?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 2, 
-                qText: 'What are my biggest goals in life?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 3, 
-                qText: 'What makes me truly happy?',
-                qHolder: "" 
-            },
+            { qNum: 1, qText: 'Как тебя зовут? Есть ли у тебя особое прозвище?', qHolder: '' },
+            { qNum: 2, qText: 'Какими тремя словами ты бы себя описал?', qHolder: '' },
+            { qNum: 3, qText: 'Чем ты увлекаешься или что тебя вдохновляет?', qHolder: '' },
+            { qNum: 4, qText: 'Какая твоя главная мечта или цель сейчас?', qHolder: '' },
+            { qNum: 5, qText: 'Каким своим достижением ты гордишься?', qHolder: '' },
+            { qNum: 6, qText: 'Какие твои сильные стороны помогают тебе идти вперёд?', qHolder: '' },
+            { qNum: 7, qText: 'С какими трудностями сталкивался и что из них вынес?', qHolder: '' },
+            { qNum: 8, qText: 'Кто или что даёт тебе силы не сдаваться?', qHolder: '' },
+            { qNum: 9, qText: 'Каким ты видишь себя через несколько лет?', qHolder: '' },
+            { qNum: 10, qText: 'Какой совет из будущего ты бы себе дал?', qHolder: '' },
+            { qNum: 11, qText: 'Есть ли у тебя личные цитаты, девизы или аффирмации?', qHolder: '' },
+            { qNum: 12, qText: 'Что ещё необходимо упомянуть?', qHolder: '' },
         ],
         count: 0
     },
     {
         category: 'friends',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What do I value most in our friendship?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 2, 
-                qText: 'How can we support each other better?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 3, 
-                qText: 'What is a memorable moment we shared together?',
-                qHolder: "" 
-            },
-
-        ],
-        count: 0
-    },
-    {
-        category: 'heart-crack',
-        questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What lessons have I learned from past relationships?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 2, 
-                qText: 'How can I heal and move forward?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 3, 
-                qText: 'What qualities should I look for in a future partner?',
-                qHolder: "" 
-            },
-
+            { qNum: 1, qText: 'Для кого эта песня — друг, коллега, учитель, класс?', qHolder: '' },
+            { qNum: 2, qText: 'Есть ли у него прозвище или «ваше» имя?', qHolder: '' },
+            { qNum: 3, qText: 'Какими словами опишешь этого человека или коллектив?', qHolder: '' },
+            { qNum: 4, qText: 'Как давно дружите или работаете вместе?', qHolder: '' },
+            { qNum: 5, qText: 'Какое самое яркое общее воспоминание?', qHolder: '' },
+            { qNum: 6, qText: 'Есть ли общие традиции, интересы или проекты?', qHolder: '' },
+            { qNum: 7, qText: 'Какие забавные истории или «внутряки» вспоминаются чаще всего?', qHolder: '' },
+            { qNum: 8, qText: 'Чем особенно ценен этот друг/коллега для тебя?', qHolder: '' },
+            { qNum: 9, qText: 'Какие его мечты, цели или успехи хочешь отметить?', qHolder: '' },
+            { qNum: 10, qText: 'Что бы ты пожелал этому человеку или коллективу?', qHolder: '' },
+            { qNum: 11, qText: 'Есть ли ваши личные шутки, цитаты, особенные фразы?', qHolder: '' },
+            { qNum: 12, qText: 'Что ещё важно включить в песню?', qHolder: '' },
         ],
         count: 0
     },
     {
         category: 'lover',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What do I appreciate most about my partner?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 2, 
-                qText: 'How can we strengthen our relationship?',
-                qHolder: "" 
-            },
-            { 
-                qNum: 3, 
-                qText: 'What are our shared goals for the future?',
-                qHolder: "" 
-
-            },
-
+            { qNum: 1, qText: 'Как зовут твоего любимого? Есть ли у него особенное прозвище?', qHolder: '' },
+            { qNum: 2, qText: 'Опиши любимую тремя словами.', qHolder: '' },
+            { qNum: 3, qText: 'Как познакомились? Есть ли у вашей встречи интересная история?', qHolder: '' },
+            { qNum: 4, qText: 'Какое ваше яркое совместное воспоминание?', qHolder: '' },
+            { qNum: 5, qText: 'Есть ли у вас особые традиции или «фишки»?', qHolder: '' },
+            { qNum: 6, qText: 'За что больше всего благодарен этому человеку?', qHolder: '' },
+            { qNum: 7, qText: 'О чём она мечтает? Есть ли совместная мечта?', qHolder: '' },
+            { qNum: 8, qText: 'Есть ли у вас любимые цитаты, особенные фразы?', qHolder: '' },
+            { qNum: 9, qText: 'Какие слова или послание ты хочешь ей сказать?', qHolder: '' },
+            { qNum: 10, qText: 'Что ещё важно упомянуть в песне?', qHolder: '' },
+        ],
+        count: 0
+    },
+    {
+        category: 'heart-crack',
+        questions: [
+            { qNum: 1, qText: 'С кем связана эта история? Имя, есть ли прозвище?', qHolder: '' },
+            { qNum: 2, qText: 'Сколько вы были вместе и как началось?', qHolder: '' },
+            { qNum: 3, qText: 'Что стало причиной расставания?', qHolder: '' },
+            { qNum: 4, qText: 'Какое светлое воспоминание бережёшь?', qHolder: '' },
+            { qNum: 5, qText: 'Что больше всего болит сейчас?', qHolder: '' },
+            { qNum: 6, qText: 'Что понял про себя после этого?', qHolder: '' },
+            { qNum: 7, qText: 'За что благодарен ей и этим отношениям?', qHolder: '' },
+            { qNum: 8, qText: 'Какие слова ты хотел бы ей сказать, но не сказал?', qHolder: '' },
+            { qNum: 9, qText: 'Какие границы и обещания себе ставишь теперь?', qHolder: '' },
+            { qNum: 10, qText: 'Как видишь ближайшее будущее после этого?', qHolder: '' },
+            { qNum: 11, qText: 'Есть фразы/цитаты, которые отражают твой настрой?', qHolder: '' },
+            { qNum: 12, qText: 'Что ещё важно добавить, чтобы трек попал в точку?', qHolder: '' },
         ],
         count: 0
     },
     {
         category: 'relation',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What do I value most in our relationship?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 2, 
-                qText: 'How can we improve our communication?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 3, 
-                qText: 'What are our common interests and hobbies?',
-                qHolder: "" 
-
-            },
-
+            { qNum: 1, qText: 'Для кого из близких эта песня?', qHolder: '' },
+            { qNum: 2, qText: 'Есть ли особое имя или прозвище в семье?', qHolder: '' },
+            { qNum: 3, qText: 'Опиши этого человека тремя словами.', qHolder: '' },
+            { qNum: 4, qText: 'Какое главное семейное воспоминание?', qHolder: '' },
+            { qNum: 5, qText: 'Есть ли у вашей семьи особые традиции или ритуалы?', qHolder: '' },
+            { qNum: 6, qText: 'Какие добрые или смешные семейные истории всегда вспоминаются?', qHolder: '' },
+            { qNum: 7, qText: 'Какие ценные советы или уроки запомнились?', qHolder: '' },
+            { qNum: 8, qText: 'О чём мечтает этот человек или вся семья?', qHolder: '' },
+            { qNum: 9, qText: 'Какое главное пожелание хочешь передать?', qHolder: '' },
+            { qNum: 10, qText: 'Есть ли особенные семейные слова, шутки, фразы?', qHolder: '' },
+            { qNum: 11, qText: 'Что важно, чтобы обязательно прозвучало в песне?', qHolder: '' },
         ],
         count: 0
     },
     {
         category: 'baby',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What are my hopes and dreams for my child?',
-                qHolder: "" 
-                
-            },
-            { 
-                qNum: 2, 
-                qText: 'How can I be the best parent I can be?',
-                qHolder: "" 
-                
-            },
-            { 
-                qNum: 3, 
-                qText: 'What values do I want to instill in my child?',
-                qHolder: "" 
-                
-            },
-
+            { qNum: 1, qText: 'Как зовут малыша? Есть ли у него ласковое имя?', qHolder: '' },
+            { qNum: 2, qText: 'Это мальчик, девочка, двойня или тройня?', qHolder: '' },
+            { qNum: 3, qText: 'Когда родился или когда ждёте появления?', qHolder: '' },
+            { qNum: 4, qText: 'Кто родители? Как ждали малыша?', qHolder: '' },
+            { qNum: 5, qText: 'Какие смешные или милые привычки есть у ребёнка?', qHolder: '' },
+            { qNum: 6, qText: 'Какие чувства испытали при появлении ребёнка?', qHolder: '' },
+            { qNum: 7, qText: 'О чём мечтаете для своего малыша?', qHolder: '' },
+            { qNum: 8, qText: 'Какие важные люди будут рядом с ним?', qHolder: '' },
+            { qNum: 9, qText: 'Какие слова любви и поддержки хотите сказать малышу?', qHolder: '' },
+            { qNum: 10, qText: 'Какое главное пожелание или напутствие хотите дать ему в песне?', qHolder: '' },
+            { qNum: 11, qText: 'Есть ли семейные традиции или реликвии, которые хотите передать?', qHolder: '' },
+            { qNum: 12, qText: 'Какие особые фразы, стишки или колыбельные ассоциируются с ребёнком?', qHolder: '' },
+            { qNum: 13, qText: 'Что ещё важно включить в песню о вашем малыше?', qHolder: '' },
         ],
         count: 0
     },
     {
         category: 'hero',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What qualities make this person a hero to me?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 2, 
-                qText: 'How has this person inspired me?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 3, 
-                qText: 'What impact has this person had on my life?',
-                qHolder: "" 
-
-            },
-
+            { qNum: 1, qText: 'Как зовут героя? Есть ли у него позывной или прозвище?', qHolder: '' },
+            { qNum: 2, qText: 'Кто он, в чём проявил себя?', qHolder: '' },
+            { qNum: 3, qText: 'Откуда он родом? Есть ли важные детали о месте, где служил или работал?', qHolder: '' },
+            { qNum: 4, qText: 'Какие ценности и принципы для него важны?', qHolder: '' },
+            { qNum: 5, qText: 'Есть ли у него символ, талисман или девиз?', qHolder: '' },
+            { qNum: 6, qText: 'Кто его поддерживает?', qHolder: '' },
+            { qNum: 7, qText: 'За что испытываешь к нему гордость или благодарность?', qHolder: '' },
+            { qNum: 8, qText: 'Есть ли слова или фразы, которые хочется включить в песню?', qHolder: '' },
+            { qNum: 9, qText: 'Какое главное послание ты хочешь передать этому герою?', qHolder: '' },
+            { qNum: 10, qText: 'Какие детали помогут сделать песню по-настоящему личной?', qHolder: '' },
+            { qNum: 11, qText: 'Что ещё важно упомянуть?', qHolder: '' },
         ],
         count: 0
     },
     {
         category: 'congrats',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What achievements am I most proud of?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 2, 
-                qText: 'Who has supported me along the way?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 3, 
-                qText: 'What are my goals for the future?',
-                qHolder: "" 
-
-            },
-
+            { qNum: 1, qText: 'Какой праздник или событие отмечаете?', qHolder: '' },
+            { qNum: 2, qText: 'Кто главный герой праздника? Как его зовут? Есть ли у него особенное имя?', qHolder: '' },
+            { qNum: 3, qText: 'Какие главные черты характера или увлечения у этого человека?', qHolder: '' },
+            { qNum: 4, qText: 'Какое самое запоминающееся воспоминание связано с этим праздником?', qHolder: '' },
+            { qNum: 5, qText: 'Есть ли особые традиции или ритуалы, связанные с этим событием?', qHolder: '' },
+            { qNum: 6, qText: 'Какие подарки или сюрпризы особенно радуют героя праздника?', qHolder: '' },
+            { qNum: 7, qText: 'Какое главное пожелание хотите передать в этот день?', qHolder: '' },
+            { qNum: 8, qText: 'За что цените или благодарите этого человека?', qHolder: '' },
+            { qNum: 9, qText: 'Какое настроение хотите создать песней?', qHolder: '' },
+            { qNum: 10, qText: 'Есть ли ваши личные фразы, шутки или приколы?', qHolder: '' },
+            { qNum: 11, qText: 'Что ещё важно обязательно включить в поздравительную песню?', qHolder: '' },
         ],
         count: 0
     },
     {
         category: 'others',
         questions: [
-
-            { 
-                qNum: 1, 
-                qText: 'What unique experiences have shaped who I am?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 2, 
-                qText: 'How do I want to be remembered?',
-                qHolder: "" 
-
-            },
-            { 
-                qNum: 3, 
-                qText: 'What impact do I want to make in the world?',
-                qHolder: "" 
-
-            },
-
+            { qNum: 1, qText: 'Кто или что будет героем песни?', qHolder: '' },
+            { qNum: 2, qText: 'Для кого эта песня — для команды, гостей, слушателей?', qHolder: '' },
+            { qNum: 3, qText: 'Как называется проект, место или событие?', qHolder: '' },
+            { qNum: 4, qText: 'Как родилась идея?', qHolder: '' },
+            { qNum: 5, qText: 'Какое яркое воспоминание связано с этим?', qHolder: '' },
+            { qNum: 6, qText: 'Есть ли у вас особые традиции или особенности?', qHolder: '' },
+            { qNum: 7, qText: 'Какие забавные истории или внутренние шутки есть?', qHolder: '' },
+            { qNum: 8, qText: 'Какие ценности и принципы для вас важны?', qHolder: '' },
+            { qNum: 9, qText: 'Какие мечты или цели хотите подчеркнуть?', qHolder: '' },
+            { qNum: 10, qText: 'Какие слова или послание хотите донести?', qHolder: '' },
+            { qNum: 11, qText: 'Есть ли девиз, символ или цвета?', qHolder: '' },
+            { qNum: 12, qText: 'Какой стиль и настроение музыки хотите?', qHolder: '' },
+            { qNum: 13, qText: 'Что ещё важно обязательно упомянуть?', qHolder: '' },
         ],
         count: 0
     },
-]
+];

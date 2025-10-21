@@ -23,7 +23,7 @@ export function ChatInput({
   };
 
   return (
-    <Box bg="gray.800" p={3}>
+    <Box bg="gray.800" p={3} h={"fit-content"}>
       <Flex gap={2} align="center">
         <ChakraInput
           value={value}
@@ -39,6 +39,7 @@ export function ChatInput({
           color="white"
           borderRadius="full"
           size={"md"}
+          fontSize="16px"
         />
         <Button
           aria-label="Send"
