@@ -1,5 +1,5 @@
 import { COLOR } from '../components/ui/colors'
-import { Box, Flex, Heading, Text, Clipboard, IconButton, Button, Grid, GridItem } from '@chakra-ui/react'
+import { Box, Flex, Heading, Text, Clipboard, IconButton, Grid, GridItem } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { PawIcon } from '../assets/svg/paw'
 import { MdLockOpen } from 'react-icons/md'
