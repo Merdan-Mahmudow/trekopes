@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Dock from "../Dock";
 import Header from "../Header";
 import { COLOR } from "../ui/colors";
+import NavBar from "../Dock/second";
 
 export function Layout() {
     const path = useLocation()
@@ -34,7 +35,7 @@ export function Layout() {
                 <Box minH={0}>
                   <Outlet />
                 </Box>
-                {isDockVisible && <Dock />}
+                {isDockVisible && <NavBar />}
             </Grid>
         </>
     );

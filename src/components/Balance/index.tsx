@@ -14,23 +14,24 @@ export function Balance() {
         
             justifyContent={"space-arond"}
             pt={"9px"}
-            gap={6}
+            gap={3}
             alignItems={"center"}>
                 <Link to="/chat"><BsChatDots size={"22px"} color={COLOR.brand.orange}/></Link>
             <Flex
                 w={"fit"}
                 borderRadius={"full"}
-                p={"3px 6px"}
+                p={"4px 12px"}
                 alignItems={"center"}
-                boxShadow={"rgb(245, 118, 7) 0 0 13px"}>
+                bg={COLOR.kit.darkGray}
+                gap={"4px"}
+                >
                 <Image
                     w={"20px"}
                     h={"20px"}
-                    ml={"5px"}
                     src="https://storage.yandexcloud.net/trekopes/paw.svg" 
                 />
                 
-                <Text px={"7px"}>18</Text>
+                <Text>18</Text>
             </Flex>
             {/* <Flex>
                 <Text

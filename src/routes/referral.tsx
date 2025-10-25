@@ -3,6 +3,7 @@ import { Box, Flex, Heading, Text, Clipboard, IconButton, Button, Grid, GridItem
 import { createFileRoute } from '@tanstack/react-router'
 import { PawIcon } from '../assets/svg/paw'
 import { MdLockOpen } from 'react-icons/md'
+import { BrandButton } from '../components/ui/button'
 
 export const Route = createFileRoute('/referral')({
     component: RouteComponent,
@@ -18,14 +19,14 @@ function RouteComponent() {
                 alignItems={"center"}
                 pt={10}>
                 <Box
-                    bg={COLOR.bg.chakra.blue950}
+                    bg={COLOR.kit.darkGray}
                     w={"11/12"}
                     p={3}
-                    border={"1px solid" + COLOR.stroke.stroke700}
-                    textAlign={"center"}>
+                    textAlign={"center"}
+                    borderRadius="2xl">
                     <Heading>Пригласи друга</Heading>
                     <Text>и вы оба получите по бесплатному треку</Text>
-
+                    <BrandButton></BrandButton>
                     <Flex
                      px={2}
                      py={1}
@@ -47,13 +48,12 @@ function RouteComponent() {
                     w="11/12"
                     mt={6}>
                     <GridItem
-                        bg={COLOR.bg.chakra.blue950}
+                        bg={COLOR.kit.darkGray}
                         p={4}
-                        borderRadius="md"
-                        border={"1px solid" + COLOR.stroke.stroke700}>
+                        borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
                             <Flex alignItems="center" gap={3}>
-                                <PawIcon size={24} />
+                                
                                 <Box>
                                     <Text fontSize="lg">За 1 друга - 1 лапка</Text>
                                     <Text color="gray.500" fontSize="sm">*за последующих в случае оплаты</Text>
@@ -63,10 +63,9 @@ function RouteComponent() {
                         </Flex>
                     </GridItem>
                     <GridItem
-                        bg={COLOR.bg.chakra.blue950}
+                        bg={COLOR.kit.darkGray}
                         p={4}
-                        borderRadius="md"
-                        border={"1px solid" + COLOR.stroke.stroke700}>
+                        borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
                             <Flex alignItems="center" gap={3}>
                                 <PawIcon size={24} />
@@ -76,10 +75,9 @@ function RouteComponent() {
                         </Flex>
                     </GridItem>
                     <GridItem
-                        bg={COLOR.bg.chakra.blue950}
+                        bg={COLOR.kit.darkGray}
                         p={4}
-                        borderRadius="md"
-                        border={"1px solid" + COLOR.stroke.stroke700}>
+                        borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
                             <Flex alignItems="center" gap={3}>
                                 <PawIcon size={24} />
@@ -89,10 +87,9 @@ function RouteComponent() {
                         </Flex>
                     </GridItem>
                     <GridItem
-                        bg={COLOR.bg.chakra.blue950}
+                        bg={COLOR.kit.darkGray}
                         p={4}
-                        borderRadius="md"
-                        border={"1px solid" + COLOR.stroke.stroke700}>
+                        borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
                             <Flex alignItems="center" gap={3}>
                                 <PawIcon size={24} />
