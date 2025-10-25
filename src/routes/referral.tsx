@@ -15,7 +15,8 @@ function RouteComponent() {
     const tg: Telegram = window.Telegram;
     const handleSend = () => {
         const sendLink = `https://t.me/share/url?url=${encodeURIComponent(refLink)}`
-        tg.WebApp.openLink(sendLink)
+        tg.WebApp.openTelegramLink(sendLink)
+        
     }
     return (
         <>
