@@ -2,7 +2,7 @@ import { Popup } from '../components/Popup'
 import { COLOR } from '../components/ui/colors'
 import { Box, Flex, Heading, Text, Button, Grid, GridItem, } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
 import { LuBaby } from 'react-icons/lu'
@@ -12,6 +12,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { QuestionModal } from "../components/QuestionModal";
 import { questions as allQuestions } from "../components/ui/questions";
 import { ResultsComponent } from './questionsFinish'
+import { setDockActive } from '../store'
 
 export const Route = createFileRoute('/generate')({
     component: RouteComponent,
@@ -62,18 +63,18 @@ const ChangeButton = ({ icon, title, onClick, isSelected }: ChangeButtonProps) =
 // --- Конец компонента Итоги ответов ---
 function RouteComponent() {
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false)
-    const [showResults, setShowResults] = useState(false) // Новое состояние для показа итогов
+    const [showResults, setShowResults] = useState(false);
 
     const buttonData: ChangeButtonProps[] = [
         { icon: <FaRegFaceSmile style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про себя", category: 'self' },
-        { icon: <BsPeople height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для друзей и для коллег", category: 'friend' },
-        { icon: <TbHeartBroken height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для разбитого сердца", category: 'broken-heart' },
-        { icon: <TbHeart height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для любимого человека", category: 'love' },
-        { icon: <RiHomeHeartLine height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для близких", category: 'relation' },
-        { icon: <LuBaby height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про ребёнка", category: 'baby' },
-        { icon: <RiShieldStarLine height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "О герое или солдате", category: 'hero' },
-        { icon: <TbConfetti height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для поздравления", category: 'congrats' },
-        { icon: <BsMagic height={"14px"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Другое", category: 'others' },
+        { icon: <BsPeople style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для друзей и для коллег", category: 'friend' },
+        { icon: <TbHeartBroken style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для разбитого сердца", category: 'broken-heart' },
+        { icon: <TbHeart style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для любимого человека", category: 'love' },
+        { icon: <RiHomeHeartLine style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для близких", category: 'relation' },
+        { icon: <LuBaby style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про ребёнка", category: 'baby' },
+        { icon: <RiShieldStarLine style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "О герое или солдате", category: 'hero' },
+        { icon: <TbConfetti style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для поздравления", category: 'congrats' },
+        { icon: <BsMagic style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Другое", category: 'others' },
     ];
 
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -92,6 +93,10 @@ function RouteComponent() {
     const found = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
     const qList = found ? found.questions : null;
     const currentQuestion = qList?.[currentIndex];
+
+    useEffect(() => {
+        setDockActive("center")
+    }, [])
 
     const handleNext = () => {
         if (qList && currentIndex < qList.length - 1) {
@@ -126,7 +131,7 @@ function RouteComponent() {
                 w={"full"}
                 alignItems={"center"}
                 gap={4}>
-                <Heading w={"11/12"} size={"2xl"} color={COLOR.kit.orangeWhite}>Создать трек</Heading>
+                <Text w={"11/12"} fontSize={"24px"} color={COLOR.kit.orangeWhite}>Создать трек</Text>
                 <Grid templateColumns="1fr"
                     gap={2}
                     w="11/12"

@@ -6,11 +6,14 @@ import { useEffect, useState } from "react";
 import { MusicIcon } from "../../assets/svg/music";
 import { COLOR } from "../ui/colors";
 import { useNavigate } from "@tanstack/react-router";
+import { useStore } from "@tanstack/react-store";
+import store from "../../store";
 
 const MotionPath = motion.path;
 
 const NavBar = () => {
-const [active, setActive] = useState<"left" | "center" | "right">("center");
+  const activeDock = useStore(store, (state) => state.dock)
+const [active, setActive] = useState<"left" | "center" | "right">("left");
   const [convexParams, setConvexParams] = useState({ centerX: 200, width: 95, height: 15 });
   const [svgWidth, setSvgWidth] = useState(400);
   const navigate = useNavigate()
@@ -72,7 +75,8 @@ const [active, setActive] = useState<"left" | "center" | "right">("center");
     <Box
        w="100vw"
       h="100px"
-      position="relative"
+      position="fixed"
+      bottom={0}
       display="flex"
       justifyContent="center"
       alignItems="center"

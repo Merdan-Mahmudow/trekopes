@@ -1,6 +1,8 @@
+import { setDockActive } from '../store'
 import { MusicList } from '../components/MusicList'
 import { Tabs, VStack } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { HiOutlineLightBulb } from 'react-icons/hi'
 import { LuUser } from 'react-icons/lu'
 
@@ -9,6 +11,10 @@ export const Route = createFileRoute('/profile')({
 })
 
 function RouteComponent() {
+
+    useEffect(() => {
+            setDockActive("left")
+        }, [])
     return (
         <>
             <Tabs.Root defaultValue="examples" variant={'enclosed'}>
