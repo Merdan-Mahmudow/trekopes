@@ -141,7 +141,7 @@ const Dock: React.FC = () => {
             zIndex={2}
             _hover={{ cursor: 'pointer' }}
           >
-            <Link to="/generate" onClick={() => handleClick('create', 500)}>
+            <Link to="." onClick={() => handleClick('create', 500)}>
               <Text userSelect="none"><PawIcon /></Text>
             </Link>
           </Box>

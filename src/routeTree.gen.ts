@@ -13,6 +13,7 @@ import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as QuestionsFinishRouteImport } from './routes/questionsFinish'
 import { Route as QuestionRouteImport } from './routes/question'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as GenerateRouteImport } from './routes/generate'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -36,6 +37,11 @@ const QuestionRoute = QuestionRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GenerateRoute = GenerateRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/generate': typeof GenerateRoute
+  '/news': typeof NewsRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/generate': typeof GenerateRoute
+  '/news': typeof NewsRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/generate': typeof GenerateRoute
+  '/news': typeof NewsRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/create'
     | '/generate'
+    | '/news'
     | '/profile'
     | '/question'
     | '/questionsFinish'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/create'
     | '/generate'
+    | '/news'
     | '/profile'
     | '/question'
     | '/questionsFinish'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/create'
     | '/generate'
+    | '/news'
     | '/profile'
     | '/question'
     | '/questionsFinish'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   CreateRoute: typeof CreateRoute
   GenerateRoute: typeof GenerateRoute
+  NewsRoute: typeof NewsRoute
   ProfileRoute: typeof ProfileRoute
   QuestionRoute: typeof QuestionRoute
   QuestionsFinishRoute: typeof QuestionsFinishRoute
@@ -162,6 +175,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generate': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   CreateRoute: CreateRoute,
   GenerateRoute: GenerateRoute,
+  NewsRoute: NewsRoute,
   ProfileRoute: ProfileRoute,
   QuestionRoute: QuestionRoute,
   QuestionsFinishRoute: QuestionsFinishRoute,

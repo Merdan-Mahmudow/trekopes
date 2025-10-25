@@ -1,6 +1,9 @@
-import { Box, Button, Flex, Grid, Input, Text } from "@chakra-ui/react";
+import { Box, Grid, Input, Text } from "@chakra-ui/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Link } from "@tanstack/react-router";
+import { COLOR } from "../ui/colors";
+import { BrandButton, GrayButton } from "../ui/button";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 type QuestionModalProps = {
     qNum: number;
@@ -8,11 +11,25 @@ type QuestionModalProps = {
     qHolder: string;
     onNext?: () => void;
     onPrev?: () => void;
+    onBackToCategories?: () => void;
     isFirst?: boolean;
     isLast?: boolean;
+    onFinish?: () => void;
 };
 
-export function QuestionModal({ qNum, qText, qHolder, onNext, onPrev, isFirst, isLast }: QuestionModalProps) {
+const MotionGrid = motion(Grid);
+
+export function QuestionModal({
+    qNum,
+    qText,
+    qHolder,
+    onNext,
+    onPrev,
+    onBackToCategories,
+    isFirst,
+    isLast,
+    onFinish
+}: QuestionModalProps) {
     const [value, setValue] = useState("");
     const [answers, setAnswers] = useState<Record<number, string>>(() => {
         try {
@@ -23,7 +40,9 @@ export function QuestionModal({ qNum, qText, qHolder, onNext, onPrev, isFirst, i
         }
     });
 
-    // при смене номера вопроса подгружаем ранее сохранённый ответ (если есть)
+    // 1 = вперед (влево), -1 = назад (вправо)
+    const [direction, setDirection] = useState<1 | -1>(1);
+
     useEffect(() => {
         setValue(answers[qNum] ?? "");
     }, [qNum, answers]);
@@ -38,7 +57,7 @@ export function QuestionModal({ qNum, qText, qHolder, onNext, onPrev, isFirst, i
 
     const handleChange = (v: string) => {
         setValue(v);
-        setAnswers(prev => {
+        setAnswers((prev) => {
             const next = { ...prev, [qNum]: v };
             persistAnswers(next);
             return next;
@@ -46,45 +65,102 @@ export function QuestionModal({ qNum, qText, qHolder, onNext, onPrev, isFirst, i
     };
 
     const handleNext = () => {
-        setAnswers(prev => {
+        setDirection(1);
+        setAnswers((prev) => {
             const next = { ...prev, [qNum]: value };
             persistAnswers(next);
             return next;
         });
         onNext && onNext();
+
+        if (isLast){
+            console.log("yeeeeees")
+            onFinish && onFinish();
+        }
     };
 
     const handlePrev = () => {
-        setAnswers(prev => {
+        setDirection(-1);
+        setAnswers((prev) => {
             const next = { ...prev, [qNum]: value };
             persistAnswers(next);
             return next;
         });
-        onPrev && onPrev();
+
+        if (isFirst && onBackToCategories) {
+            onBackToCategories();
+        } else {
+            onPrev && onPrev();
+        }
+    };
+
+    // анимация направлений
+    const variants = {
+        enter: (direction: 1 | -1) => ({
+            x: direction > 0 ? 100 : -100,
+            opacity: 0,
+        }),
+        center: {
+            x: 0,
+            opacity: 1,
+        },
+        exit: (direction: 1 | -1) => ({
+            x: direction > 0 ? -100 : 100,
+            opacity: 0,
+        }),
     };
 
     return (
-        <>
-            <Grid
+        <AnimatePresence custom={direction} mode="wait">
+            <MotionGrid
                 key={qNum}
-                h={"250px"}
+                custom={direction}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.5, ease: "linear" }}
                 rounded={"2xl"}
-                pos={"relative"}
                 placeSelf={"center"}
                 w={"400px"}
-                templateRows={"50px 1fr 50px"}
+                templateRows={"1fr 50px"}
+                gap={6}>
 
-            >
-                <Flex borderBottom={".5px solid "} h={"full"} alignItems={"center"}><Text w={"full"} textAlign={"center"}>Вопрос {qNum}</Text></Flex>
-                <Box p={4} w="100%" maxW="400px">
-                    <Text>{qText}</Text>
-                    <Input placeholder={qHolder} value={value} onChange={(e) => handleChange(e.target.value)} />
+                <Box maxW="80vw">
+                    <Text fontSize={"24px"} lineHeight={"130%"} color={COLOR.kit.orangeWhite}>{qText}</Text>
+                    <Text color={COLOR.kit.smoke}>Вопрос {qNum}</Text>
                 </Box>
-                <Grid px={4} gap={4} templateColumns={"1fr 1fr"} w="100%" maxW="400px">
-                    <Button rounded={"xl"} onClick={handlePrev}>{isFirst ?  <Link to="/create">Назад</Link>: "Назад"}</Button>
-                    <Button rounded={"xl"} onClick={handleNext}>{isLast ? <Link to="/questionsFinish">Завершить</Link> : value.length > 0 ? "Продолжить" : "Пропустить"}</Button>
+                <Input
+                    placeholder={qHolder}
+                    p={"12px 24px"}
+                    rounded={"3xl"}
+                    height={"58px"}
+                    value={value}
+                    onChange={(e) => handleChange(e.target.value)}
+                    fontSize={"16px"}
+                    border={{ _focus: `${COLOR.kit.orange} 2px solid` }}
+                    outline={"none"}
+                    lineHeight={"130%"}
+                />
+
+                <Grid px={4} pt={3} gap={4} templateColumns={"1fr 1fr"} w="100%" maxW="400px">
+                    <GrayButton onClick={handlePrev}>
+                       <FaArrowLeft /> Назад 
+                    </GrayButton>
+                    <BrandButton onClick={handleNext}>
+                        {isLast ? (
+                            "Завершить"
+                        ) : value.length > 0 ? (
+                            <>
+                                Далее <FaArrowRight />
+                            </>
+                        ) : (
+                            "Пропустить"
+                        )}
+                    </BrandButton>
+
                 </Grid>
-            </Grid>
-        </>
-    )
+            </MotionGrid>
+        </AnimatePresence>
+    );
 }

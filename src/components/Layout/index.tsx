@@ -1,7 +1,6 @@
 import { Grid, Box } from "@chakra-ui/react";
 import { Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import Dock from "../Dock";
 import Header from "../Header";
 import { COLOR } from "../ui/colors";
 import NavBar from "../Dock/second";

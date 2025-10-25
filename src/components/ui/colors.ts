@@ -30,6 +30,7 @@ export const COLOR = {
         smoke: "rgba(115, 115, 115, 1)",
         white: "rgba(255, 255, 255, 1)",
         orangeWhite: "rgba(248, 228, 189, 1)",
-        orange: "rgba(243, 146, 4, 1)"
+        orange: "rgba(243, 146, 4, 1)",
+        iconBg: "linear-gradient(215.54deg, #ED8F02 10.1%, #F26100 89.06%)"
     }
 }
