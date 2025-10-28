@@ -3,6 +3,7 @@ import { useState, useCallback, useRef } from "react";
 import { FaFileUpload } from 'react-icons/fa';
 import Webcam from "react-webcam";
 import { MdCameraswitch, MdPhotoCamera } from 'react-icons/md';
+import { Toaster, toaster } from "../../../components/ui/toaster"
 
 const FACING_MODE_USER = "user";
 const FACING_MODE_ENVIRONMENT = "environment";
@@ -27,12 +28,20 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
         const allowedTypes = ["image/png", "image/jpeg"];
         if (!allowedTypes.includes(file.type)) {
             setError("Неверный тип файла. Пожалуйста, выберите .png или .jpg");
+            toaster.create({
+                description: error,
+                type: "error"
+            })
             return;
         }
 
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (file.size > maxSize) {
             setError("Файл слишком большой. Пожалуйста, выберите файл размером до 5 МБ.");
+            toaster.create({
+                description: error,
+                type: "error"
+            })
             return;
         }
 
@@ -180,6 +189,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
             >
                 Сделать снимок
             </Button>
+            <Toaster />
         </VStack>
     );
 };
