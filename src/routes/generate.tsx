@@ -118,7 +118,7 @@ function RouteComponent() {
                 onOpenChange={handleClosePopup}
             >
                 { genType == 'text' && <TextGenerateScreen /> }
-                { genType == 'link' && <LinkGenerate /> }
+                { genType == 'link' && <LinkGenerate onClose={handleClosePopup} /> }
                 { genType == 'photo' && <PhotoGenerateScreen onClose={handleClosePopup} /> }
             </Popup>
         </>

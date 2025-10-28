@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { Box, Text, Separator, Grid, Flex, IconButton, Input } from '@chakra-ui/react'
 import { questions as allQuestions } from '../components/ui/questions'
@@ -10,7 +10,11 @@ export const Route = createFileRoute('/questionsFinish')({
     component: ResultsComponent,
 })
 
-export function ResultsComponent() {
+interface ResultsComponentProps {
+    onFinish?: () => void;
+}
+
+export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
     const [answers, setAnswers] = useState<Record<number, string>>({})
     const [questions, setQuestions] = useState<string[] | null>(null)
     const [editingAnswer, setEditingAnswer] = useState<number | null>(null)
@@ -111,13 +115,6 @@ export function ResultsComponent() {
             </Box>
         )
     }
-
-    const navigate = useNavigate()
-
-    const handleApprove = () => {
-        navigate({ to: '/generate', search: {} })
-    }
-
     const renderAnswer = (qText: string, answer: string, index: number, unanswered: boolean) => {
         if (editingAnswer === index) {
             return (
@@ -182,20 +179,20 @@ export function ResultsComponent() {
     }
 
     return (
-        <Box maxW="720px" mx="auto">
+        <Box maxW="full" mx="auto">
             <Text fontSize={"24px"} color={COLOR.kit.orangeWhite} mb={4}>Итог ответов</Text>
             <Grid alignItems={"start"} gap={2}>
                 {questionsAndAnswers}
             </Grid>
 
-            <Flex gap={4} justifyContent="center" mt={8}>
+            <Grid w={"full"} templateColumns="1fr" gap={4}mt={8}>
                 <BrandButton
                 w='full'
-                    onClick={handleApprove}
+                    onClick={onFinish}
                     disabled={editingAnswer !== null}>
                     Утвердить
                 </BrandButton>
-            </Flex>
+            </Grid>
         </Box>
     )
 }

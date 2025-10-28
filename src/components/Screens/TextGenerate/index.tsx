@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { QuestionModal } from "../../../components/QuestionModal";
 import { questions as allQuestions } from "../../../components/ui/questions";
 import { ResultsComponent } from '../../../routes/questionsFinish'
+import { ArtistParams } from '../ArtistParams'
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -56,6 +57,7 @@ const ChangeButton = ({ icon, title, onClick, isSelected }: ChangeButtonProps) =
 // --- Конец компонента Итоги ответов ---
 export function TextGenerateScreen() {
     const [showResults, setShowResults] = useState(false);
+    const [showArtistParams, setShowArtistParams] = useState(false);
 
     const buttonData: ChangeButtonProps[] = [
         { icon: <FaRegFaceSmile style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про себя", category: 'self' },
@@ -96,6 +98,10 @@ export function TextGenerateScreen() {
         }
     };
 
+    const handleFinishResults = () => {
+        setShowArtistParams(true);
+    };
+
     const handlePrev = () => {
         if (currentIndex > 0) setCurrentIndex((i) => i - 1);
     };
@@ -128,8 +134,23 @@ export function TextGenerateScreen() {
                                 ))}
                             </Grid>
                         </MotionDiv>)
+                    ) : showArtistParams ? (
+                        // 3. Экран выбора артиста и параметров
+                        (<MotionDiv
+                            key="artist-params"
+                            initial={{ x: 100, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: -100, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <ArtistParams
+                                onBack={() => setShowArtistParams(false)}
+                                onCancel={() => setSelectedCategory(null)}
+                                onGenerate={() => setSelectedCategory(null)}
+                            />
+                        </MotionDiv>)
                     ) : showResults ? (
-                        // 3. Экран итоговых ответов
+                        // 2. Экран итоговых ответов
                         (<MotionDiv
                             key="results-summary"
                             initial={{ x: 100, opacity: 0 }}
@@ -137,10 +158,10 @@ export function TextGenerateScreen() {
                             exit={{ x: -100, opacity: 0 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <ResultsComponent />
+                            <ResultsComponent onFinish={handleFinishResults} />
                         </MotionDiv>)
                     ) : (
-                        // 2. Экран вопросов
+                        // 1.5. Экран вопросов
                         (<MotionDiv
                             key="question-modal"
                             initial={{ x: 100, opacity: 0 }}
