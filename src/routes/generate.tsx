@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { setDockActive } from '../store'
 import { TextGenerateScreen } from '../components/Screens/TextGenerate'
 import { LinkGenerate } from '../components/Screens/LinkGenerate'
+import { PhotoGenerateScreen } from '../components/Screens/PhotoGenerate'
 
 export const Route = createFileRoute('/generate')({
     component: RouteComponent,
@@ -118,6 +119,7 @@ function RouteComponent() {
             >
                 { genType == 'text' && <TextGenerateScreen /> }
                 { genType == 'link' && <LinkGenerate /> }
+                { genType == 'photo' && <PhotoGenerateScreen onClose={handleClosePopup} /> }
             </Popup>
         </>
     )
