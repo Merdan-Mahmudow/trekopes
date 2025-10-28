@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { setDockActive } from '../store'
 import { TextGenerateScreen } from '../components/Screens/TextGenerate'
 import { LinkGenerate } from '../components/Screens/LinkGenerate'
+import { PhotoFlowModal } from '@/features/photo-song/PhotoFlowModal'
 
 export const Route = createFileRoute('/generate')({
     component: RouteComponent,
@@ -14,6 +15,7 @@ export const Route = createFileRoute('/generate')({
 // --- Конец компонента Итоги ответов ---
 function RouteComponent() {
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false)
+    const [isPhotoSongModalOpen, setIsPhotoSongModalOpen] = useState<boolean>(false)
     const [ genType, setGenType ] = useState<"text" | "photo"| "link" | "style" | null>("text")
 
 
@@ -27,6 +29,10 @@ function RouteComponent() {
     }
 
     const handleChangeType = (type: "text" | "photo"| "link" | "style" | null) => {
+        if (type === 'photo') {
+            setIsPhotoSongModalOpen(true)
+            return
+        }
         setIsPopupOpen(true)
         setGenType(type)
     } 
@@ -119,6 +125,11 @@ function RouteComponent() {
                 { genType == 'text' && <TextGenerateScreen /> }
                 { genType == 'link' && <LinkGenerate /> }
             </Popup>
+
+            <PhotoFlowModal
+                isOpen={isPhotoSongModalOpen}
+                onClose={() => setIsPhotoSongModalOpen(false)}
+            />
         </>
     )
 }

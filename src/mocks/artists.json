@@ -1,0 +1,14 @@
+[
+  { "id": "miyagi", "name": "Miyagi", "avatarUrl": "/assets/artists/miyagi.png" },
+  { "id": "scriptonite", "name": "Скриптонит", "avatarUrl": "/assets/artists/scriptonite.png" },
+  { "id": "zivert", "name": "Zivert", "avatarUrl": "/assets/artists/zivert.png" },
+  { "id": "klava_koka", "name": "Клава Кока", "avatarUrl": "/assets/artists/klava_koka.png" },
+  { "id": "morgenstern", "name": "Morgenstern", "avatarUrl": "/assets/artists/morgenstern.png" },
+  { "id": "max_korzh", "name": "Макс Корж", "avatarUrl": "/assets/artists/max_korzh.png" },
+  { "id": "egor_kreed", "name": "Егор Крид", "avatarUrl": "/assets/artists/egor_kreed.png" },
+  { "id": "basta", "name": "Баста", "avatarUrl": "/assets/artists/basta.png" },
+  { "id": "lsp", "name": "ЛСП", "avatarUrl": "/assets/artists/lsp.png" },
+  { "id": "feduk", "name": "Feduk", "avatarUrl": "/assets/artists/feduk.png" },
+  { "id": "elizabeth", "name": "Елизавета", "avatarUrl": "/assets/artists/elizabeth.png" },
+  { "id": "t-fest", "name": "T-Fest", "avatarUrl": "/assets/artists/t-fest.png" }
+]
