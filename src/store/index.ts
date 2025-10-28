@@ -9,6 +9,11 @@ const store = new Store({
   },
   dock: {
     active: "" as "left" | "center" | "right"
+  },
+  user: {
+    avatar: "" as string,
+    name: "" as string,
+    balance: 0 as number
   }
 });
 

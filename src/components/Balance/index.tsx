@@ -1,14 +1,14 @@
 import { Flex, Image, Text } from "@chakra-ui/react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { BsChatDots } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
-// import { useState, useEffect } from "react";
+import { useStore } from "@tanstack/react-store";
+import store from "../../store";
 
 export function Balance() {
-    // const [chatID, setChatID] = useState<string>()
-    // useEffect(() => {
-    //     setChatID("735673465")
-    // })
+    const navigate = useNavigate();
+    const user = useStore(store, (state) => state.user)
+
     return <>
         <Flex
         
@@ -24,6 +24,7 @@ export function Balance() {
                 alignItems={"center"}
                 bg={COLOR.kit.darkGray}
                 gap={"4px"}
+                onClick={() => navigate({ to: "/tarrifs" })}
                 >
                 <Image
                     w={"20px"}
@@ -31,22 +32,8 @@ export function Balance() {
                     src="https://storage.yandexcloud.net/trekopes/paw.svg" 
                 />
                 
-                <Text>18</Text>
+                <Text>{user.balance}</Text>
             </Flex>
-            {/* <Flex>
-                <Text
-                    color={"gray"}
-                    fontSize={"10pt"}
-                    mt={"8px"}>ID: {chatID}
-                </Text>
-                <Clipboard.Root value={chatID}>
-                    <Clipboard.Trigger asChild>
-                        <IconButton variant="ghost" color={"orange.400"} size="xs">
-                            <Clipboard.Indicator />
-                        </IconButton>
-                    </Clipboard.Trigger>
-                </Clipboard.Root>
-            </Flex> */}
         </Flex>
     </>
 }

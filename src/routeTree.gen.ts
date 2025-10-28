@@ -9,16 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TarrifsRouteImport } from './routes/tarrifs'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as QuestionsFinishRouteImport } from './routes/questionsFinish'
 import { Route as QuestionRouteImport } from './routes/question'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as NewsRouteImport } from './routes/news'
 import { Route as GenerateRouteImport } from './routes/generate'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 
+const TarrifsRoute = TarrifsRouteImport.update({
+  id: '/tarrifs',
+  path: '/tarrifs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReferralRoute = ReferralRouteImport.update({
   id: '/referral',
   path: '/referral',
@@ -37,11 +42,6 @@ const QuestionRoute = QuestionRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NewsRoute = NewsRouteImport.update({
-  id: '/news',
-  path: '/news',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GenerateRoute = GenerateRouteImport.update({
@@ -70,22 +70,22 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/generate': typeof GenerateRoute
-  '/news': typeof NewsRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
+  '/tarrifs': typeof TarrifsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/generate': typeof GenerateRoute
-  '/news': typeof NewsRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
+  '/tarrifs': typeof TarrifsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -93,11 +93,11 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/create': typeof CreateRoute
   '/generate': typeof GenerateRoute
-  '/news': typeof NewsRoute
   '/profile': typeof ProfileRoute
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
+  '/tarrifs': typeof TarrifsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -106,33 +106,33 @@ export interface FileRouteTypes {
     | '/chat'
     | '/create'
     | '/generate'
-    | '/news'
     | '/profile'
     | '/question'
     | '/questionsFinish'
     | '/referral'
+    | '/tarrifs'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/chat'
     | '/create'
     | '/generate'
-    | '/news'
     | '/profile'
     | '/question'
     | '/questionsFinish'
     | '/referral'
+    | '/tarrifs'
   id:
     | '__root__'
     | '/'
     | '/chat'
     | '/create'
     | '/generate'
-    | '/news'
     | '/profile'
     | '/question'
     | '/questionsFinish'
     | '/referral'
+    | '/tarrifs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -140,15 +140,22 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   CreateRoute: typeof CreateRoute
   GenerateRoute: typeof GenerateRoute
-  NewsRoute: typeof NewsRoute
   ProfileRoute: typeof ProfileRoute
   QuestionRoute: typeof QuestionRoute
   QuestionsFinishRoute: typeof QuestionsFinishRoute
   ReferralRoute: typeof ReferralRoute
+  TarrifsRoute: typeof TarrifsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tarrifs': {
+      id: '/tarrifs'
+      path: '/tarrifs'
+      fullPath: '/tarrifs'
+      preLoaderRoute: typeof TarrifsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/referral': {
       id: '/referral'
       path: '/referral'
@@ -175,13 +182,6 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/news': {
-      id: '/news'
-      path: '/news'
-      fullPath: '/news'
-      preLoaderRoute: typeof NewsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/generate': {
@@ -220,11 +220,11 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   CreateRoute: CreateRoute,
   GenerateRoute: GenerateRoute,
-  NewsRoute: NewsRoute,
   ProfileRoute: ProfileRoute,
   QuestionRoute: QuestionRoute,
   QuestionsFinishRoute: QuestionsFinishRoute,
   ReferralRoute: ReferralRoute,
+  TarrifsRoute: TarrifsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
