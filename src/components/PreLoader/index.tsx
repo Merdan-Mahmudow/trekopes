@@ -9,17 +9,17 @@ export const PreLoader = () => {
   const text = "ТРЕКОIIЁС";
 
   return (
-    <HStack h={"100dvh"} w={"100vw"} justifyContent={"center"}>
+    <HStack h={"100dvh"} w={"100vw"} justifyContent={"center"} bg={COLOR.kit.darkGray} color={COLOR.kit.orange}>
       {text.split("").map((char, index) => (
         <MotionSpan
           key={index}
           className="font-bicubic"
-          style={{ color: "white", fontSize: "24pt", fontWeight: "bold"}}
+          style={{fontSize: "24pt", fontWeight: "bold"}}
           animate={{
             textShadow: [
-              `0px 0px 0px ${COLOR.kit.orange}` ,
-              `0px 0px 20px ${COLOR.kit.orange}`,
-              `0px 0px 0px ${COLOR.kit.orange}`,
+              `0px 0px 0px ${COLOR.kit.white}` ,
+              `0px 0px 20px #FBEBBB `,
+              `0px 0px 0px ${COLOR.kit.white}`,
             ],
           }}
           transition={{
