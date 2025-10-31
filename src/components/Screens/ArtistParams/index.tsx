@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { FaPaw } from 'react-icons/fa';
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
+import { TrackLoadingScreen } from "../TrackLoading";
 
 type Artist = {
     id: string;
@@ -31,6 +32,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [generationParams, setGenerationParams] = useState<GenerationParams>({
         tempo: 105,
         mood: "happy",
@@ -62,13 +64,18 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
     const handleGenerate = async () => {
         setIsGenerating(true);
         try {
-            await new Promise(r => setTimeout(r, 800));
+            setIsLoading(true)
             onGenerate({ artist: activeTab === "mode" ? selectedArtist : null, params: generationParams });
         } finally {
             setIsGenerating(false);
         }
     };
-
+    if (isLoading) {
+        return (
+            <>
+            <TrackLoadingScreen /></>
+        )
+    }
     return (
         <VStack gap={4} w="full" color="white">
             <Box w="full" bg={COLOR.kit.darkGray} borderRadius="24px" p={6}>

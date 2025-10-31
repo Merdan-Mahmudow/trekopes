@@ -13,7 +13,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     const [link, setLink] = useState("");
     const [isValidating, setIsValidating] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [currentScreen, setCurrentScreen] = useState<"link" | "artist" | "params">("link");
+    const [currentScreen, setCurrentScreen] = useState<"link" | "artist" | "params" | "loading">("link");
     // дальнейшие шаги выполняются в общем компоненте ArtistParams
 
     const validateVKLink = (url: string): boolean => {
@@ -72,16 +72,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     };
 
     const handleGenerate = async () => {
-        setIsValidating(true);
-        setError(null);
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            onClose && onClose();
-        } catch (err) {
-            setError("Ошибка при генерации трека. Попробуйте еще раз.");
-        } finally {
-            setIsValidating(false);
-        }
+
     };
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
