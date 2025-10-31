@@ -39,7 +39,8 @@ function RouteComponent() {
                 flexDir={"column"}
                 w={"full"}
                 alignItems={"center"}
-                gap={4}>
+                gap={4}
+                pb={"11vh"}>
                 <Text w={"11/12"} fontSize={"24px"} color={COLOR.kit.orangeWhite}>Создать трек</Text>
                 <Grid templateColumns="1fr"
                     gap={2}

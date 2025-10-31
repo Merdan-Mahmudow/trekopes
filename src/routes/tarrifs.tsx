@@ -127,7 +127,7 @@ function RouteComponent() {
     ]
 
     return (
-        <Flex flexDir="column" w="full" align="center" gap={4}>
+        <Flex flexDir="column" w="full" align="center" gap={4} pb={"11vh"}>
             <Text w="11/12" fontSize="24px" color={COLOR.kit.orangeWhite}>Создать трек</Text>
 
             <Grid

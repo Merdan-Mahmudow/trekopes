@@ -17,9 +17,9 @@ export const PreLoader = () => {
           style={{fontSize: "24pt", fontWeight: "bold"}}
           animate={{
             textShadow: [
-              `0px 0px 0px ${COLOR.kit.white}` ,
+              `0px 0px 0px #FBEBBB ` ,
               `0px 0px 20px #FBEBBB `,
-              `0px 0px 0px ${COLOR.kit.white}`,
+              `0px 0px 0px #FBEBBB `,
             ],
           }}
           transition={{

@@ -1,5 +1,5 @@
 import { COLOR } from '../../../components/ui/colors'
-import { Button, Grid, GridItem, Box, Text, VStack, HStack } from '@chakra-ui/react'
+import { Button, Grid, GridItem, Dialog, Portal, CloseButton } from '@chakra-ui/react'
 import { useState } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
@@ -11,8 +11,6 @@ import { QuestionModal } from "../../../components/QuestionModal";
 import { questions as allQuestions } from "../../../components/ui/questions";
 import { ResultsComponent } from '../../../routes/questionsFinish'
 import { ArtistParams } from '../ArtistParams'
-import { BrandButton, GrayButton } from '../../ui/button'
-import { useNavigate } from '@tanstack/react-router'
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -61,7 +59,6 @@ export function TextGenerateScreen() {
     const [showResults, setShowResults] = useState(false);
     const [showArtistParams, setShowArtistParams] = useState(false);
     const [showProReminder, setShowProReminder] = useState(false);
-    const navigate = useNavigate();
 
     const buttonData: ChangeButtonProps[] = [
         { icon: <FaRegFaceSmile style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про себя", category: 'self' },
@@ -126,121 +123,106 @@ export function TextGenerateScreen() {
 
     return (
         <>
-                <AnimatePresence mode="wait">
-                    {!selectedCategory ? (
-                        // 1. Экран выбора категории
-                        (<MotionDiv
-                            key="category-list"
-                            initial={{ x: 0, opacity: 1 }}
-                            exit={{ x: -100, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <Grid pt={1} px={"5"} gap={"4px"} w={"full"}>
-                                {buttonData.map((button) => (
-                                    <GridItem key={button.title}>
-                                        <ChangeButton
-                                            icon={button.icon}
-                                            title={button.title}
-                                            category={button.category}
-                                            onClick={() => handleCategorySelect(button.category)}
-                                        />
-                                    </GridItem>
-                                ))}
-                            </Grid>
-                        </MotionDiv>)
-                    ) : showArtistParams ? (
-                        // 3. Экран выбора артиста и параметров
-                        (<MotionDiv
-                            key="artist-params"
-                            initial={{ x: 100, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -100, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <ArtistParams
-                                onBack={() => setShowArtistParams(false)}
-                                onCancel={() => setSelectedCategory(null)}
-                                onGenerate={() => setSelectedCategory(null)}
-                            />
-                        </MotionDiv>)
-                    ) : showResults ? (
-                        // 2. Экран итоговых ответов
-                        (<MotionDiv
-                            key="results-summary"
-                            initial={{ x: 100, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -100, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <ResultsComponent onFinish={handleFinishResults} />
-                        </MotionDiv>)
-                    ) : (
-                        // 1.5. Экран вопросов
-                        (<MotionDiv
-                            key={showProReminder ? 'pro-reminder' : 'question-modal'}
-                            initial={{ x: 100, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: 100, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            {showProReminder ? (
-                                <VStack w="full" alignItems="center">
-                                    <Box
-                                        w="400px"
-                                        maxW="90vw"
-                                        bg={COLOR.kit.darkGray}
-                                        borderRadius="2xl"
-                                        border="1px solid"
-                                        borderColor={COLOR.kit.smoke}
-                                        p={5}
-                                    >
-                                        <VStack alignItems="flex-start" gap={3}>
-                                            <Text fontSize="24px" color={COLOR.kit.orangeWhite}>
-                                                Отличный старт!
-                                            </Text>
-                                            <Text color={COLOR.kit.orangeWhite}>
-                                                Заполнено 3/12, осталось 9 вопросов.
-                                            </Text>
-                                            <Box bg={COLOR.kit.white} color={COLOR.kit.darkGray} p={4} borderRadius="xl" w="full">
-                                                <Text fontWeight="semibold">Гав! Напоминаю</Text>
-                                                <Text>
-                                                    Трек по точным настройкам (жанр, настроение, сценарий) доступен в PRO — 990 ₽.
-                                                </Text>
-                                                <Text mt={2}>
-                                                    В PRO включено 10 подробных треков — выгода составит 60%.
-                                                </Text>
-                                            </Box>
-                                            <HStack w="full" pt={2}>
-                                                <BrandButton onClick={() => { navigate({ to: '/tarrifs' }); setShowProReminder(false); }}>
-                                                    Подробнее
-                                                </BrandButton>
-                                                <GrayButton onClick={() => { setShowProReminder(false); setCurrentIndex((i) => i + 1); }}>
-                                                    Пропустить
-                                                </GrayButton>
-                                            </HStack>
-                                        </VStack>
-                                    </Box>
-                                </VStack>
-                            ) : (
-                                qList && currentQuestion && (
-                                    <QuestionModal
-                                        key={currentQuestion.qNum}
-                                        qNum={currentQuestion.qNum}
-                                        qText={currentQuestion.qText}
-                                        qHolder={currentQuestion.qHolder}
-                                        onNext={handleNext}
-                                        onPrev={handlePrev}
-                                        isFirst={currentIndex === 0}
-                                        isLast={currentIndex === qList.length - 1}
-                                        // Изменено: isLast теперь приводит к переходу на экран итогов
-                                        onBackToCategories={() => setSelectedCategory(null)}
-                                        onFinish={() => setShowResults(true)}
+            <AnimatePresence mode="wait">
+                {!selectedCategory ? (
+                    // 1. Экран выбора категории
+                    (<MotionDiv
+                        key="category-list"
+                        initial={{ x: 0, opacity: 1 }}
+                        exit={{ x: -100, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <Grid pt={1} px={"5"} gap={"4px"} w={"full"}>
+                            {buttonData.map((button) => (
+                                <GridItem key={button.title}>
+                                    <ChangeButton
+                                        icon={button.icon}
+                                        title={button.title}
+                                        category={button.category}
+                                        onClick={() => handleCategorySelect(button.category)}
                                     />
-                                )
-                            )}
-                        </MotionDiv>)
-                    )}
-                </AnimatePresence>
+                                </GridItem>
+                            ))}
+                        </Grid>
+                    </MotionDiv>)
+                ) : showArtistParams ? (
+                    // 3. Экран выбора артиста и параметров
+                    (<MotionDiv
+                        key="artist-params"
+                        initial={{ x: 100, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -100, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <ArtistParams
+                            onBack={() => setShowArtistParams(false)}
+                            onCancel={() => setSelectedCategory(null)}
+                            onGenerate={() => setSelectedCategory(null)}
+                        />
+                    </MotionDiv>)
+                ) : showResults ? (
+                    // 2. Экран итоговых ответов
+                    (<MotionDiv
+                        key="results-summary"
+                        initial={{ x: 100, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -100, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <ResultsComponent onFinish={handleFinishResults} />
+                    </MotionDiv>)
+                ) : (
+                    // 1.5. Экран вопросов
+                    (<MotionDiv
+                        key={'question-modal'}
+                        initial={{ x: 100, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: 100, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {qList && currentQuestion && (
+                            <QuestionModal
+                                key={currentQuestion.qNum}
+                                qNum={currentQuestion.qNum}
+                                qText={currentQuestion.qText}
+                                qHolder={currentQuestion.qHolder}
+                                onNext={handleNext}
+                                onPrev={handlePrev}
+                                isFirst={currentIndex === 0}
+                                isLast={currentIndex === qList.length - 1}
+                                // Изменено: isLast теперь приводит к переходу на экран итогов
+                                onBackToCategories={() => setSelectedCategory(null)}
+                                onFinish={() => setShowResults(true)}
+                            />
+                        )
+                        }
+                    </MotionDiv>)
+                )}
+                    <Dialog.Root open={showProReminder}>
+                        <Portal>
+                            <Dialog.Backdrop />
+                            <Dialog.Positioner>
+                                <Dialog.Content>
+                                    <Dialog.Header>
+                                        <Dialog.Title></Dialog.Title>
+                                    </Dialog.Header>
+                                    <Dialog.Body>
+                                        
+                                    </Dialog.Body>
+                                    <Dialog.Footer>
+                                        <Dialog.ActionTrigger asChild>
+                                            <Button variant="outline">Cancel</Button>
+                                        </Dialog.ActionTrigger>
+                                        <Button>Save</Button>
+                                    </Dialog.Footer>
+                                    <Dialog.CloseTrigger asChild>
+                                        <CloseButton size="sm" />
+                                    </Dialog.CloseTrigger>
+                                </Dialog.Content>
+                            </Dialog.Positioner>
+                        </Portal>
+                    </Dialog.Root>
+            </AnimatePresence>
         </>
     )
 }

@@ -9,40 +9,40 @@ const getTelegramUserId = (): string | undefined => {
 }
 
 // Query функция
-async function getUserQueryFn() {
+async function getChatQueryFn() {
     const userId = getTelegramUserId();
     if (!userId) throw new Error("User ID not available");
-    const response = await request('get', `/get-user/${userId}`);
+    const response = await request('get', `/get-chat/${userId}`);
     return response.data;
 }
 
-export function useUser() {
+export function useChat() {
     const userId = getTelegramUserId();
 
-    const userQuery = useQuery({
-        queryKey: ['user', userId],
-        queryFn: getUserQueryFn,
+    const chatQuery = useQuery({
+        queryKey: ['chat', userId],
+        queryFn: getChatQueryFn,
         enabled: !!userId,
     });
 
     // Старый API для совместимости
     return {
         // Новый API с useQuery
-        user: userQuery,
+        chat: chatQuery,
         
         // Старый API для совместимости
-        getUser: async () => {
-            return getUserQueryFn();
+        getChat: async () => {
+            return getChatQueryFn();
         },
     };
 }
 
 // Отдельный хук для удобства
-export function useUserData() {
+export function useChatData() {
     const userId = getTelegramUserId();
     return useQuery({
-        queryKey: ['user', userId],
-        queryFn: getUserQueryFn,
+        queryKey: ['chat', userId],
+        queryFn: getChatQueryFn,
         enabled: !!userId,
     });
 }

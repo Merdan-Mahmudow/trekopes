@@ -14,8 +14,8 @@ export const Route = createFileRoute('/referral')({
 })
 
 function RouteComponent() {
-    const refLink = "https://t.me/TPEKOllEC_BOT?start=87968768"
     const tg: Telegram = window.Telegram;
+    const refLink = `https://t.me/TPEKOllEC_BOT?start=${tg.WebApp.initDataUnsafe.user?.id}`
     useEffect(() => {
         setDockActive("left")
     }, [])
@@ -31,6 +31,7 @@ function RouteComponent() {
                 w={"full"}
                 alignItems={"center"}
                 py={10}
+                pb={"11vh"}
                 >
                 <Flex 
                 flexDir={"column"}
