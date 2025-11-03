@@ -1,10 +1,10 @@
-import { Flex, Link, Text } from "@chakra-ui/react"
+import { Button, Flex, Float, Grid, Icon, Text } from "@chakra-ui/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Transition } from "framer-motion";
 import { useRef, useEffect } from "react";
 import { BsChatDots, BsQuestionLg } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
-import { FaArrowRightLong } from "react-icons/fa6";
+import { TbExternalLink } from "react-icons/tb";
 
 export interface MessageProps {
   role: "user" | "assistant"
@@ -105,7 +105,7 @@ export function ChatList({ messages }: { messages: MessageProps[] }) {
             style={{ transformOrigin: "bottom left", display: "flex" }}
             className="bubble"
           >
-           { !msg.isHelpBox ? <MessageBox role={msg.role} content={msg.content}/> : msg.content }
+            {!msg.isHelpBox ? <MessageBox role={msg.role} content={msg.content} /> : msg.content}
           </motion.div>
         ))}
       </AnimatePresence>
@@ -116,32 +116,39 @@ export function ChatList({ messages }: { messages: MessageProps[] }) {
 export function MessageHelpBox() {
   return (
     <>
-      <Flex
-        marginBlock={"3"}
-        borderRadius={"2xl"}
-        textAlign={"left"}
-        paddingLeft={"3"}
-        paddingRight={"4"}
-        maxW={["500px", "325px"]}
-        w={"fit-content"}
-        color={"gray.100"}
-        bg={"#242625"}>
+      <Grid marginBlock={3} gap={1}>
         <Flex
-        >
-        <BsChatDots size={"28px"} color={COLOR.brand.orange} style={{position: "relative", top: "-3px", marginRight: "5px"}}/>
-        <Text >
-          В Гав-чате можно спросить совета по треку и получить идеи.
-        </Text>
+          borderRadius={"2xl"}
+          textAlign={"left"}
+          p={"1rem 1.3rem"}
+          maxW={["500px", "325px"]}
+          w={"fit-content"}
+          color={"gray.100"}
+          bg={"#242625"}
+          direction={"column"}
+          gap={3}>
+          <Flex>
+            <BsChatDots size={"28px"} color={COLOR.brand.orange} style={{ position: "relative", top: "-3px", marginRight: "5px" }} />
+            <Text >
+              В Гав-чате можно спросить совета по треку и получить идеи.
+            </Text>
+          </Flex>
 
-        <BsQuestionLg size={"22px"} color={COLOR.brand.orange} style={{position: "relative", marginRight: "5px"}}/>
-        <Text >
-          Нужна помощь? 
-        </Text>
-        <FaArrowRightLong size={"18px"} color={COLOR.brand.orange} style={{position: "relative", marginRight: "5px", top: "2px", marginLeft: "5px"}}/>
-        <Link href="https:/t.me/Help_llec_bot" color={COLOR.brand.orange}> GAVHELP
-        </Link>
-      </Flex>
-      </Flex>
+          <Flex>
+            <BsQuestionLg size={"22px"} color={COLOR.brand.orange} style={{ position: "relative", marginRight: "5px" }} />
+            <Text >
+              Нужна помощь?
+            </Text>
+          </Flex>
+
+        </Flex>
+        <Button color={COLOR.kit.orange} onClick={() => window.location.href = "tg://resolve?domain=Help_llec_bot"} rounded={"xl"} bg={"whiteAlpha.300"} letterSpacing={1} size={"lg"}>
+          GAVHELP
+          <Float offsetX={2.5} offsetY={2.5}>
+            <Icon color={"white"} children={<TbExternalLink style={{width: "13px", height: "13px"}} />}/>
+          </Float>
+          </Button>
+      </Grid>
     </>
   );
 }

@@ -21,18 +21,17 @@ export function Layout() {
 
         // initial check
         updateVisible();
-
     }, [path.pathname]);
 
     const templateRows = `${isHeaderVisible ? "85px " : ""}1fr${isDockVisible ? " auto" : ""}`;
 
     return (
         <>
-            <Grid templateRows={templateRows} h={"100dvh"} bg={COLOR.bg.chakra.subtle} p={0} m={0} >
+            <Grid templateRows={templateRows} h={"100dvh"} bg={COLOR.bg.chakra.subtle} p={0} m={0} transition={"all 2s linear"} >
                 {isHeaderVisible && <Header />}
                 {/* Оборачиваем Outlet, чтобы он получал ограничение 1fr (minH=0) */}
                 <Box minH={0}>
-                  <Outlet />
+                    <Outlet />
                 </Box>
                 {isDockVisible && <NavBar />}
             </Grid>

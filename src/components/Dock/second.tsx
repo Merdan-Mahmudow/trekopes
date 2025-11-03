@@ -5,11 +5,18 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { MusicIcon } from "../../assets/svg/music";
 import { COLOR } from "../ui/colors";
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+
 const MotionPath = motion.path;
 
 const NavBar = () => {
-const [active, setActive] = useState<"left" | "center" | "right">("left");
+  const path = useLocation()
+  const [active, setActive] = useState<"left" | "center" | "right" >(
+    path.pathname == "/referral" ? "left" :
+      path.pathname == "/generate" ? "center" :
+        path.pathname == "/profile" ? "right": "left"
+  );
+
   const [convexParams, setConvexParams] = useState({ centerX: 200, width: 95, height: 15 });
   const [svgWidth, setSvgWidth] = useState(400);
   const navigate = useNavigate()
@@ -69,7 +76,7 @@ const [active, setActive] = useState<"left" | "center" | "right">("left");
   }
   return (
     <Box
-       w="100vw"
+      w="100vw"
       h="100px"
       position="fixed"
       bottom={0}
@@ -100,25 +107,25 @@ const [active, setActive] = useState<"left" | "center" | "right">("left");
           aria-label="Users"
           variant="ghost"
           color={active === "left" ? "orange.400" : "whiteAlpha.700"}
-          onClick={() => handleClick("left", {to: '/referral'})}
+          onClick={() => handleClick("left", { to: '/referral' })}
         >
-          <UsersIcon stroke={active === "left" ? COLOR.brand.orange : "white"}/>
+          <UsersIcon stroke={active === "left" ? COLOR.brand.orange : "white"} />
         </IconButton>
         <IconButton
           aria-label="Paw"
           variant="ghost"
           _hover={{ bg: "none" }}
           color={active === "center" ? "orange.400" : "whiteAlpha.700"}
-          onClick={() => handleClick("center", {to: '/generate'})}
+          onClick={() => handleClick("center", { to: '/generate' })}
         >
-          <PawIcon size={"26px"} fill={active === "center" ? COLOR.brand.orange : "white"}/>
+          <PawIcon size={"26px"} fill={active === "center" ? COLOR.brand.orange : "white"} />
         </IconButton>
         <IconButton
           aria-label="Music"
           variant="ghost"
-          onClick={() => handleClick("right", {to: '/profile'})}
+          onClick={() => handleClick("right", { to: '/profile' })}
         >
-          <MusicIcon size={"24px"} fill={active === "right" ? COLOR.brand.orange : "white"}/>
+          <MusicIcon size={"24px"} fill={active === "right" ? COLOR.brand.orange : "white"} />
         </IconButton>
       </Flex>
     </Box>

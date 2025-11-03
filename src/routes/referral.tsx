@@ -22,7 +22,7 @@ function RouteComponent() {
     const handleSend = () => {
         const sendLink = `https://t.me/share/url?url=${encodeURIComponent(refLink)}`
         tg.WebApp.openTelegramLink(sendLink)
-        
+
     }
     return (
         <>
@@ -32,20 +32,20 @@ function RouteComponent() {
                 alignItems={"center"}
                 py={10}
                 pb={"11vh"}
-                >
-                <Flex 
-                flexDir={"column"}
+            >
+                <Flex
+                    flexDir={"column"}
                     bg={COLOR.kit.darkGray}
                     w={"11/12"}
                     px={6}
                     py={7}
                     textAlign={"center"}
                     borderRadius="2xl"
-                    
+
                     gap={3}>
                     <Box>
                         <Text color={COLOR.kit.orangeWhite} fontSize={"24px"}>Пригласи друга</Text>
-                    <Text>и вы оба получите по бесплатному треку</Text>
+                        <Text>и вы оба получите по бесплатному треку</Text>
                     </Box>
 
                     <Flex
@@ -93,7 +93,7 @@ function RouteComponent() {
                         borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
                             <Flex alignItems="center" gap={3}>
-                                <Box w={"45px"} h={"45px"} bg={COLOR.kit.iconBg} rounded={"full"}></Box>
+                                <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />
                                 <Text fontSize="lg">За 10 друзей - PRO</Text>
                             </Flex>
                             <MdLockOpen color="gray.500" />
@@ -105,8 +105,7 @@ function RouteComponent() {
                         borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
                             <Flex alignItems="center" gap={3}>
-                                <Box w={"45px"} h={"45px"} bg={COLOR.kit.iconBg} rounded={"full"}></Box>
-                                <Text fontSize="lg">За 20 друзей - 20% с оплат</Text>
+                                <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />                                <Text fontSize="lg">За 20 друзей - 20% с оплат</Text>
                             </Flex>
                             <MdLockOpen color="gray.500" />
                         </Flex>
@@ -117,8 +116,7 @@ function RouteComponent() {
                         borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
                             <Flex alignItems="center" gap={3}>
-                                <Box w={"45px"} h={"45px"} bg={COLOR.kit.iconBg} rounded={"full"}></Box>
-                                <Text fontSize="lg">За 50 друзей - Partner PRO</Text>
+                                <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />                                <Text fontSize="lg">За 50 друзей - Partner PRO</Text>
                             </Flex>
                             <MdLockOpen color="gray.500" />
                         </Flex>

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Box, Flex, Input as ChakraInput, Button, Icon } from "@chakra-ui/react";
 import { BsSendFill } from "react-icons/bs";
+import { COLOR } from "../ui/colors";
 
 export interface ChatInputProps {
   onSend: (content: string) => void;
@@ -13,9 +14,12 @@ export function ChatInput({
   placeholder = "Введите сообщение...",
   isDisabled = false,
 }: ChatInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const [value, setValue] = useState("");
 
   const send = () => {
+    inputRef.current?.focus()
     const trimmed = value.trim();
     if (!trimmed || isDisabled) return;
     onSend(trimmed);
@@ -27,6 +31,7 @@ export function ChatInput({
       <Flex gap={2} align="center">
         <ChakraInput
           value={value}
+          ref={inputRef}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -37,17 +42,20 @@ export function ChatInput({
           placeholder={placeholder}
           bg="#0f1111"
           color="white"
-          borderRadius="full"
-          size={"md"}
+          rounded={"2xl"}
+          size={"lg"}
           fontSize="16px"
+          h={"58px"}
+          _focus={{ borderColor: COLOR.kit.orange }}
         />
         <Button
           aria-label="Send"
           onClick={send}
           disabled={isDisabled}
-          size="md"
+          h={"58px"}
+          w={"70px"}
           colorScheme="green"
-          rounded={"full"}
+          rounded={"2xl"}
           bg={"orange.500"}
         >
           <Icon as={BsSendFill} color={"white"} />
