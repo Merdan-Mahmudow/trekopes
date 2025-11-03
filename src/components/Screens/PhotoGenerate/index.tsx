@@ -33,26 +33,36 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     toaster.create({ description: message, type: "error" });
   };
 
-  // ✅ Проверка и загрузка файла
-  const handleFileValidation = (file: File) => {
-    if (!file) return;
+ // ✅ Проверка и загрузка файла
+const handleFileValidation = (file: File) => {
+  if (!file) return;
 
-    const allowedTypes = ["image/png", "image/jpeg"];
-    if (!allowedTypes.includes(file.type)) {
-      return showError("Неверный тип файла. Выберите .png или .jpg");
-    }
+  const allowedTypes = ["image/png", "image/jpeg"];
+  const maxSize = 5 * 1024 * 1024; // 5MB
 
-    if (file.size > 5 * 1024 * 1024) {
-      return showError("Файл слишком большой (макс. 5 МБ)");
-    }
+  if (!allowedTypes.includes(file.type)) {
+    showError("Неверный тип файла. Выберите .png или .jpg");
+    return;
+  }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImgSrc(reader.result as string);
-      setScreen("preview");
-    };
-    reader.readAsDataURL(file);
+  if (file.size > maxSize) {
+    showError("Файл слишком большой (макс. 5 МБ)");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    setImgSrc(reader.result as string);
+    setScreen("preview");
   };
+  reader.onerror = () => showError("Ошибка при чтении файла");
+  reader.readAsDataURL(file);
+
+  // ✅ сбрасываем input, чтобы можно было выбрать тот же файл ещё раз
+  if (inputRef.current) {
+    inputRef.current.value = "";
+  }
+};
 
   // ✅ Drag & Drop
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
