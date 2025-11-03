@@ -13,9 +13,9 @@ type Artist = {
 
 export type GenerationParams = {
     tempo: number;
-    mood: string;
-    style: string;
-    voice: 'male' | 'female' | 'both';
+    mood?: string | null;
+    style?: string | null;
+    voice?: 'male' | 'female' | 'both' | null;
 };
 
 type ArtistParamsProps = {
@@ -35,9 +35,9 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
     const [isLoading, setIsLoading] = useState(false);
     const [generationParams, setGenerationParams] = useState<GenerationParams>({
         tempo: 105,
-        mood: "happy",
-        style: "pop",
-        voice: 'both'
+        mood: null,
+        style: null,
+        voice: null
     });
     const TEMPO_COLORS = {
         slow: (generationParams.tempo >= 60  && generationParams.tempo <= 90) ? COLOR.kit.orange : COLOR.kit.smoke,
@@ -86,7 +86,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                         borderBottom={activeTab === "mode" ? `2px solid ${COLOR.kit.orange}` : "2px solid transparent"}
                         pb={2}
                     >
-                        <Text color={activeTab === "mode" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "mode" ? "bold" : "normal"}>РЕЖИМ</Text>
+                        <Text color={activeTab === "mode" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "mode" ? "bold" : "normal"}>ПО СТИЛЮ</Text>
                     </Box>
                     <Box
                         cursor="pointer"
@@ -112,7 +112,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                             _focus={{ borderColor: COLOR.kit.orange, boxShadow: "0 0 0 1px #F59A0E" }}
                         />
 
-                        <Grid templateColumns="repeat(4, 1fr)" gap={4} w="full">
+                        <Grid templateColumns="repeat(3, 1fr)" gap={4}>
                             {filteredArtists.map((artist) => (
                                 <GridItem key={artist.id}>
                                     <VStack
