@@ -13,3 +13,13 @@ body{
 .bicubic {
     font-family: "Bicubic", sans-serif;
 }
+
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  visibility: hidden;
+}
+
+input[type="range"]::-moz-range-thumb {
+  visibility: hidden;
+}

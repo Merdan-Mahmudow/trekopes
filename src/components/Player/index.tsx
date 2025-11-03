@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, Flex, Button, Text } from '@chakra-ui/react'
+import { Box, Flex, Button, Text, VStack } from '@chakra-ui/react'
 import { BsPlayFill, BsPauseFill } from 'react-icons/bs'
 import store from '../../store'
 import { useStore } from '@tanstack/react-store'
@@ -134,9 +134,10 @@ export function Player() {
   }, [])
 
   return (
-    <Box position="fixed" bottom="18px" left="18px" zIndex={1200} bg="rgba(0,0,0,0.6)" p={3} borderRadius="md" display={!playerState.isVisible ? "none" : "block"}>
+    <VStack>
+      <Box position="fixed" bottom="18px" w={"90vw"} zIndex={1200} bg="rgba(51, 49, 49, 1)" p={3} borderRadius="2xl" display={!playerState.isVisible ? "none" : "block"}>
       <Flex align="center" gap={3} minW="260px">
-        <Button onClick={toggle} aria-label={isPlaying ? 'Pause' : 'Play'}>
+        <Button onClick={toggle} w={"50px"} h={"50px"} variant={"surface"} rounded={"full"}>
           {isPlaying ? <BsPauseFill /> : <BsPlayFill />}
         </Button>
         <Box flex={1}>
@@ -144,6 +145,7 @@ export function Player() {
             <input
               aria-label="player-slider"
               type="range"
+
               min={0}
               step={0.1}
               max={Math.max(duration || 0, 0)}
@@ -181,6 +183,7 @@ export function Player() {
         </Box>
       </Flex>
     </Box>
+    </VStack>
   )
 }
 

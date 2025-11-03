@@ -87,9 +87,10 @@ const NavBar = () => {
       <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} 100`} preserveAspectRatio="none">
         <MotionPath
           d={createPath(positions[active])}
-          fill="#282828"
+          fill={COLOR.kit.darkGray}
           animate={{ d: createPath(positions[active]) }}
           transition={{ duration: 0.15, ease: "easeInOut" }}
+          vectorEffect={""}
         />
       </svg>
 

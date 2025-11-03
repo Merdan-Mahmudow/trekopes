@@ -27,7 +27,7 @@ export function Layout() {
 
     return (
         <>
-            <Grid templateRows={templateRows} h={"100dvh"} bg={COLOR.bg.chakra.subtle} p={0} m={0} transition={"all 2s linear"} >
+            <Grid templateRows={templateRows} h={"100dvh"} bg={COLOR.bg.chakra.subtle} p={0} m={0} >
                 {isHeaderVisible && <Header />}
                 {/* Оборачиваем Outlet, чтобы он получал ограничение 1fr (minH=0) */}
                 <Box minH={0}>

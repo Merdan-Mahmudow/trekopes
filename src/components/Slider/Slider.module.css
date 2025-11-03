@@ -1,0 +1,72 @@
+/* Slider.module.css */
+.scope {
+  /* локальные CSS-переменные только для слайдера */
+  --swiper-theme-color: #ff6a00;
+  --swiper-navigation-size: 28px;
+}
+
+.root {
+  width: 100%;
+  height: 400px;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* базовая раскладка Swiper — только внутри .scope */
+.scope :global(.swiper) { width: 100%; height: 100%; }
+.scope :global(.swiper-wrapper) { display: flex; }
+.scope :global(.swiper-slide) {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* твой вид слайдов */
+.slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6a00, #ee0979);
+}
+
+/* навигация */
+.scope :global(.swiper-button-next),
+.scope :global(.swiper-button-prev) {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;                 /* иконки стрелок */
+  background: rgba(0,0,0,.25);
+  border-radius: 50%;
+  z-index: 10;
+  cursor: pointer;
+  transition: opacity .2s ease;
+}
+.scope :global(.swiper-button-next) { right: 12px; }
+.scope :global(.swiper-button-prev) { left: 12px; }
+.scope :global(.swiper-button-next:hover),
+.scope :global(.swiper-button-prev:hover) { opacity: .85; }
+
+/* пагинация */
+.scope :global(.swiper-pagination) {
+  position: absolute;
+  left: 0; right: 0; bottom: 12px;
+  display: flex; gap: 8px; justify-content: center;
+  z-index: 10;
+}
+.scope :global(.swiper-pagination-bullet) {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff; opacity: .6; cursor: pointer;
+}
+.scope :global(.swiper-pagination-bullet-active) {
+  background: var(--swiper-theme-color); opacity: 1;
+}
