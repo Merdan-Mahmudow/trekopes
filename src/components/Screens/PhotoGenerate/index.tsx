@@ -8,12 +8,6 @@ import Webcam from "react-webcam";
 import { MdCameraswitch, MdPhotoCamera } from "react-icons/md";
 import { Toaster, toaster } from "../../../components/ui/toaster";
 
-const videoConstraints = {
-  width: 420,
-  height: 420,
-  facingMode: "user",
-};
-
 export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
   const [screen, setScreen] = useState<
     "select" | "camera" | "preview" | "artistParams"
@@ -22,10 +16,18 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user"); // ✅ новое состояние
+
   const webcamRef = useRef<Webcam>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ Унифицированная функция показа ошибки
+  const videoConstraints = {
+    width: 420,
+    height: 420,
+    facingMode,
+  };
+
+  // ✅ Универсальная функция для ошибок
   const showError = (message: string) => {
     setError(message);
     toaster.create({ description: message, type: "error" });
@@ -60,13 +62,12 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     if (file) handleFileValidation(file);
   }, []);
 
-  // ✅ File input
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFileValidation(file);
   };
 
-  // ✅ Захват фото с камеры
+  // ✅ Снимок
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
@@ -75,7 +76,12 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     }
   }, []);
 
-  // ✅ Переход к ArtistParams
+  // ✅ Переключение между камерами
+  const toggleCamera = () => {
+    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+  };
+
+  // ✅ ArtistParams
   if (screen === "artistParams") {
     return (
       <VStack gap={4} w="full" p={4}>
@@ -88,7 +94,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     );
   }
 
-  // ✅ Предпросмотр фото
+  // ✅ Preview
   if (screen === "preview") {
     return (
       <VStack gap={6} p={6} w="full">
@@ -136,12 +142,11 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
         >
           <Webcam
             audio={false}
+            mirrored={false}
             ref={webcamRef}
             screenshotFormat="image/jpeg"
-            width="100%"
-            height="100%"
             videoConstraints={videoConstraints}
-            style={{ objectFit: "cover" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         </Box>
 
@@ -158,7 +163,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
             <Icon as={MdPhotoCamera} mr={2} />
             Сделать снимок
           </Button>
-          <Button variant="ghost">
+          <Button variant="ghost" onClick={toggleCamera}>
             <Icon as={MdCameraswitch} boxSize={8} />
           </Button>
         </Flex>
@@ -166,7 +171,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     );
   }
 
-  // ✅ Основной экран выбора
+  // ✅ Главный экран
   return (
     <VStack gap={4} p={6} w="full" color="white">
       <Heading size="lg">Песня по фото</Heading>
