@@ -45,14 +45,15 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
         fast: (generationParams.tempo >= 121 && generationParams.tempo <= 180) ? COLOR.kit.orange : COLOR.kit.smoke,
     }
     const artists: Artist[] = useMemo(() => ([
-        { id: "1", name: "Мияги", avatar: "👨‍🎤" },
-        { id: "2", name: "Скриптонит", avatar: "🎵" },       
-        { id: "3", name: "Zivert", avatar: "🎶" },
-        { id: "4", name: "Клава Кока", avatar: "🎤" },
-        { id: "5", name: "ICEGERGERT", avatar: "🎸" },
-        { id: "6", name: "Макс Корж", avatar: "🎹" },
-        { id: "7", name: "Баста", avatar: "🎺" },
-        { id: "8", name: "KSON", avatar: "🎻" },
+        { id: "1", name: "Не выбрано", avatar: "❔" },
+        { id: "2", name: "Мияги", avatar: "👨‍🎤" },
+        { id: "3", name: "Скриптонит", avatar: "🎵" },       
+        { id: "4", name: "Zivert", avatar: "🎶" },
+        { id: "5", name: "Клава Кока", avatar: "🎤" },
+        { id: "6", name: "ICEGERGERT", avatar: "🎸" },
+        { id: "7", name: "Макс Корж", avatar: "🎹" },
+        { id: "8", name: "Баста", avatar: "🎺" },
+        { id: "9", name: "KSON", avatar: "🎻" },
     ]), []);
 
     const filteredArtists = useMemo(() => artists.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())), [artists, searchQuery]);
@@ -86,7 +87,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                         borderBottom={activeTab === "mode" ? `2px solid ${COLOR.kit.orange}` : "2px solid transparent"}
                         pb={2}
                     >
-                        <Text color={activeTab === "mode" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "mode" ? "bold" : "normal"}>ПО СТИЛЮ</Text>
+                        <Text color={activeTab === "mode" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "mode" ? "bold" : "normal"}>ПО АРТИСТУ</Text>
                     </Box>
                     <Box
                         cursor="pointer"

@@ -11,12 +11,12 @@ const MotionPath = motion.path;
 
 const NavBar = () => {
   const path = useLocation()
-  const [active, setActive] = useState<"left" | "center" | "right" >(
-    path.pathname == "/referral" ? "left" :
+  const [active, setActive] = useState<"left" | "center" | "right">("left");
+  useEffect(() => {
+    setActive(path.pathname == "/referral" ? "left" :
       path.pathname == "/generate" ? "center" :
-        path.pathname == "/profile" ? "right": "left"
-  );
-
+        path.pathname == "/profile" ? "right" : "left")
+  }, [path.pathname, active])
   const [convexParams, setConvexParams] = useState({ centerX: 200, width: 95, height: 15 });
   const [svgWidth, setSvgWidth] = useState(400);
   const navigate = useNavigate()
@@ -84,13 +84,13 @@ const NavBar = () => {
       justifyContent="center"
       alignItems="center"
     >
-      <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} 100`} preserveAspectRatio="none">
+      <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} 100`} preserveAspectRatio="none" overflow={"visible"}>
         <MotionPath
           d={createPath(positions[active])}
           fill={COLOR.kit.darkGray}
           animate={{ d: createPath(positions[active]) }}
           transition={{ duration: 0.15, ease: "easeInOut" }}
-          vectorEffect={""}
+          style={{filter: "drop-shadow(0px 0px 7px rgba(0, 0, 0, 1))", overflow: "visible"}}
         />
       </svg>
 

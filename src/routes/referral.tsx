@@ -1,19 +1,23 @@
 import { COLOR } from '../components/ui/colors'
-import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem } from '@chakra-ui/react'
+import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem} from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
-import { MdLockOpen } from 'react-icons/md'
+import { SiGoogletasks } from "react-icons/si";
 import { BrandButton } from '../components/ui/button'
 import type { Telegram } from 'telegram-web-app'
 import { RiTelegram2Line } from 'react-icons/ri'
 import { useEffect } from 'react'
 import { setDockActive } from '../store'
 import { BsPeople } from 'react-icons/bs'
+import { LuLockKeyhole } from "react-icons/lu";
+
+
 
 export const Route = createFileRoute('/referral')({
     component: RouteComponent,
 })
 
 function RouteComponent() {
+
     const tg: Telegram = window.Telegram;
     const refLink = `https://t.me/TPEKOllEC_BOT?start=${tg.WebApp.initDataUnsafe.user?.id}`
     useEffect(() => {
@@ -24,6 +28,7 @@ function RouteComponent() {
         tg.WebApp.openTelegramLink(sendLink)
 
     }
+
     return (
         <>
             <Flex
@@ -73,7 +78,7 @@ function RouteComponent() {
                     w="11/12"
                     mt={6}>
                     <GridItem
-                        bg={COLOR.kit.darkGray}
+                        bg={COLOR.kit.smoke}
                         p={4}
                         borderRadius="2xl">
                         <Flex alignItems="center" justifyContent="space-between">
@@ -81,10 +86,10 @@ function RouteComponent() {
                                 <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />
                                 <Box>
                                     <Text fontSize="lg">За 1 друга - 1 лапка</Text>
-                                    <Text color="gray.500" fontSize="sm">*за последующих в случае оплаты</Text>
+                                    <Text color="gray.200" fontSize="sm">*за последующих в случае оплаты</Text>
                                 </Box>
                             </Flex>
-                            <MdLockOpen color="gray.500" />
+                           <SiGoogletasks size={20} fill="#25d130ff" />
                         </Flex>
                     </GridItem>
                     <GridItem
@@ -96,7 +101,7 @@ function RouteComponent() {
                                 <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />
                                 <Text fontSize="lg">За 10 друзей - PRO</Text>
                             </Flex>
-                            <MdLockOpen color="gray.500" />
+                            <LuLockKeyhole size={20} color="white" />
                         </Flex>
                     </GridItem>
                     <GridItem
@@ -107,7 +112,7 @@ function RouteComponent() {
                             <Flex alignItems="center" gap={3}>
                                 <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />                                <Text fontSize="lg">За 20 друзей - 20% с оплат</Text>
                             </Flex>
-                            <MdLockOpen color="gray.500" />
+                            <LuLockKeyhole size={20} color="white" />
                         </Flex>
                     </GridItem>
                     <GridItem
@@ -118,11 +123,12 @@ function RouteComponent() {
                             <Flex alignItems="center" gap={3}>
                                 <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />                                <Text fontSize="lg">За 50 друзей - Partner PRO</Text>
                             </Flex>
-                            <MdLockOpen color="gray.500" />
+                            <LuLockKeyhole size={20} color="white" />
                         </Flex>
                     </GridItem>
                 </Grid>
             </Flex>
+
 
         </>
     )

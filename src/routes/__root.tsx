@@ -1,7 +1,6 @@
 import { createRootRoute } from '@tanstack/react-router'
 
 import { Layout } from '../components/Layout';
-import Player from '../components/Player';
 import { useEffect, useState } from 'react';
 import type { Telegram } from "telegram-web-app";
 import { COLOR } from '../components/ui/colors';
@@ -45,7 +44,6 @@ function RootComponent() {
     {isPreload ? <PreLoader />
         : <>
       <Layout />
-      <Player />
       </>
       }
     </>

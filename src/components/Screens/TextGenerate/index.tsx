@@ -1,5 +1,5 @@
 import { COLOR } from '../../../components/ui/colors'
-import { Button, Grid, GridItem, Dialog, Portal, CloseButton } from '@chakra-ui/react'
+import { Box, Button, Grid, GridItem, Text } from '@chakra-ui/react'
 import { useState } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
@@ -11,6 +11,8 @@ import { QuestionModal } from "../../../components/QuestionModal";
 import { questions as allQuestions } from "../../../components/ui/questions";
 import { ResultsComponent } from '../../../routes/questionsFinish'
 import { ArtistParams } from '../ArtistParams'
+import { BrandButton, GrayButton } from '../../../components/ui/button'
+import { DiaologWindow } from '../../../components/Dialog'
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -120,7 +122,9 @@ export function TextGenerateScreen() {
     const handleCategorySelect = (category: string) => {
         setSelectedCategory(category);
     };
-
+    const handleCloseDialog = () => {
+        setShowProReminder(false)
+    }
     return (
         <>
             <AnimatePresence mode="wait">
@@ -198,31 +202,37 @@ export function TextGenerateScreen() {
                         }
                     </MotionDiv>)
                 )}
-                    <Dialog.Root open={showProReminder}>
-                        <Portal>
-                            <Dialog.Backdrop />
-                            <Dialog.Positioner>
-                                <Dialog.Content>
-                                    <Dialog.Header>
-                                        <Dialog.Title></Dialog.Title>
-                                    </Dialog.Header>
-                                    <Dialog.Body>
-                                        
-                                    </Dialog.Body>
-                                    <Dialog.Footer>
-                                        <Dialog.ActionTrigger asChild>
-                                            <Button variant="outline">Cancel</Button>
-                                        </Dialog.ActionTrigger>
-                                        <Button>Save</Button>
-                                    </Dialog.Footer>
-                                    <Dialog.CloseTrigger asChild>
-                                        <CloseButton size="sm" />
-                                    </Dialog.CloseTrigger>
-                                </Dialog.Content>
-                            </Dialog.Positioner>
-                        </Portal>
-                    </Dialog.Root>
+                    
             </AnimatePresence>
+                        <DiaologWindow
+                open={showProReminder}
+                footer={(
+                    <>
+                        <Grid gridTemplateColumns={"1fr 1fr"} w={"full"}>
+                            <GrayButton w='full' onClick={() => {setShowProReminder(false)}}>Пропустить</GrayButton>
+                            <BrandButton w='full'>Купить PRO</BrandButton>
+                        </Grid>
+                    </>
+                )}
+                onOpenChange={handleCloseDialog}
+            >
+                <Box
+                    borderRadius="md"
+                    fontSize="md"
+                >
+                    <Text fontWeight="bolder" textAlign={"center"} letterSpacing={1} textTransform={"uppercase"} color={COLOR.kit.orange} fontSize={"lg"} mb={2}>
+                        Гав! Напоминаю
+                    </Text>
+                <Text fontSize={"20px"} color={COLOR.kit.orangeWhite} pb={3} pt={3}>Отличный старт!</Text>
+                    <Text>
+                        Трек по точным настройкам (жанр, настроение, сценарий) доступен в <b>PRO</b> — 990 ₽.
+                    </Text>
+
+                    <Text mt={1}>
+                        В PRO включено 10 подробных треков — выгода составит <b>60%</b>.
+                    </Text>
+                </Box>
+            </DiaologWindow>
         </>
     )
 }

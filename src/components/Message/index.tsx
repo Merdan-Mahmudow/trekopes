@@ -128,14 +128,14 @@ export function MessageHelpBox() {
           direction={"column"}
           gap={3}>
           <Flex>
-            <BsChatDots size={"28px"} color={COLOR.brand.orange} style={{ position: "relative", top: "-3px", marginRight: "5px" }} />
+            <BsChatDots size={"28px"} color={COLOR.brand.orange} style={{ position: "relative", top: "-1px", marginRight: "5px" }} />
             <Text >
               В Гав-чате можно спросить совета по треку и получить идеи.
             </Text>
           </Flex>
 
           <Flex>
-            <BsQuestionLg size={"22px"} color={COLOR.brand.orange} style={{ position: "relative", marginRight: "5px" }} />
+            <BsQuestionLg size={"22px"} color={COLOR.brand.orange} style={{ position: "relative", top: "1px", marginRight: "5px" }} />
             <Text >
               Нужна помощь?
             </Text>

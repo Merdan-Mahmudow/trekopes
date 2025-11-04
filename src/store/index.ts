@@ -6,6 +6,11 @@ const store = new Store({
     isVisible: false,
     isPlaying: false,
     currentTrackId: null as string | null,
+    queue: [] as Array<{ id: string; src: string; title?: string; artist?: string; cover?: string; duration?: number }>,
+    currentIndex: -1,
+    title: undefined as string | undefined,
+    artist: undefined as string | undefined,
+    cover: undefined as string | undefined,
   },
   dock: {
     active: "" as "left" | "center" | "right"

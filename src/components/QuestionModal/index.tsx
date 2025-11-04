@@ -120,7 +120,7 @@ export function QuestionModal({
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.5, ease: "linear" }}
-                rounded={"2xl"}
+                px={4}
                 placeSelf={"center"}
                 w={"400px"}
                 templateRows={"1fr 50px"}

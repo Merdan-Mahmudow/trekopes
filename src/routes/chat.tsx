@@ -15,6 +15,7 @@ function RouteComponent() {
   const tg: Telegram = window.Telegram;
   const [messages, addMessage] = useState<MessageProps[]>([])
   const navigate = useNavigate()
+
   useEffect(() => {
     setTimeout(() => addMessage(prev => [...prev, { role: "assistant", content: <MessageHelpBox />, isHelpBox: true }]), 725)
   }, [addMessage])
@@ -36,7 +37,7 @@ function RouteComponent() {
   }
   return <>
     <Grid
-      templateRows={"70px 1fr 83px"}
+      templateRows={"70px 1fr 70px"}
       h="100%">
       <Flex
         bg={"gray.800"}

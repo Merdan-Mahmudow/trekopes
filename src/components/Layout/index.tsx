@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Header from "../Header";
 import { COLOR } from "../ui/colors";
 import NavBar from "../Dock/second";
+import Player from "../Player";
 
 export function Layout() {
     const path = useLocation()
@@ -23,12 +24,17 @@ export function Layout() {
         updateVisible();
     }, [path.pathname]);
 
-    const templateRows = `${isHeaderVisible ? "85px " : ""}1fr${isDockVisible ? " auto" : ""}`;
+    const templateRows = `${isHeaderVisible ? "85px auto " : ""}1fr${isDockVisible ? " auto" : ""}`;
 
     return (
         <>
             <Grid templateRows={templateRows} h={"100dvh"} bg={COLOR.bg.chakra.subtle} p={0} m={0} >
-                {isHeaderVisible && <Header />}
+                {isHeaderVisible && (
+                    <>
+                        <Header />
+                        <Player />
+                    </>
+                )}
                 {/* Оборачиваем Outlet, чтобы он получал ограничение 1fr (minH=0) */}
                 <Box minH={0}>
                     <Outlet />

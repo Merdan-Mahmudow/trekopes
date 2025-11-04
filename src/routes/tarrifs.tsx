@@ -1,3 +1,5 @@
+import IconMicrophone from '../assets/svg/microphone'
+import IconKorona from '../assets/svg/korona'
 import { COLOR } from '../components/ui/colors'
 import {
     Box,
@@ -9,10 +11,11 @@ import {
     Badge,
     Stack,
     List,
-    Image,
     Float,
 } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
+import IconNote from '../assets/svg/music1'
 
 export const Route = createFileRoute('/tarrifs')({
     component: RouteComponent,
@@ -24,8 +27,9 @@ type Tariff = {
     features: string[]
     price: number
     isActive: boolean
-    image?: string
+    image?: ReactNode
     isPopular?: boolean
+    personal?: boolean
 }
 
 function formatPriceRUB(value: number) {
@@ -33,7 +37,7 @@ function formatPriceRUB(value: number) {
 }
 
 function TariffCard({ tariff }: { tariff: Tariff }) {
-    const { title, features, price, isActive, isPopular, image } = tariff
+    const { title, features, price, isActive, isPopular, image, personal } = tariff
     return (
         <GridItem
             bg={COLOR.kit.darkGray}
@@ -47,23 +51,32 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
             _hover={{ transform: 'translateY(-2px)' }}
         >
             {isPopular && (
-                <Float placement={"top-start"} offsetX={10}>
+                <Float placement={"top-start"} offsetX={20}>
                     <Badge
                         colorScheme="orange"
+                        bg={"red.500"}
                     >
-                        Хит
+                        Популярное
                     </Badge>
                 </Float>
             )}
-
+            {personal && (
+                <Float placement={"top-start"} offsetX={20}>
+                    <Badge
+                        colorScheme="orange"
+                    >
+                        Перcональный менеджер
+                    </Badge>
+                </Float>
+            )}
             <Flex gap={4} align="center">
-                <Box flexShrink={0} w="110px" h="110px" bg="gray.700" borderRadius="md" overflow="hidden">
+                <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={'orange.600'} borderRadius="2xl" overflow="hidden">
                     {image ? (
-                        <Image src={image} alt={title} w="100%" h="100%" objectFit="cover" />
+                        image
                     ) : (
                         <Box w="100%" h="100%" />
                     )}
-                </Box>
+                </Flex>
 
                 <Stack w="full">
                     <Flex justifyContent={"space-between"}>
@@ -72,7 +85,7 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
                     </Flex>
                     <List.Root>
                         {features.map((feature) => (
-                            <List.Item key={feature}>
+                            <List.Item key={feature} _marker={{ color: "transparent" }}>
                                 <Text color={COLOR.kit.smoke} fontSize="sm">{feature}</Text>
                             </List.Item>
                         ))}
@@ -87,42 +100,45 @@ function RouteComponent() {
     const TARIFFS: Tariff[] = [
         {
             id: 'track-1',
-            title: '1 трек',
+            title: 'TRACK',
             features: [
-                '1 генерация только в Telegram-боте',
-                'Ввод: голос, голосовое сообщение или текст',
-                'Свободный формат: стиль, настроение; автонаписание текста',
+                '1 генерация в боте',
+                'Выбирай стиль/настроение, говори трекопсу - он сделает',
+                'голосовым или текстом',
+                'Трекопес напишет текст',
             ],
             price: 250,
             isActive: false,
-            image: '',
+            image: <IconNote width={67.5} />,
             isPopular: false,
         },
         {
             id: 'pro',
             title: 'PRO',
             features: [
-                '10 PRO-треков, открыт весь функционал',
-                'По стилю/жанрам/исполнителю, по фото и ссылке VK',
-                'Подробные сценарии; голос/BPM/настроение',
+                '10 PRO-треков',
+                'Подробные сценарии на все случаи жизни: от поздравлений до личной мотивации',
+                'По артисту/жанру/фото/ссылке',
             ],
             price: 999,
             isActive: true,
-            image: '',
+            image: <IconMicrophone width={85} />,
             isPopular: true,
         },
         {
             id: 'ultra',
             title: 'ULTRA',
             features: [
-                '1 премиум-трек с менеджером (гарантия результата)',
-                'Обложка + оживление обложки',
-                '+20 PRO-генераций',
+                '1 PREMIUM-трек',
+                'Гарантия результата',
+                '20 PRO-генераций',
+                'Обложка к треку + оживление',
             ],
             price: 5000,
             isActive: false,
-            image: '',
+            image: <IconKorona width={85} />,
             isPopular: false,
+            personal: true
         },
     ]
 

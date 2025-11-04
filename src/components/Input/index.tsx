@@ -45,20 +45,20 @@ export function ChatInput({
           rounded={"2xl"}
           size={"lg"}
           fontSize="16px"
-          h={"58px"}
+          h={"38px"}
           _focus={{ borderColor: COLOR.kit.orange }}
         />
         <Button
           aria-label="Send"
           onClick={send}
           disabled={isDisabled}
-          h={"58px"}
-          w={"70px"}
+          h={"38px"}
+          w={"45px"}
           colorScheme="green"
           rounded={"2xl"}
           bg={"orange.500"}
         >
-          <Icon as={BsSendFill} color={"white"} />
+          <Icon as={BsSendFill} position={"relative"} right={0.5} color={"white"} />
         </Button>
       </Flex>
     </Box>

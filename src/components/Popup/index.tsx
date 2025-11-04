@@ -24,11 +24,6 @@ export const Popup = ({
   onOpenChange
 }: PopupProps) => {
 
-  // const handleChange = (state: { open: boolean }) => {
-  //   setIsOpen(state.open);
-  //   onOpenChange?.(state.open);
-  // };
-
   return (
     <Drawer.Root open={open} onFocusOutside={onFocusOutside} onOpenChange={onOpenChange} placement={"bottom"}>
       <Portal>
