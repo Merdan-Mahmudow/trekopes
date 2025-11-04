@@ -55,6 +55,7 @@ const slides = [
                 w={"full"}
                 alignItems={"center"}
                 gap={4}
+                pt={4}
                 pb={"11vh"}>
                     <FMCarousel 
                     height={200}

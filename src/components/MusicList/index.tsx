@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 // import type { Telegram } from "telegram-web-app";
-import { FaPlay, FaDownload } from "react-icons/fa";
+import { FaPlay } from "react-icons/fa";
 import type { SongItem } from "../../types/songs";
 import { updatePlayerState, setCurrentTrack, loadQueue } from "../../store/player";
 import type { Track } from "../../types/player";
@@ -24,7 +24,7 @@ import { BsPauseFill } from 'react-icons/bs'
 import { COLOR } from "../ui/colors";
 import { LuCopyPlus } from "react-icons/lu";
 import { Link } from "@tanstack/react-router";
-
+import { HiOutlineDownload } from "react-icons/hi";
 export function MusicList() {
     // const tg: Telegram = window.Telegram;
     const { loadTracks } = useTracks();
@@ -151,7 +151,7 @@ export function MusicList() {
                                                     {url && (
                                                         <a href={url} target="_blank" rel="noopener noreferrer">
                                                             <IconButton aria-label="download" size="sm" variant={"ghost"}>
-                                                                <FaDownload />
+                                                                <HiOutlineDownload />
                                                             </IconButton>
                                                         </a>
                                                     )}
