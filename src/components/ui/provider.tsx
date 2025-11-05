@@ -9,7 +9,15 @@ import {
 export function Provider(props: ColorModeProviderProps) {
   return (
     <ChakraProvider value={defaultSystem}>
-      <ColorModeProvider {...props} forcedTheme="dark" enableSystem={false}/>
+      {/* Автоопределение темы с резервом на тёмную */}
+      <ColorModeProvider 
+        {...props} 
+        forcedTheme={undefined} 
+        enableSystem={true}
+        attribute="class"
+        defaultTheme="dark"
+        storageKey="trekopes-color-mode"
+      />
     </ChakraProvider>
   )
 }

@@ -6,7 +6,6 @@ import {
     Text,
     IconButton,
     Spinner,
-    Separator,
     Button,
     Grid,
     GridItem,
@@ -99,7 +98,7 @@ export function MusicList() {
     };
 
     return (
-        <Box p={4} w="100%">
+        <Box p={4} w="100%" pb={"10dvh"}>
             <VStack gap={3} align="stretch">
                 {isLoading && (
                     <HStack justify="center" py={8}>
@@ -175,8 +174,6 @@ export function MusicList() {
                         )}
                     </>
                 )}
-
-                <Separator />
             </VStack>
         </Box>
     );

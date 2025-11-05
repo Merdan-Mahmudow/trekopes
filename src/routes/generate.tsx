@@ -121,7 +121,7 @@ const slides = [
                                     <Icon color={COLOR.kit.white} fontSize={card.iconSize} children={card.icon} />
                                 </Flex>
                                 <Box>
-                                    <Heading size="xl">{card.title}</Heading>
+                                    <Heading>{card.title}</Heading>
                                     <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">{card.description}</Text>
                                 </Box>
                             </Flex>

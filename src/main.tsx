@@ -7,6 +7,11 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import Scrollbar from "smooth-scrollbar"
 import OverscrollPlugin from 'smooth-scrollbar/plugins/overscroll';
 
+// Импорт стилей
+import "./style/root.css"
+import "./style/fonts.css"
+import "./style/keyframes.css"
+
 Scrollbar.use(OverscrollPlugin);
 
 Scrollbar.initAll({

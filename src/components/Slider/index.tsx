@@ -195,8 +195,8 @@ export function FMCarousel({
                   setPage(([p]) => [p + diff, Math.sign(diff) || 1]);
                 }}
                 style={{
-                  width: 10,
-                  height: 10,
+                  width: "10px !important",
+                  height: "10px !important",
                   borderRadius: "50%",
                   margin: "0 6px",
                   border: "none",
