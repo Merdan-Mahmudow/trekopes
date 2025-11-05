@@ -31,8 +31,8 @@ export function BrandButton({
             h={h}
             w={w}
             minW={{ base: "120px", md: "150px" }}
-            minH={{ base: "44px", md: "66px" }}
-            rounded={"3xl"}
+            minH={{ base: "58px", md: "66px" }}
+            rounded={"2xl"}
             padding={{ base: "12px", md: "16px" }}
             color={color}
             fontSize={{ base: "0.9375rem", md: "1rem" }}
@@ -75,8 +75,8 @@ export function GrayButton({
             h={h}
             w={w}
             minW={{ base: "120px", md: "150px" }}
-            minH={{ base: "44px", md: "66px" }}
-            rounded={"3xl"}
+            minH={{ base: "58px", md: "66px" }}
+            rounded={"2xl"}
             padding={{ base: "12px", md: "16px" }}
             color={color}
             fontSize={{ base: "0.9375rem", md: "1rem" }}

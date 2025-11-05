@@ -40,14 +40,14 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
         voice: null
     });
     const TEMPO_COLORS = {
-        slow: (generationParams.tempo >= 60  && generationParams.tempo <= 90) ? COLOR.kit.orange : COLOR.kit.smoke,
+        slow: (generationParams.tempo >= 60 && generationParams.tempo <= 90) ? COLOR.kit.orange : COLOR.kit.smoke,
         medium: (generationParams.tempo >= 91 && generationParams.tempo <= 120) ? COLOR.kit.orange : COLOR.kit.smoke,
         fast: (generationParams.tempo >= 121 && generationParams.tempo <= 180) ? COLOR.kit.orange : COLOR.kit.smoke,
     }
     const artists: Artist[] = useMemo(() => ([
         { id: "1", name: "Не выбрано", avatar: "❔" },
         { id: "2", name: "Мияги", avatar: "👨‍🎤" },
-        { id: "3", name: "Скриптонит", avatar: "🎵" },       
+        { id: "3", name: "Скриптонит", avatar: "🎵" },
         { id: "4", name: "Zivert", avatar: "🎶" },
         { id: "5", name: "Клава Кока", avatar: "🎤" },
         { id: "6", name: "ICEGERGERT", avatar: "🎸" },
@@ -74,7 +74,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
     if (isLoading) {
         return (
             <>
-            <TrackLoadingScreen /></>
+                <TrackLoadingScreen /></>
         )
     }
     return (
@@ -113,13 +113,14 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                             _focus={{ borderColor: COLOR.kit.orange, boxShadow: "0 0 0 1px #F59A0E" }}
                         />
 
-                        <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                        <Grid templateColumns="repeat(auto-fill, minmax(100px, 1fr))" gap={4} w={"full"}>
                             {filteredArtists.map((artist) => (
-                                <GridItem key={artist.id}>
+                                <GridItem key={artist.id} w="full">
                                     <VStack
+                                        w={"full"}
+                                        py={4}
                                         cursor="pointer"
                                         onClick={() => setSelectedArtist(artist)}
-                                        p={3}
                                         borderRadius="16px"
                                         bg={selectedArtist?.id === artist.id ? COLOR.kit.orange : "#1E1E20"}
                                         _hover={{ bg: selectedArtist?.id === artist.id ? COLOR.kit.orange : "#2A2A2D" }}
@@ -157,7 +158,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                                 </Slider.Control>
                             </Slider.Root>
                             <Flex gap={2} alignItems="center" justifyContent="space-between" w="275px" mt={2}>
-                                <Text color={TEMPO_COLORS.slow} onClick={() => {handleParamsChange("tempo", 75); setTempo(75)}} fontSize="sm">Медленный</Text>
+                                <Text color={TEMPO_COLORS.slow} onClick={() => { handleParamsChange("tempo", 75); setTempo(75) }} fontSize="sm">Медленный</Text>
                                 <Text color={TEMPO_COLORS.medium} onClick={() => { handleParamsChange("tempo", 105); setTempo(105) }} fontSize="sm">Средний</Text>
                                 <Text color={TEMPO_COLORS.fast} onClick={() => { handleParamsChange("tempo", 135); setTempo(135) }} fontSize="sm">Быстрый</Text>
                             </Flex>

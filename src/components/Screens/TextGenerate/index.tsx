@@ -1,6 +1,6 @@
 import { COLOR } from '../../../components/ui/colors'
-import { Box, Button, Flex, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { Box, Button, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
+import { useState, type ReactNode } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
 import { LuBaby } from 'react-icons/lu'
@@ -16,7 +16,6 @@ import { DiaologWindow } from '../../../components/Dialog'
 import { ProPayScreen } from '../ProPay'
 import { useNavigate } from '@tanstack/react-router'
 import { useIsPro } from '../../../store/user'
-import { PiGenderFemale, PiGenderMale, PiGenderNeuter } from 'react-icons/pi'
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -59,55 +58,141 @@ const ChangeButton = ({ icon, title, onClick, isSelected }: ChangeButtonProps) =
     )
 }
 
-type GenderOption = {
+type ScenarioOption = {
     value: string,
     label: string,
-    icon: ReactNode,
 }
 
-const genderButtonStyle = {
+type ScenarioConfig = {
+    title: string,
+    subtitle: string,
+    instruction: string,
+    question: string,
+    options: ScenarioOption[],
+}
+
+const optionButtonStyle = {
     ...buttonStyle,
-    justifyContent: 'flex-start' as const,
+    justifyContent: 'center' as const,
 }
 
-type GenderButtonProps = {
-    option: GenderOption,
+type OptionButtonProps = {
+    option: ScenarioOption,
     onClick: () => void,
-    isSelected?: boolean,
 }
 
-const GenderButton = ({ option, onClick, isSelected }: GenderButtonProps) => (
+const OptionButton = ({ option, onClick }: OptionButtonProps) => (
     <Button
-        justifyContent={genderButtonStyle.justifyContent}
-        w={genderButtonStyle.w}
-        h={genderButtonStyle.h}
-        className={genderButtonStyle.className}
-        fontSize={genderButtonStyle.fontSize}
-        bg={isSelected ? COLOR.kit.smoke : genderButtonStyle.bg}
-        boxShadow={genderButtonStyle.boxShadow}
-        color={genderButtonStyle.color}
-        rounded={genderButtonStyle.rounded}
+        justifyContent={optionButtonStyle.justifyContent}
+        w={optionButtonStyle.w}
+        h={optionButtonStyle.h}
+        className={optionButtonStyle.className}
+        fontSize={optionButtonStyle.fontSize}
+        bg={optionButtonStyle.bg}
+        boxShadow={optionButtonStyle.boxShadow}
+        color={optionButtonStyle.color}
+        rounded={optionButtonStyle.rounded}
         onClick={onClick}
         outline={"none"}
     >
-        <Flex alignItems="center" gap={3}>
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                w="48px"
-                h="48px"
-                borderRadius="full"
-                bg={COLOR.kit.iconBg}
-            >
-                {option.icon}
-            </Box>
-            <Text fontSize="lg">{option.label}</Text>
-        </Flex>
+        {option.label}
     </Button>
 )
 
-type Step = 'intro' | 'gender' | 'category' | 'questions' | 'results' | 'artist-params'
+type Step = 'category' | 'intro' | 'audience' | 'questions' | 'results' | 'artist-params'
+
+const SCENARIO_CONFIGS: Record<ChangeButtonProps['category'], ScenarioConfig> = {
+    'broken-heart': {
+        title: '💔 Анкета «Для разбитого сердца»',
+        subtitle: 'Песня-переосмысление после расставания — бережно, честно, со смыслом.',
+        instruction: 'Можно пропускать любые вопросы — просто переходите дальше.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'ex-male', label: '🧔 Бывшему' },
+            { value: 'ex-female', label: '👩 Бывшей' },
+        ],
+    },
+    love: {
+        title: '💖 Анкета «Для любимого человека»',
+        subtitle: 'Признание в любви, годовщина, свадьба, романтика — всё, что от сердца.',
+        instruction: 'Любой пункт можно пропустить.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'lover-male', label: '🧑 Любимому' },
+            { value: 'lover-female', label: '👩 Любимой' },
+        ],
+    },
+    self: {
+        title: '🌿 Анкета «Про себя»',
+        subtitle: 'Личная история, путь, характер, внутренний монолог.',
+        instruction: 'Отвечайте выборочно — пропуски допустимы.',
+        question: 'Выберите пол:',
+        options: [
+            { value: 'self-male', label: '🧑 Мужской' },
+            { value: 'self-female', label: '👩 Женский' },
+        ],
+    },
+    baby: {
+        title: '🍼 Анкета «Про ребёнка»',
+        subtitle: 'Песня о малыше — от нежных колыбельных до выпускного из садика.',
+        instruction: 'Можно отвечать не на всё.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'baby-boy', label: '🧒 Мальчик' },
+            { value: 'baby-girl', label: '👧 Девочка' },
+        ],
+    },
+    friend: {
+        title: '🎓 Анкета «Для друзей и коллег»',
+        subtitle: 'Подарок другу, коллеге, наставнику или всей команде — с теплом и юмором.',
+        instruction: 'Пропуски разрешены.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'friend-male', label: '🧑 Мужчине' },
+            { value: 'friend-female', label: '👩 Женщине' },
+        ],
+    },
+    relation: {
+        title: '👨‍👩‍👧‍👦 Анкета «Для близких»',
+        subtitle: 'Мама, папа, брат, сестра — семейная история в музыке.',
+        instruction: 'Отвечайте как удобно — можно пропускать.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'family-male', label: '🧔 Мужчине' },
+            { value: 'family-female', label: '👩 Женщине' },
+        ],
+    },
+    hero: {
+        title: '🎖️ Анкета «О герое или солдате»',
+        subtitle: 'О тех, кто защищает и спасает — от врачей до спасателей.',
+        instruction: 'Любые вопросы можно пропускать.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'hero-male', label: '🧑‍🚒 Мужчине' },
+            { value: 'hero-female', label: '👩‍⚕️ Женщине' },
+        ],
+    },
+    congrats: {
+        title: '🎈 Анкета «Праздник и поздравление»',
+        subtitle: 'День рождения, юбилей, Новый год — яркий музыкальный подарок.',
+        instruction: 'Заполняйте частично — это нормально.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'congrats-male', label: '🧑 Мужчине' },
+            { value: 'congrats-female', label: '👩 Женщине' },
+        ],
+    },
+    others: {
+        title: '🧩 Анкета «Другое»',
+        subtitle: 'Любая тема — проект, команда, событие, город, бренд, хобби.',
+        instruction: 'Можно пропустить любой пункт.',
+        question: 'Кому посвящается песня?',
+        options: [
+            { value: 'other-male', label: '🧑 Мужчине' },
+            { value: 'other-female', label: '👩 Женщине' },
+        ],
+    },
+}
 
 
 // --- Конец компонента Итоги ответов ---
@@ -116,27 +201,37 @@ export function TextGenerateScreen() {
     const [showProReminder, setShowProReminder] = useState(false);
     const [showProScreen, setShowProScreen] = useState(false);
     const isPro = useIsPro();
-    const [step, setStep] = useState<Step>('intro');
-    const [selectedGender, setSelectedGender] = useState<string | null>(null);
+    const [step, setStep] = useState<Step>('category');
+    const [selectedCategory, setSelectedCategory] = useState<ChangeButtonProps['category'] | null>(null);
+
+    const withIconBackground = (icon: ReactNode): ReactNode => (
+        <Box
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+            mr={3}
+            p="16px"
+            bg={COLOR.kit.iconBg}
+            borderRadius="2xl"
+        >
+            {icon}
+        </Box>
+    );
 
     const buttonData: ChangeButtonProps[] = [
-        { icon: <FaRegFaceSmile style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про себя", category: 'self' },
-        { icon: <BsPeople style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для друзей и для коллег", category: 'friend' },
-        { icon: <TbHeartBroken style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для разбитого сердца", category: 'broken-heart' },
-        { icon: <TbHeart style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для любимого человека", category: 'love' },
-        { icon: <RiHomeHeartLine style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для близких", category: 'relation' },
-        { icon: <LuBaby style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про ребёнка", category: 'baby' },
-        { icon: <RiShieldStarLine style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "О герое или солдате", category: 'hero' },
-        { icon: <TbConfetti style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Для поздравления", category: 'congrats' },
-        { icon: <BsMagic style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Другое", category: 'others' },
+        { icon: withIconBackground(<FaRegFaceSmile />), title: "Про себя", category: 'self' },
+        { icon: withIconBackground(<BsPeople />), title: "Для друзей и для коллег", category: 'friend' },
+        { icon: withIconBackground(<TbHeartBroken />), title: "Для разбитого сердца", category: 'broken-heart' },
+        { icon: withIconBackground(<TbHeart />), title: "Для любимого человека", category: 'love' },
+        { icon: withIconBackground(<RiHomeHeartLine />), title: "Для близких", category: 'relation' },
+        { icon: withIconBackground(<LuBaby />), title: "Про ребёнка", category: 'baby' },
+        { icon: withIconBackground(<RiShieldStarLine />), title: "О герое или солдате", category: 'hero' },
+        { icon: withIconBackground(<TbConfetti />), title: "Для поздравления", category: 'congrats' },
+        { icon: withIconBackground(<BsMagic />), title: "Другое", category: 'others' },
     ];
 
-    const genderOptions: GenderOption[] = useMemo(() => ([
-        { value: 'male', label: 'Мужчина', icon: <PiGenderMale size={24} /> },
-        { value: 'female', label: 'Женщина', icon: <PiGenderFemale size={24} /> },
-    ]), []);
+    const scenarioConfig = selectedCategory ? SCENARIO_CONFIGS[selectedCategory] : null;
 
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const categoryMap: Record<string, string> = {
@@ -181,117 +276,115 @@ export function TextGenerateScreen() {
         if (currentIndex > 0) setCurrentIndex((i) => i - 1);
     };
 
-    const handleCategorySelect = (category: string) => {
+    const handleCategorySelect = (category: ChangeButtonProps['category']) => {
         setSelectedCategory(category);
         setCurrentIndex(0);
-        setStep('questions');
+        setStep('intro');
         setShowProReminder(false);
     };
+
     const handleCloseDialog = () => {
         setShowProReminder(false)
     }
 
-    const handleSelectGender = (gender: string) => {
-        setSelectedGender(gender);
+    const handleStartScenario = () => {
+        setStep('audience');
+    }
+
+    const handleSelectAudience = (_value: string) => {
+        setCurrentIndex(0);
+        setStep('questions');
+        setShowProReminder(false);
+    }
+
+    const handleBackToCategories = () => {
+        setSelectedCategory(null);
+        setCurrentIndex(0);
         setStep('category');
-        setSelectedCategory(null);
-        setCurrentIndex(0);
     }
-
-    const handleResetToIntro = () => {
-        setSelectedGender(null);
-        setSelectedCategory(null);
-        setCurrentIndex(0);
-        setStep('intro');
-    }
-
-    const selectedGenderOption = useMemo(
-        () => genderOptions.find((option) => option.value === selectedGender) ?? null,
-        [genderOptions, selectedGender]
-    );
 
     return (
         <>
             <AnimatePresence mode="wait">
-                {step === 'intro' ? (
+                {step === 'category' ? (
                     <MotionDiv
-                        key="intro-screen"
-                        initial={{ x: -100, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: 100, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <Box px={5} py={8} textAlign="center" color={COLOR.kit.orangeWhite}>
-                            <Heading size="lg" mb={3}>Соберём историю для песни</Heading>
-                            <Text fontSize="lg" color={COLOR.kit.smoke} mb={8}>
-                                Ответь на несколько вопросов, чтобы Трекопёс написал персональный трек.
-                            </Text>
-                            <BrandButton w="full" onClick={() => setStep('gender')}>
-                                Начать
-                            </BrandButton>
-                        </Box>
-                    </MotionDiv>
-                ) : step === 'gender' ? (
-                    <MotionDiv
-                        key="gender-select"
+                        key="category-list"
                         initial={{ x: -100, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: 100, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
                         <Box px={5} py={6} color={COLOR.kit.orangeWhite}>
-                            <Heading size="md" mb={2}>Кто станет героем трека?</Heading>
-                            <Text fontSize="md" color={COLOR.kit.smoke} mb={6}>
-                                Выбери подходящий вариант — так мы подстроим вопросы.
-                            </Text>
+                            <Heading size="md" mb={4}>Выбери тему сценария</Heading>
                             <Grid gap={3}>
-                                {genderOptions.map((option) => (
-                                    <GenderButton
-                                        key={option.value}
-                                        option={option}
-                                        isSelected={selectedGender === option.value}
-                                        onClick={() => handleSelectGender(option.value)}
-                                    />
+                                {buttonData.map((button) => (
+                                    <GridItem key={button.title}>
+                                        <ChangeButton
+                                            icon={button.icon}
+                                            title={button.title}
+                                            category={button.category}
+                                            onClick={() => handleCategorySelect(button.category)}
+                                        />
+                                    </GridItem>
                                 ))}
                             </Grid>
-                            <GrayButton mt={6} w="full" onClick={handleResetToIntro}>
-                                Назад
+                        </Box>
+                    </MotionDiv>
+                ) : step === 'intro' && scenarioConfig ? (
+                    <MotionDiv
+                        key="scenario-intro"
+                        initial={{ x: -100, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: 100, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <Box px={5} py={8} color={COLOR.kit.orangeWhite}>
+                            <Heading size="lg" mb={3}>{scenarioConfig.title}</Heading>
+                            <Text fontSize="lg" color={COLOR.kit.smoke} mb={6}>
+                                {scenarioConfig.subtitle}
+                            </Text>
+                            <Box
+                                borderWidth="1px"
+                                borderColor={COLOR.kit.orangeWhite}
+                                borderRadius="2xl"
+                                px={4}
+                                py={3}
+                                mb={8}
+                                color={COLOR.kit.smoke}
+                            >
+                                {scenarioConfig.instruction}
+                            </Box>
+                            <BrandButton w="full" mb={4} onClick={handleStartScenario}>
+                                Начать
+                            </BrandButton>
+                            <GrayButton w="full" onClick={handleBackToCategories}>
+                                Назад к темам
                             </GrayButton>
                         </Box>
                     </MotionDiv>
-                ) : step === 'category' ? (
+                ) : step === 'audience' && scenarioConfig ? (
                     <MotionDiv
-                        key="category-list"
-                        initial={{ x: 0, opacity: 1 }}
-                        exit={{ x: -100, opacity: 0 }}
+                        key="scenario-audience"
+                        initial={{ x: -100, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: 100, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <Grid pt={1} px={"5"} gap={"4px"} w={"full"}>
-                            <Flex mb={4} justifyContent="space-between" alignItems="center">
-                                <Text fontSize="sm" color={COLOR.kit.smoke} textTransform="uppercase" letterSpacing={1}>
-                                    Пол: {selectedGenderOption?.label ?? 'Не указан'}
-                                </Text>
-                                <Button
-                                    variant="ghost"
-                                    color={COLOR.kit.orangeWhite}
-                                    fontSize="sm"
-                                    mt={1}
-                                    onClick={() => setStep('gender')}
-                                >
-                                    Изменить
-                                </Button>
-                            </Flex>
-                            {buttonData.map((button) => (
-                                <GridItem key={button.title}>
-                                    <ChangeButton
-                                        icon={button.icon}
-                                        title={button.title}
-                                        category={button.category}
-                                        onClick={() => handleCategorySelect(button.category)}
+                        <Box px={5} py={6} color={COLOR.kit.orangeWhite}>
+                            <Heading size="md" mb={2}>{scenarioConfig.question}</Heading>
+                            <Grid gap={3} templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }} mt={4}>
+                                {scenarioConfig.options.map((option) => (
+                                    <OptionButton
+                                        key={option.value}
+                                        option={option}
+                                        onClick={() => handleSelectAudience(option.value)}
                                     />
-                                </GridItem>
-                            ))}
-                        </Grid>
+                                ))}
+                            </Grid>
+                            <GrayButton mt={6} w="full" onClick={() => setStep('intro')}>
+                                Назад
+                            </GrayButton>
+                        </Box>
                     </MotionDiv>
                 ) : step === 'results' ? (
                     <MotionDiv
@@ -313,14 +406,10 @@ export function TextGenerateScreen() {
                     >
                         <ArtistParams
                             onBack={() => setStep('results')}
-                            onCancel={() => {
-                                setSelectedCategory(null);
-                                setStep('category');
-                            }}
+                            onCancel={handleBackToCategories}
                             onGenerate={() => {
                                 if (isPro) {
-                                    setSelectedCategory(null);
-                                    setStep('category');
+                                    handleBackToCategories();
                                 }
                                 else setShowProScreen(true)
                             }}
@@ -344,17 +433,14 @@ export function TextGenerateScreen() {
                                 onPrev={handlePrev}
                                 isFirst={currentIndex === 0}
                                 isLast={currentIndex === qList.length - 1}
-                                onBackToCategories={() => {
-                                    setSelectedCategory(null);
-                                    setStep('category');
-                                }}
+                                onBackToCategories={handleBackToCategories}
                                 onFinish={() => setStep('results')}
                             />
                         )
                         }
                     </MotionDiv>
                 )}
-                    
+
             </AnimatePresence>
                         <DiaologWindow
                 open={showProReminder}
@@ -369,7 +455,7 @@ export function TextGenerateScreen() {
                 onOpenChange={handleCloseDialog}
             >
                 <Box
-                    borderRadius="md"
+                    borderRadius="2xl"
                     fontSize="md"
                 >
                     <Text fontWeight="bolder" textAlign={"center"} letterSpacing={1} textTransform={"uppercase"} color={COLOR.kit.orange} fontSize={"lg"} mb={2}>
