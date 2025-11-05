@@ -4,6 +4,8 @@ import { FaLink } from 'react-icons/fa';
 import { COLOR } from "../../../components/ui/colors";
 import { BrandButton, GrayButton } from "../../../components/ui/button";
 import { ArtistParams } from "../ArtistParams";
+import { ProPayScreen } from "../ProPay";
+import { useIsPro } from "../../../store/user";
 
 interface LinkGenerateProps {
     onClose?: () => void;
@@ -13,7 +15,8 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     const [link, setLink] = useState("");
     const [isValidating, setIsValidating] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [currentScreen, setCurrentScreen] = useState<"link" | "artist" | "params" | "loading">("link");
+    const [currentScreen, setCurrentScreen] = useState<"link" | "artist" | "params" | "loading" | "pro">("link");
+    const isPro = useIsPro();
     // дальнейшие шаги выполняются в общем компоненте ArtistParams
 
     const validateVKLink = (url: string): boolean => {
@@ -72,7 +75,11 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     };
 
     const handleGenerate = async () => {
-
+        if (isPro) {
+            onClose && onClose();
+        } else {
+            setCurrentScreen("pro");
+        }
     };
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,6 +167,10 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
 
             </VStack>
         );
+    }
+
+    if (currentScreen === "pro" && !isPro) {
+        return <ProPayScreen onBack={() => setCurrentScreen("artist")} onPay={() => onClose && onClose()} />
     }
 
     // Экран после ссылки: используем общий компонент ArtistParams

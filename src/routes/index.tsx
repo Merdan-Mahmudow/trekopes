@@ -9,11 +9,17 @@ export const Route = createFileRoute('/')({
 
 function Index() {
     const tg: Telegram = window.Telegram;
+    const isWelcomeSeen = localStorage.getItem('isWelcomeSeen')
     const navigate = useNavigate();
     useEffect(() => {
         tg.WebApp.BackButton.hide()
-        navigate({ to: '/referral' })
-    }, [tg]);
+        if (!isWelcomeSeen) {
+            localStorage.setItem('isWelcomeSeen', 'true')
+            navigate({ to: '/welcome' })
+        } else {
+            navigate({ to: '/referral' })
+        }
+    }, [tg, isWelcomeSeen]);
     return <>
         
     </>

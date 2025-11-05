@@ -13,8 +13,8 @@ export function Layout() {
     const [isDockVisible, setIsDockVisible] = useState<boolean>(true);
 
     useEffect(() => {
-        const hideHeaderPaths = ["/chat"];
-        const hideDockPaths = ['/create', '/chat', '/question', '/questionsFinish'];
+        const hideHeaderPaths = ["/chat", "/welcome"];
+        const hideDockPaths = ['/create', '/chat', '/question', '/questionsFinish', '/welcome'];
         const updateVisible = () => {
             setIsHeaderVisible(!hideHeaderPaths.includes(path.pathname));
             setIsDockVisible(!hideDockPaths.includes(path.pathname));

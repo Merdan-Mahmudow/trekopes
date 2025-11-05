@@ -13,7 +13,7 @@ import {
     List,
     Float,
 } from '@chakra-ui/react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import IconNote from '../assets/svg/music1'
 
@@ -37,6 +37,7 @@ function formatPriceRUB(value: number) {
 }
 
 function TariffCard({ tariff }: { tariff: Tariff }) {
+    const navigate = useNavigate()
     const { title, features, price, isActive, isPopular, image, personal } = tariff
     return (
         <GridItem
@@ -49,6 +50,11 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
             position="relative"
             transition="all 0.2s ease"
             _hover={{ transform: 'translateY(-2px)' }}
+            cursor="pointer"
+            onClick={() => {
+                const id = title.toLowerCase() === 'track' ? 'track' : title.toLowerCase()
+                navigate({ to: '/subscription', search: { tarrif: id, source: ""} })
+            }}
         >
             {isPopular && (
                 <Float placement={"top-start"} offsetX={20}>
@@ -99,7 +105,7 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
 function RouteComponent() {
     const TARIFFS: Tariff[] = [
         {
-            id: 'track-1',
+            id: 'track',
             title: 'TRACK',
             features: [
                 '1 генерация в боте',

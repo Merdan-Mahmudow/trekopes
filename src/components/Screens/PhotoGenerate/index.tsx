@@ -8,14 +8,17 @@ import Webcam from "react-webcam";
 import { MdCameraswitch, MdPhotoCamera } from "react-icons/md";
 import { Toaster } from "../../../components/ui/toaster";
 import { LuUpload } from "react-icons/lu";
+import { ProPayScreen } from "../ProPay";
+import { useIsPro } from "../../../store/user";
 
 export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     const [screen, setScreen] = useState<
-        "select" | "camera" | "preview" | "artistParams"
+        "select" | "camera" | "preview" | "artistParams" | "pro"
     >("select");
 
     const [imgSrc, setImgSrc] = useState<string | null>(null);
     const [facingMode, setFacingMode] = useState<"user" | "environment">("user"); // ✅ новое состояние
+    const isPro = useIsPro();
 
     const webcamRef = useRef<Webcam>(null);
 
@@ -47,7 +50,10 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
                 <ArtistParams
                     onBack={() => setScreen("preview")}
                     onCancel={onClose}
-                    onGenerate={onClose}
+                    onGenerate={() => {
+                        if (isPro) onClose();
+                        else setScreen("pro");
+                    }}
                 />
             </VStack>
         );
@@ -128,6 +134,10 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
                 </Flex>
             </VStack>
         );
+    }
+
+    if (screen === "pro" && !isPro) {
+        return <ProPayScreen onBack={() => setScreen("artistParams")} onPay={onClose} />
     }
 
     // ✅ Главный экран

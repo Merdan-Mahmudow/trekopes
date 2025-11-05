@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as TarrifsRouteImport } from './routes/tarrifs'
+import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as ReferralRouteImport } from './routes/referral'
 import { Route as QuestionsFinishRouteImport } from './routes/questionsFinish'
 import { Route as QuestionRouteImport } from './routes/question'
@@ -19,9 +21,19 @@ import { Route as CreateRouteImport } from './routes/create'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TarrifsRoute = TarrifsRouteImport.update({
   id: '/tarrifs',
   path: '/tarrifs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubscriptionRoute = SubscriptionRouteImport.update({
+  id: '/subscription',
+  path: '/subscription',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReferralRoute = ReferralRouteImport.update({
@@ -74,7 +86,9 @@ export interface FileRoutesByFullPath {
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
+  '/subscription': typeof SubscriptionRoute
   '/tarrifs': typeof TarrifsRoute
+  '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,7 +99,9 @@ export interface FileRoutesByTo {
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
+  '/subscription': typeof SubscriptionRoute
   '/tarrifs': typeof TarrifsRoute
+  '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,7 +113,9 @@ export interface FileRoutesById {
   '/question': typeof QuestionRoute
   '/questionsFinish': typeof QuestionsFinishRoute
   '/referral': typeof ReferralRoute
+  '/subscription': typeof SubscriptionRoute
   '/tarrifs': typeof TarrifsRoute
+  '/welcome': typeof WelcomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,7 +128,9 @@ export interface FileRouteTypes {
     | '/question'
     | '/questionsFinish'
     | '/referral'
+    | '/subscription'
     | '/tarrifs'
+    | '/welcome'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,7 +141,9 @@ export interface FileRouteTypes {
     | '/question'
     | '/questionsFinish'
     | '/referral'
+    | '/subscription'
     | '/tarrifs'
+    | '/welcome'
   id:
     | '__root__'
     | '/'
@@ -132,7 +154,9 @@ export interface FileRouteTypes {
     | '/question'
     | '/questionsFinish'
     | '/referral'
+    | '/subscription'
     | '/tarrifs'
+    | '/welcome'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,16 +168,32 @@ export interface RootRouteChildren {
   QuestionRoute: typeof QuestionRoute
   QuestionsFinishRoute: typeof QuestionsFinishRoute
   ReferralRoute: typeof ReferralRoute
+  SubscriptionRoute: typeof SubscriptionRoute
   TarrifsRoute: typeof TarrifsRoute
+  WelcomeRoute: typeof WelcomeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tarrifs': {
       id: '/tarrifs'
       path: '/tarrifs'
       fullPath: '/tarrifs'
       preLoaderRoute: typeof TarrifsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/subscription': {
+      id: '/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof SubscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/referral': {
@@ -224,7 +264,9 @@ const rootRouteChildren: RootRouteChildren = {
   QuestionRoute: QuestionRoute,
   QuestionsFinishRoute: QuestionsFinishRoute,
   ReferralRoute: ReferralRoute,
+  SubscriptionRoute: SubscriptionRoute,
   TarrifsRoute: TarrifsRoute,
+  WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

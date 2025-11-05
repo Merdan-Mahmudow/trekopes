@@ -11,7 +11,7 @@ const MotionPath = motion.path;
 
 const NavBar = () => {
   const path = useLocation()
-  const [active, setActive] = useState<"left" | "center" | "right">("left");
+  const [active, setActive] = useState<"left" | "center" | "right" | "none">("none");
   useEffect(() => {
     setActive(path.pathname == "/referral" ? "left" :
       path.pathname == "/generate" ? "center" :
@@ -34,6 +34,7 @@ const NavBar = () => {
     left: svgWidth * 0.23,
     center: svgWidth * 0.5,
     right: svgWidth * 0.77,
+    none: 0,
   };
 
   const changeConvexParams = () => {

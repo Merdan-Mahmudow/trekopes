@@ -7,20 +7,23 @@ interface BrandButtonProps {
     size?: "sm" | "md" | "lg" | "xl" | "2xl" | "2xs" | "xs" | undefined;
     disabled?: boolean
     w?: string
+    color?: string
+    bg?: string
+    h?: string | number
 }
 
-export function BrandButton({ onClick, children, size, w, disabled = false }: BrandButtonProps) {
+export function BrandButton({ onClick, children, size, w, disabled = false, color = "white", bg = COLOR.kit.iconBg, h = "66px" }: BrandButtonProps) {
     return (
     <Button
-    bg={COLOR.kit.iconBg}
+    bg={bg}
     onClick={onClick}
     size={size}
-    h={"66px"}
+    h={h}
     w={w}
     minW={"150px"}
     rounded={"3xl"}
     padding={"16px"}
-    color={"white"}
+    color={color}
     fontSize={"16px"}
     disabled={disabled}
     >
@@ -28,16 +31,16 @@ export function BrandButton({ onClick, children, size, w, disabled = false }: Br
     </Button>)
 }
 
-export function GrayButton({ onClick, children, size, disabled = false }: BrandButtonProps) {
+export function GrayButton({ onClick, children, size, disabled = false, color = "white", bg = COLOR.kit.darkGray }: BrandButtonProps) {
     return (
     <Button
-    bg={COLOR.kit.darkGray}
+    bg={bg}
     onClick={onClick}
     size={size}
     h={"66px"}
     rounded={"3xl"}
     padding={"16px"}
-    color={"white"}
+    color={color}
     fontSize={"16px"}
     disabled={disabled}
     >

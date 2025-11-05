@@ -20,7 +20,6 @@ function RootComponent() {
   useEffect(() => {
     if (tg) {
       tg.WebApp.setHeaderColor(COLOR.bg.hex.subtle);
-
     }
   }, [tg]);
   useEffect(() => {
@@ -28,6 +27,7 @@ function RootComponent() {
       setIsPreload(false)
     }, 5000)
   }, [isPreload])
+
   // const { getUser } = useUser();
 
   // const { data: user, isLoading: isUserLoading } = useQuery({

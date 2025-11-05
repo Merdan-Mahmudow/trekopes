@@ -13,6 +13,8 @@ import { TbTextSize } from "react-icons/tb";
 import { GiMusicalNotes } from "react-icons/gi";
 import { PhotoGenerateScreen } from '../components/Screens/PhotoGenerate'
 import { FMCarousel } from '../components/Slider'
+import { StyleGenerateScreen } from '../components/Screens/StyleGenerate'
+import { FastGenerateScreen } from '../components/Screens/FastGenerate'
 
 
 
@@ -24,7 +26,7 @@ export const Route = createFileRoute('/generate')({
 // --- Конец компонента Итоги ответов ---
 function RouteComponent() {
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false)
-    const [ genType, setGenType ] = useState<"text" | "photo"| "link" | "style" | null>("text")
+    const [ genType, setGenType ] = useState<"text" | "photo"| "link" | "style" | "fast" | null>("text")
 
 
     useEffect(() => {
@@ -36,9 +38,9 @@ function RouteComponent() {
         setIsPopupOpen(false);
     }
 
-    const handleChangeType = (type: "text" | "photo"| "link" | "style" | null) => {
-        setIsPopupOpen(true)
-        setGenType(type)
+    const handleChangeType = (type: "text" | "photo"| "link" | "style" | "fast" | null) => {
+        setIsPopupOpen(true);
+        setGenType(type);
     } 
 const slides = [
     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 1</Box>},
@@ -47,6 +49,44 @@ const slides = [
     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 4</Box>},
     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 5</Box>},
 ]
+
+    const cards = [
+        {
+            type: 'text' as const,
+            title: 'Песня по сценарию',
+            description: 'Выбери сценарий и заполни анкету - получишь персональную песню',
+            icon: <BsFileText />,
+            iconSize: '5xl' as const,
+        },
+        {
+            type: 'photo' as const,
+            title: 'Песня по фото',
+            description: 'Сфотографируйте человека, место или предмет - Трекопес напишет трек',
+            icon: <IoCameraOutline />,
+            iconSize: '5xl' as const,
+        },
+        {
+            type: 'link' as const,
+            title: 'Песня по ссылке',
+            description: 'Кидай ссылку на свой профиль в ВК или профиль друга - я все изучу и сделаю песню',
+            icon: <FaLink />,
+            iconSize: '4xl' as const,
+        },
+        {
+            type: 'style' as const,
+            title: 'Песня по стилю',
+            description: 'Выбери сценарий и заполни анкету - получишь персональную песню',
+            icon: <GiMusicalNotes />,
+            iconSize: '5xl' as const,
+        },
+        {
+            type: 'fast' as const,
+            title: 'Песня по тексту',
+            description: 'Выбери сценарий и заполни анкету - получишь персональную песню',
+            icon: <TbTextSize />,
+            iconSize: '5xl' as const,
+        },
+    ] as const
 
     return (
         <>
@@ -69,86 +109,24 @@ const slides = [
                     gap={2}
                     w="11/12"
                     overflow={"auto"}>
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={"24px"}
-                        borderRadius="2xl"
-                        onClick={ () => handleChangeType("text")}>
-                        <Flex gap={4} alignItems="center">
-                            <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
-                                <Icon color={COLOR.kit.white} fontSize={"5xl"} children={<BsFileText />} />
+                    {cards.map((card, idx) => (
+                        <GridItem
+                            key={idx}
+                            bg={COLOR.kit.darkGray}
+                            p={"24px"}
+                            borderRadius="2xl"
+                            onClick={() => handleChangeType(card.type)}>
+                            <Flex gap={4} alignItems="center">
+                                <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
+                                    <Icon color={COLOR.kit.white} fontSize={card.iconSize} children={card.icon} />
+                                </Flex>
+                                <Box>
+                                    <Heading size="xl">{card.title}</Heading>
+                                    <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">{card.description}</Text>
+                                </Box>
                             </Flex>
-                            <Box>
-                                <Heading size="xl">Песня по сценарию</Heading>
-                                <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">Выбери сценарий и заполни анкету - получишь персональную песню</Text>
-
-                            </Box>
-                        </Flex>
-                    </GridItem>
-
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={"24px"}
-                        borderRadius="2xl"
-                        onClick={() => handleChangeType('photo')}>
-                        <Flex gap={4} alignItems="center">
-                            <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
-                                <Icon color={COLOR.kit.white} fontSize={"5xl"} children={<IoCameraOutline />} />
-                            </Flex>
-                            <Box>
-                                <Heading size="xl">Песня по фото</Heading>
-                                <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">Сфотографируйте человека, место или предмет - Трекопес напишет трек</Text>
-                            </Box>
-                        </Flex>
-                    </GridItem>
-
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={"24px"}
-                        borderRadius="2xl"
-                        onClick={() => handleChangeType("link")}>
-                        <Flex gap={4} alignItems="center">
-                            <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
-                               <Icon color={COLOR.kit.white} fontSize={"4xl"} children={<FaLink />} />
-                            </Flex>
-                            <Box>
-                                <Heading size="xl">Песня по ссылке</Heading>
-                                <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">Кидай ссылку на свой профиль в ВК или профиль друга - я все изучу и сделаю песню</Text>
-                            </Box>
-                        </Flex>
-                    </GridItem>
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={"24px"}
-                        borderRadius="2xl"
-                        onClick={() => handleChangeType("style")}>
-                        <Flex gap={4} alignItems="center">
-                            <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
-                                <Icon color={COLOR.kit.white} fontSize={"5xl"} children={<GiMusicalNotes />} />
-                            </Flex>
-                            <Box>
-                                <Heading size="xl">Песня по стилю</Heading>
-                                <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">Выбери сценарий и заполни анкету - получишь персональную песню</Text>
-
-                            </Box>
-                        </Flex>
-                    </GridItem>
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={"24px"}
-                        borderRadius="2xl"
-                        onClick={() => handleChangeType("style")}>
-                        <Flex gap={4} alignItems="center">
-                            <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
-                                <Icon color={COLOR.kit.white} fontSize={"5xl"} children={<TbTextSize />} />
-                            </Flex>
-                            <Box>
-                                <Heading size="xl">Песня по тексту</Heading>
-                                <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">Выбери сценарий и заполни анкету - получишь персональную песню</Text>
-
-                            </Box>
-                        </Flex>
-                    </GridItem>
+                        </GridItem>
+                    ))}
                 </Grid>
             </Flex>
 
@@ -160,6 +138,8 @@ const slides = [
                 { genType == 'text' && <TextGenerateScreen /> }
                 { genType == 'link' && <LinkGenerate onClose={handleClosePopup} /> }
                 { genType == 'photo' && <PhotoGenerateScreen onClose={handleClosePopup} /> }
+                { genType == 'style' && <StyleGenerateScreen onClose={handleClosePopup} /> }
+                { genType == 'fast' && <FastGenerateScreen onClose={handleClosePopup} /> }
             </Popup>
         </>
     )

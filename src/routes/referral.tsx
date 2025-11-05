@@ -29,6 +29,38 @@ function RouteComponent() {
 
     }
 
+    // JSON-список карточек (можно вынести в отдельный файл/источник при необходимости)
+    const REWARDS = [
+        {
+            id: 'r1',
+            title: 'За 1 друга - 1 лапка',
+            subtitle: '*за последующих в случае оплаты',
+            bg: COLOR.kit.smoke,
+            unlocked: true,
+        },
+        {
+            id: 'r10',
+            title: 'За 10 друзей - PRO',
+            subtitle: '',
+            bg: COLOR.kit.darkGray,
+            unlocked: false,
+        },
+        {
+            id: 'r20',
+            title: 'За 20 друзей - 20% с оплат',
+            subtitle: '',
+            bg: COLOR.kit.darkGray,
+            unlocked: false,
+        },
+        {
+            id: 'r50',
+            title: 'За 50 друзей - Partner PRO',
+            subtitle: '',
+            bg: COLOR.kit.darkGray,
+            unlocked: false,
+        },
+    ] as const
+
     return (
         <>
             <Flex
@@ -43,9 +75,9 @@ function RouteComponent() {
                     bg={COLOR.kit.darkGray}
                     w={"11/12"}
                     px={6}
-                    py={7}
+                    py={5}
                     textAlign={"center"}
-                    borderRadius="2xl"
+                    borderRadius="3xl"
 
                     gap={3}>
                     <Box>
@@ -54,11 +86,14 @@ function RouteComponent() {
                     </Box>
 
                     <Flex
-                        px={4}
-                        py={2}
+                        pl={5}
+                        pr={3}
+                        py={1}
                         bg={COLOR.kit.smoke}
                         rounded={"2xl"}
-                        alignItems={"center"}>
+                        alignItems={"center"}
+                        textAlign={"start"}
+                        justifyItems={"space-beateen"}>
                         <Text lineClamp={1}>{refLink}</Text>
                         <Clipboard.Root value={refLink}>
                             <Clipboard.Trigger asChild>
@@ -69,7 +104,7 @@ function RouteComponent() {
                         </Clipboard.Root>
                     </Flex>
 
-                    <BrandButton onClick={handleSend}><RiTelegram2Line />Пригласить друга</BrandButton>
+                    <BrandButton h={"50px"} onClick={handleSend}><RiTelegram2Line />Пригласить друга</BrandButton>
 
                 </Flex>
                 <Grid
@@ -77,55 +112,31 @@ function RouteComponent() {
                     gap={2}
                     w="11/12"
                     mt={6}>
-                    <GridItem
-                        bg={COLOR.kit.smoke}
-                        p={4}
-                        borderRadius="2xl">
-                        <Flex alignItems="center" justifyContent="space-between">
-                            <Flex alignItems="center" gap={3}>
-                                <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />
-                                <Box>
-                                    <Text fontSize="lg">За 1 друга - 1 лапка</Text>
-                                    <Text color="gray.200" fontSize="sm">*за последующих в случае оплаты</Text>
-                                </Box>
+                    {REWARDS.map((item) => (
+                        <GridItem
+                            key={item.id}
+                            bg={item.bg}
+                            px={4}
+                            py={2}
+                            borderRadius="2xl">
+                            <Flex alignItems="center" justifyContent="space-between">
+                                <Flex alignItems="center" gap={3}>
+                                    <BsPeople size={"24px"} style={{ boxSizing: "content-box", padding: "7px", borderRadius: "50%", background: COLOR.kit.iconBg }} />
+                                    <Box>
+                                        <Text fontSize="lg">{item.title}</Text>
+                                        {item.subtitle ? (
+                                            <Text color="gray.200" fontSize="sm">{item.subtitle}</Text>
+                                        ) : null}
+                                    </Box>
+                                </Flex>
+                                {item.unlocked ? (
+                                    <SiGoogletasks size={20} fill="#25d130ff" />
+                                ) : (
+                                    <LuLockKeyhole size={20} color="white" />
+                                )}
                             </Flex>
-                           <SiGoogletasks size={20} fill="#25d130ff" />
-                        </Flex>
-                    </GridItem>
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={4}
-                        borderRadius="2xl">
-                        <Flex alignItems="center" justifyContent="space-between">
-                            <Flex alignItems="center" gap={3}>
-                                <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />
-                                <Text fontSize="lg">За 10 друзей - PRO</Text>
-                            </Flex>
-                            <LuLockKeyhole size={20} color="white" />
-                        </Flex>
-                    </GridItem>
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={4}
-                        borderRadius="2xl">
-                        <Flex alignItems="center" justifyContent="space-between">
-                            <Flex alignItems="center" gap={3}>
-                                <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />                                <Text fontSize="lg">За 20 друзей - 20% с оплат</Text>
-                            </Flex>
-                            <LuLockKeyhole size={20} color="white" />
-                        </Flex>
-                    </GridItem>
-                    <GridItem
-                        bg={COLOR.kit.darkGray}
-                        p={4}
-                        borderRadius="2xl">
-                        <Flex alignItems="center" justifyContent="space-between">
-                            <Flex alignItems="center" gap={3}>
-                                <BsPeople size={"20"} style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />                                <Text fontSize="lg">За 50 друзей - Partner PRO</Text>
-                            </Flex>
-                            <LuLockKeyhole size={20} color="white" />
-                        </Flex>
-                    </GridItem>
+                        </GridItem>
+                    ))}
                 </Grid>
             </Flex>
 

@@ -13,6 +13,9 @@ import { ResultsComponent } from '../../../routes/questionsFinish'
 import { ArtistParams } from '../ArtistParams'
 import { BrandButton, GrayButton } from '../../../components/ui/button'
 import { DiaologWindow } from '../../../components/Dialog'
+import { ProPayScreen } from '../ProPay'
+import { useNavigate } from '@tanstack/react-router'
+import { useIsPro } from '../../../store/user'
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -58,9 +61,12 @@ const ChangeButton = ({ icon, title, onClick, isSelected }: ChangeButtonProps) =
 
 // --- Конец компонента Итоги ответов ---
 export function TextGenerateScreen() {
+    const navigate = useNavigate()
     const [showResults, setShowResults] = useState(false);
     const [showArtistParams, setShowArtistParams] = useState(false);
     const [showProReminder, setShowProReminder] = useState(false);
+    const [showProScreen, setShowProScreen] = useState(false);
+    const isPro = useIsPro();
 
     const buttonData: ChangeButtonProps[] = [
         { icon: <FaRegFaceSmile style={{ boxSizing: "content-box", padding: "16px", borderRadius: "50%", background: COLOR.kit.iconBg }} />, title: "Про себя", category: 'self' },
@@ -161,7 +167,10 @@ export function TextGenerateScreen() {
                         <ArtistParams
                             onBack={() => setShowArtistParams(false)}
                             onCancel={() => setSelectedCategory(null)}
-                            onGenerate={() => setSelectedCategory(null)}
+                            onGenerate={() => {
+                                if (isPro) setSelectedCategory(null)
+                                else setShowProScreen(true)
+                            }}
                         />
                     </MotionDiv>)
                 ) : showResults ? (
@@ -233,6 +242,9 @@ export function TextGenerateScreen() {
                     </Text>
                 </Box>
             </DiaologWindow>
+            {showProScreen && !isPro && (
+                <ProPayScreen onBack={() => setShowProScreen(false)} onPay={() => navigate({ to: '/subscription', search: { tarrif: 'pro', source: 'propay' } })} />
+            )}
         </>
     )
 }
