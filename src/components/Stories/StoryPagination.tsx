@@ -17,7 +17,6 @@ export function StoryPagination({ total, activeIndex, progress }: StoryPaginatio
       top={{ base: 3, md: 5 }}
       left="50%"
       transform="translateX(-50%)"
-      spacing={2}
       w="92vw"
       zIndex={2}
     >

@@ -31,7 +31,7 @@ export function StorySlide({ item, isActive }: StorySlideProps) {
             transition={{ duration: 0.35 }}
           >
             <Center w="full" h="full">
-              <VStack spacing={4} maxW="90vw" textAlign="center">
+              <VStack gap={4} maxW="90vw" textAlign="center">
                 {item.image && (
                   <Image src={item.image} alt="story" maxH="50vh" objectFit="contain" />
                 )}
