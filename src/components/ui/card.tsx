@@ -1,4 +1,4 @@
-import { Box, BoxProps, VStack, HStack, Heading, Text, Image, ImageProps } from "@chakra-ui/react"
+import { Box, type BoxProps, VStack, Heading, Text, Image } from "@chakra-ui/react"
 import { forwardRef } from "react"
 
 /**
@@ -15,6 +15,17 @@ export interface CardProps extends BoxProps {
   orientation?: "vertical" | "horizontal"
   variant?: "default" | "outlined" | "elevated"
 }
+// interface CSSProportiesT {
+//   bg?: string | null
+//   border?: string | null
+//   borderColor?: string | null
+//   boxShadow?: string | null
+// }
+// interface StylesT {
+//   default: CSSProportiesT
+//   outlined: CSSProportiesT
+//   elevated: CSSProportiesT
+// }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ 
@@ -56,7 +67,6 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         flexDirection={{ base: "column", md: isHorizontal ? "row" : "column" }}
         bg={variantStyles[variant].bg}
         border={variantStyles[variant].border}
-        borderColor={variantStyles[variant].borderColor}
         borderRadius="0.75rem"
         overflow="hidden"
         transition="transform 0.2s ease, box-shadow 0.2s ease"

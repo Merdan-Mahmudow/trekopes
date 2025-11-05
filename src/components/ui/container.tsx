@@ -1,10 +1,10 @@
-import { Box, type ChakraComponent } from "@chakra-ui/react"
+import { Box, type BoxProps } from "@chakra-ui/react"
 import { forwardRef, type ReactNode } from "react"
 
 /**
  * Адаптивный контейнер с центрированием и растущими отступами
  */
-export interface ContainerProps extends ChakraComponent<"div", {}> {
+export interface ContainerProps extends BoxProps {
   maxW?: "sm" | "md" | "lg" | "xl" | "2xl" | "full"
   centerContent?: boolean
   children?: ReactNode
