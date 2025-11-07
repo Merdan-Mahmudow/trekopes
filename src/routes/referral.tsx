@@ -1,14 +1,14 @@
 import { COLOR } from '../components/ui/colors'
 import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem} from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
-import { SiGoogletasks } from "react-icons/si";
 import { BrandButton } from '../components/ui/button'
 import type { Telegram } from 'telegram-web-app'
 import { RiTelegram2Line } from 'react-icons/ri'
 import { useEffect } from 'react'
 import { setDockActive } from '../store'
 import { BsPeople } from 'react-icons/bs'
-import { LuLockKeyhole } from "react-icons/lu";
+import { FaRegCircle } from "react-icons/fa";
+import { FaRegCheckCircle } from "react-icons/fa";
 
 
 
@@ -130,9 +130,9 @@ function RouteComponent() {
                                     </Box>
                                 </Flex>
                                 {item.unlocked ? (
-                                    <SiGoogletasks size={20} fill="#25d130ff" />
+                                    <FaRegCheckCircle size={20} color="#22c55e" />
                                 ) : (
-                                    <LuLockKeyhole size={20} color="white" />
+                                    <FaRegCircle size={20} color="white" />
                                 )}
                             </Flex>
                         </GridItem>

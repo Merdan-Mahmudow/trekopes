@@ -5,7 +5,7 @@ import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
 import { TrackLoadingScreen } from "../TrackLoading";
 
-type Artist = {
+export type Artist = {
     id: string;
     name: string;
     avatar: string;
@@ -108,6 +108,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                             bg="#1E1E20"
                             borderColor="#2A2A2D"
                             borderRadius="16px"
+                            outline={"none"}
                             color="white"
                             _placeholder={{ color: "#8A8A8A" }}
                             _focus={{ borderColor: COLOR.kit.orange, boxShadow: "0 0 0 1px #F59A0E" }}
@@ -140,7 +141,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                 ) : (
                     <VStack gap={6} w="full">
                         <VStack key={"md"} align="flex-start" w="full">
-                            <Text fontSize="sm" fontWeight="medium">Темп (BPM): {generationParams.tempo}</Text>
+                            <Text fontSize="sm" fontWeight="medium">Темп (ударов в минуту): {generationParams.tempo}</Text>
                             <Slider.Root
                                 size={"md"}
                                 value={[tempo]}

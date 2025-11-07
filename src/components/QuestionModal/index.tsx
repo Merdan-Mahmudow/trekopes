@@ -122,7 +122,7 @@ export function QuestionModal({
                 transition={{ duration: 0.5, ease: "linear" }}
                 px={4}
                 placeSelf={"center"}
-                w={"400px"}
+                w={"90vw"}
                 templateRows={"1fr 50px"}
                 gap={6}>
 
@@ -132,6 +132,7 @@ export function QuestionModal({
                 </Box>
                 <Input
                     placeholder={qHolder}
+                    maxW="90vw"
                     p={"12px 24px"}
                     rounded={"3xl"}
                     height={"58px"}
@@ -143,7 +144,7 @@ export function QuestionModal({
                     lineHeight={"130%"}
                 />
 
-                <Grid px={4} pt={3} gap={4} templateColumns={"1fr 1fr"} w="100%" maxW="400px">
+                <Grid pt={3} gap={4} templateColumns={"1fr 1fr"} w="100%" maxW="90vw">
                     <GrayButton onClick={handlePrev}>
                        <FaArrowLeft /> Назад 
                     </GrayButton>

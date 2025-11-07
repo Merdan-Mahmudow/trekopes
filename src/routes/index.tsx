@@ -17,7 +17,7 @@ function Index() {
             localStorage.setItem('isWelcomeSeen', 'true')
             navigate({ to: '/welcome' })
         } else {
-            navigate({ to: '/referral' })
+            navigate({ to: '/generate' })
         }
     }, [tg, isWelcomeSeen]);
     return <>

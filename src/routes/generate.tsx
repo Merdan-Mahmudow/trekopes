@@ -12,7 +12,7 @@ import { BsFileText } from "react-icons/bs";
 import { TbTextSize } from "react-icons/tb";
 import { GiMusicalNotes } from "react-icons/gi";
 import { PhotoGenerateScreen } from '../components/Screens/PhotoGenerate'
-import { FMCarousel } from '../components/Slider'
+import FMCarousel from '../components/Slider'
 import { StyleGenerateScreen } from '../components/Screens/StyleGenerate'
 import { FastGenerateScreen } from '../components/Screens/FastGenerate'
 
@@ -42,13 +42,13 @@ function RouteComponent() {
         setIsPopupOpen(true);
         setGenType(type);
     } 
-const slides = [
-    {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 1</Box>},
-    {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 2</Box>},
-    {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 3</Box>},
-    {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 4</Box>},
-    {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 5</Box>},
-]
+// const slides = [
+//     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 1</Box>},
+//     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 2</Box>},
+//     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 3</Box>},
+//     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 4</Box>},
+//     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 5</Box>},
+// ]
 
     const cards = [
         {
@@ -98,11 +98,6 @@ const slides = [
                 pt={4}
                 pb={"11vh"}>
                     <FMCarousel 
-                    height={200}
-                    autoPlay
-                    showArrows={false}
-                    showDots={true}
-                    slides={slides}
                     />
                 <Text w={"11/12"} fontSize={"24px"} color={COLOR.kit.orangeWhite}>Создать трек</Text>
                 <Grid templateColumns="1fr"
@@ -116,7 +111,7 @@ const slides = [
                             p={"24px"}
                             borderRadius="2xl"
                             onClick={() => handleChangeType(card.type)}>
-                            <Flex gap={4} alignItems="center">
+                            <Flex gap={4}>
                                 <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
                                     <Icon color={COLOR.kit.white} fontSize={card.iconSize} children={card.icon} />
                                 </Flex>

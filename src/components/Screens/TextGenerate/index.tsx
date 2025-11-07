@@ -44,7 +44,6 @@ const ChangeButton = ({ icon, title, onClick, isSelected }: ChangeButtonProps) =
             justifyContent={buttonStyle.justifyContent}
             w={buttonStyle.w}
             h={buttonStyle.h}
-            className={buttonStyle.className}
             fontSize={buttonStyle.fontSize}
             bg={isSelected ? COLOR.kit.smoke : buttonStyle.bg}
             boxShadow={buttonStyle.boxShadow}
@@ -314,7 +313,7 @@ export function TextGenerateScreen() {
                         exit={{ x: 100, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <Box px={5} py={6} color={COLOR.kit.orangeWhite}>
+                        <Box py={6} color={COLOR.kit.orangeWhite}>
                             <Heading size="md" mb={4}>Выбери тему сценария</Heading>
                             <Grid gap={3}>
                                 {buttonData.map((button) => (

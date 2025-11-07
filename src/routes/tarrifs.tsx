@@ -44,8 +44,6 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
             bg={COLOR.kit.darkGray}
             p="24px"
             borderRadius="2xl"
-            border="1px solid"
-            borderColor={isActive ? COLOR.kit.orangeWhite : 'whiteAlpha.100'}
             boxShadow={isActive ? 'md' : 'sm'}
             position="relative"
             transition="all 0.2s ease"
@@ -57,7 +55,7 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
             }}
         >
             {isPopular && (
-                <Float placement={"top-start"} offsetX={20}>
+                <Float placement={"top-start"} offsetX={70}>
                     <Badge
                         colorScheme="orange"
                         bg={"red.500"}
@@ -67,7 +65,7 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
                 </Float>
             )}
             {personal && (
-                <Float placement={"top-start"} offsetX={20}>
+                <Float placement={"top-start"} offsetX={105}>
                     <Badge
                         colorScheme="orange"
                     >
@@ -76,7 +74,7 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
                 </Float>
             )}
             <Flex gap={4} align="center">
-                <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={'orange.600'} borderRadius="2xl" overflow="hidden">
+                <Flex top={5} position="relative"  justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={'orange.600'} borderRadius="2xl" overflow="hidden">
                     {image ? (
                         image
                     ) : (
