@@ -1,4 +1,3 @@
-// Types generated for the API response in the user's message
 export interface FileEntry {
 	url: string
 	active: boolean

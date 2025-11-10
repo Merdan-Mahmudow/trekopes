@@ -1,36 +1,93 @@
 /* Slider.module.css */
 .scope {
-  /* локальные CSS-переменные только для слайдера */
   --swiper-theme-color: #ff6a00;
   --swiper-navigation-size: 28px;
+  width: 100vw;
+  display: block;
+  height: 100%;
 }
 
 .root {
   width: 100%;
-  height: 400px;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
+  background: rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 
-/* базовая раскладка Swiper — только внутри .scope */
-.scope :global(.swiper) { width: 100%; height: 100%; }
-.scope :global(.swiper-wrapper) { display: flex; }
+.scope :global(.swiper) {
+  width: 100%;
+}
+
+.scope :global(.swiper-wrapper) {
+  display: flex;
+}
+
 .scope :global(.swiper-slide) {
-  flex-shrink: 0;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* твой вид слайдов */
 .slide {
+  width: 90vw;
+  height: 200px;
+  background: linear-gradient(135deg, #ff6a00, #ee0979);
+  border-radius: 16px;
+}
+
+.slideContent {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 620px;
+  text-align: center;
+  color: #fff;
+  height: 100%;
+}
+
+.badge {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(26px, 5vw, 40px);
   font-weight: 700;
-  color: #fff;
-  background: linear-gradient(135deg, #ff6a00, #ee0979);
+  line-height: 1.1;
+}
+
+.description {
+  font-size: clamp(16px, 4vw, 20px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+@media (max-width: 640px) {
+  .slide {
+    padding: 24px 18px;
+  }
+
+  .root {
+    border-radius: 16px;
+  }
+
+  .badge {
+    font-size: 11px;
+  }
 }
 
 /* навигация */

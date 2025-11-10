@@ -55,9 +55,9 @@ const NavBar = () => {
     return `
       M 9 ${topY}
       H ${waveStart - -3.7}
-      C ${waveStart + 10} ${topY + 3}, ${waveStart + 25} ${waveHeight + 3}, ${centerX - 15} ${waveHeight}
-      C ${centerX - 5} ${waveHeight - 3}, ${centerX + 5} ${waveHeight - 3}, ${centerX + 15} ${waveHeight}
-      C ${waveEnd - 15} ${waveHeight + 6}, ${waveEnd - 23} ${topY - 4}, ${waveEnd} ${topY}
+      C ${waveStart + 10} ${topY}, ${waveStart + 25} ${waveHeight + 3}, ${centerX - 15} ${waveHeight}
+      C ${centerX - 5} ${waveHeight - 3}, ${centerX + 4.5} ${waveHeight - 3}, ${centerX + 15} ${waveHeight}
+      C ${waveEnd - 15} ${waveHeight + 6}, ${waveEnd - 23} ${topY - 3}, ${waveEnd} ${topY}
       H ${svgWidth - 40}
       C ${svgWidth - 25} ${topY}, ${svgWidth - 20} 36, ${svgWidth - 20} 60
       V 60
@@ -86,9 +86,15 @@ const NavBar = () => {
       alignItems="center"
     >
       <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} 100`} preserveAspectRatio="none" overflow={"visible"}>
+      <defs>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="objectBoundingBox">
+          <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="rgba(0,0,0,0.35)" />
+        </filter>
+      </defs>
         <MotionPath
           d={createPath(positions[active])}
           fill={"#27272a"}
+          filter="url(#shadow)"
           animate={{ d: createPath(positions[active]) }}
           transition={{ duration: 0.15, ease: "easeInOut" }}
           style={{filter: "drop-shadow(0px 0px 7px rgba(0, 0, 0, 1))", overflow: "visible"}}

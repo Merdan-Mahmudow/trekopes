@@ -1,5 +1,6 @@
 import { Flex, Image, Text } from "@chakra-ui/react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { LuPlus } from "react-icons/lu";    
 import { BsChatDots } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
 import { useStore } from "@tanstack/react-store";
@@ -33,6 +34,7 @@ export function Balance() {
                 />
                 
                 <Text>{user.balance}</Text>
+                <LuPlus size={13} color={COLOR.kit.orange} />
             </Flex>
         </Flex>
     </>

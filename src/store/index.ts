@@ -3,7 +3,7 @@ import { Store } from "@tanstack/react-store";
 const store = new Store({
   player: {
     src: undefined as string | undefined,
-    isVisible: false,
+    isVisible: true,
     isPlaying: false,
     currentTrackId: null as string | null,
     queue: [] as Array<{ id: string; src: string; title?: string; artist?: string; cover?: string; duration?: number }>,

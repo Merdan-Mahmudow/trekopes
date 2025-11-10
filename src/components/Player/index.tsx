@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import { Box, Flex, Button, Text, HStack, IconButton, Image, CloseButton } from '@chakra-ui/react'
 import { BsPlayFill, BsPauseFill, BsSkipBackwardFill, BsSkipForwardFill } from 'react-icons/bs'
 import store from '../../store'
@@ -25,6 +26,8 @@ export function Player() {
   const [current, setCurrent] = useState(0)
   const [status, setStatus] = useState<PlayerStatus>('idle')
   const seekingRef = useRef(false)
+  const progressRef = useRef<HTMLDivElement | null>(null)
+  const [isScrubbing, setIsScrubbing] = useState(false)
 
   // Initialize audio element
   useEffect(() => {
@@ -242,82 +245,101 @@ function resolveDuration(a: HTMLAudioElement, fallback?: number): number | null 
   return null;
 }
 
+const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
+  const a = audioRef.current
+  if (!a) {
+    console.warn('[Player] seekToPercent: audioRef.current is null')
+    return
+  }
+
+  if (a.readyState < HAVE_METADATA) {
+    const targetPercent = Math.max(0, Math.min(1, Number.isFinite(percent) ? percent : 0))
+    const onMeta = () => {
+      a.removeEventListener('loadedmetadata', onMeta)
+      seekToPercent(targetPercent, emitTelemetry)
+    }
+    a.addEventListener('loadedmetadata', onMeta, { once: true })
+    try { a.load?.() } catch { /* ignore */ }
+    return
+  }
+
+  const dur = resolveDuration(a, duration)
+  if (!Number.isFinite(dur) || (dur as number) <= 0) {
+    console.warn('[Player] seekToPercent: invalid duration', { aDuration: a.duration, fallback: duration })
+    return
+  }
+
+  const clampedPercent = Math.max(0, Math.min(1, Number.isFinite(percent) ? percent : 0))
+  const newTime = clampedPercent * (dur as number)
+
+  if (!Number.isFinite(newTime) || newTime < 0) {
+    console.warn('[Player] seekToPercent: computed newTime non-finite', { percent, dur, newTime })
+    return
+  }
+
+  try {
+    a.currentTime = newTime
+    setCurrent(newTime)
+  } catch (err) {
+    console.warn('[Player] seekToPercent: failed to set currentTime', err, { newTime })
+    return
+  }
+
+  if (emitTelemetry) {
+    trackTelemetry('seek', {
+      track_id: playerState.currentTrackId,
+      position: newTime,
+      source: 'progress_bar',
+    })
+  }
+}, [duration, playerState.currentTrackId])
+
+const seekByClientX = useCallback((clientX: number | null, emitTelemetry: boolean) => {
+  const bar = progressRef.current
+  if (!bar) return
+  if (!Number.isFinite(clientX)) return
+  const rect = bar.getBoundingClientRect()
+  const width = rect?.width ?? 0
+  if (!Number.isFinite(width) || width <= 0) return
+  const x = (clientX as number) - rect.left
+  const percentRaw = x / width
+  seekToPercent(percentRaw, emitTelemetry)
+}, [seekToPercent])
+
 const handleSeek = useCallback((
   e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
 ) => {
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault()
+  e.stopPropagation()
+  seekingRef.current = true
+  const cx = getClientX(e)
+  seekByClientX(cx, true)
+  seekingRef.current = false
+}, [seekByClientX])
 
-  const a = audioRef.current;
-  if (!a) {
-    console.warn('[Player] handleSeek: audioRef.current is null');
-    return;
+const handleProgressPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+  if (!duration) return
+  e.preventDefault()
+  e.stopPropagation()
+  seekingRef.current = true
+  setIsScrubbing(true)
+  seekByClientX(e.clientX, false)
+
+  const handleMove = (event: PointerEvent) => {
+    seekByClientX(event.clientX, false)
   }
 
-  const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-  const width = rect?.width ?? 0;
-  if (!Number.isFinite(width) || width <= 0) {
-    console.warn('[Player] handleSeek: invalid rect.width', width);
-    return;
+  const handleUp = (event: PointerEvent) => {
+    seekByClientX(event.clientX, true)
+    seekingRef.current = false
+    setIsScrubbing(false)
+    document.removeEventListener('pointermove', handleMove)
+    document.removeEventListener('pointerup', handleUp)
   }
 
-  const cx = getClientX(e);
-  if (!Number.isFinite(cx)) {
-    console.warn('[Player] handleSeek: clientX is non-finite', cx);
-    return;
-  }
-
-  const x = (cx as number) - rect.left;
-  const percentRaw = x / width;
-  // Аккуратно клаем проценты
-  const percent = Math.max(0, Math.min(1, Number.isFinite(percentRaw) ? percentRaw : 0));
-
-  const safeApply = () => {
-    const dur = resolveDuration(a, duration);
-    if (!Number.isFinite(dur) || (dur as number) <= 0) {
-      console.warn('[Player] handleSeek: duration non-finite/<=0', { aDuration: a.duration, fallback: duration });
-      return;
-    }
-
-    // Считаем цель и валидируем
-    const newTimeRaw = percent * (dur as number);
-    const newTime = Number.isFinite(newTimeRaw) ? newTimeRaw : 0;
-
-    // Доп. защита от невалидных значений
-    if (!Number.isFinite(newTime) || newTime < 0) {
-      console.warn('[Player] handleSeek: computed newTime non-finite', { percent, dur, newTimeRaw });
-      return;
-    }
-
-    try {
-      a.currentTime = newTime;   // ← тут раньше падало
-      setCurrent(newTime);
-      seekingRef.current = false;
-
-      trackTelemetry('seek', {
-        track_id: playerState.currentTrackId,
-        position: newTime,
-        source: 'progress_bar',
-      });
-
-      console.log('[Player] Seek OK', { width, x, percent, newTime, dur });
-    } catch (err) {
-      console.warn('[Player] handleSeek: failed to set currentTime', err, { percent, width, x });
-    }
-  };
-
-  // Если метаданные не готовы — дождёмся
-  if (a.readyState < HAVE_METADATA) {
-    const onMeta = () => {
-      a.removeEventListener('loadedmetadata', onMeta);
-      safeApply();
-    };
-    a.addEventListener('loadedmetadata', onMeta, { once: true });
-    try { a.load?.(); } catch {}
-  } else {
-    safeApply();
-  }
-}, [duration, playerState.currentTrackId]);
+  document.addEventListener('pointermove', handleMove)
+  document.addEventListener('pointerup', handleUp)
+}, [duration, seekByClientX])
 
   const handleNext = useCallback(() => {
     if (playerState.queue && playerState.currentIndex !== undefined) {
@@ -411,6 +433,9 @@ const handleSeek = useCallback((
   }
 
   const progressPercent = duration > 0 ? (current / duration) * 100 : 0
+  const clampedProgress = Number.isFinite(progressPercent)
+    ? Math.max(0, Math.min(100, progressPercent))
+    : 0
 
   // Public API
   useEffect(() => {
@@ -464,13 +489,14 @@ const handleSeek = useCallback((
     <Box
       role="region"
       aria-label="Audio player"
-      position="relative"
-      w="100vw"
+      position="sticky"
+      top={0}
+      left={0}
+      w="100%"
       zIndex={1200}
       bg="#1c1c1e"
       color="#f2f2f2"
       boxShadow="0 4px 12px rgba(0, 0, 0, 0.3)"
-      borderBottomRadius={"2xl"}
       
     >
       <Flex
@@ -568,7 +594,6 @@ const handleSeek = useCallback((
             color="white"
             _hover={{ bg: isPlaying ? '#3a3a3d' : COLOR.kit.orange }}
             _active={{ bg: isPlaying ? '#4a4a4d' : COLOR.kit.orange }}
-            _focus={{ outline: '2px solid ' + COLOR.kit.orange, outlineOffset: '2px' }}
             loading={status === 'loading'}
           >
             {status === 'loading' ? null : isPlaying ? <BsPauseFill size={20} /> : <BsPlayFill size={20} />}
@@ -619,8 +644,9 @@ const handleSeek = useCallback((
         h="3px"
         bg="#2a2a2d"
         cursor="pointer"
+        ref={progressRef}
         onClick={handleSeek}
-        onTouchEnd={handleSeek}
+        onPointerDown={handleProgressPointerDown}
         onMouseMove={(e) => {
           if (!duration) return
           const rect = e.currentTarget.getBoundingClientRect()
@@ -659,11 +685,25 @@ const handleSeek = useCallback((
           bottom={0}
           h="100%"
           bg="#6aa7ff"
-          width={`${progressPercent}%`}
+          width={`${clampedProgress}%`}
           transition="width 0.1s linear"
           borderRadius="0 2px 2px 0"
           zIndex={2}
           pointerEvents="none"
+        />
+        {/* Thumb */}
+        <Box
+          position="absolute"
+          top="50%"
+          left={`${clampedProgress}%`}
+          transform={`translate(0, -50%) scale(${isScrubbing ? 1.25 : 1})`}
+          transition="transform 0.12s ease, box-shadow 0.15s ease"
+          w="9px"
+          h="9px"
+          borderRadius="full"
+          bg={COLOR.kit.orange}
+          pointerEvents="none"
+          zIndex={3}
         />
       </Box>
     </Box>

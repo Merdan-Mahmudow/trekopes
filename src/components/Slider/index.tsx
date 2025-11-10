@@ -1,142 +1,82 @@
-"use client"
+import { memo } from "react"
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Autoplay, Navigation, Pagination } from "swiper/modules"
+import styles from "./Slider.module.css"
 
-import { AnimatePresence, motion, usePresenceData, wrap } from "motion/react"
-import { forwardRef, type SVGProps, useState } from "react"
+import "swiper/css"
+import "swiper/css/navigation"
+import "swiper/css/pagination"
 
-export default function FMCarousel() {
-    const items = [1, 2, 3, 4, 5, 6]
-    const [selectedItem, setSelectedItem] = useState(items[0])
-    const [direction, setDirection] = useState<1 | -1>(1)
+type SlideItem = {
+    id: string
+    badge?: string
+    title: string
+    description: string
+}
 
-    function setSlide(newDirection: 1 | -1) {
-        const nextItem = wrap(1, items.length, selectedItem + newDirection)
-        setSelectedItem(nextItem)
-        setDirection(newDirection)
-    }
+const slides: SlideItem[] = [
+    {
+        id: "story",
+        badge: "новое",
+        title: "Песня под ваш сценарий",
+        description: "Выберите историю, заполните короткую анкету — Трекопес соберёт эмоции и превратит их в готовый трек.",
+    },
+    {
+        id: "photo",
+        badge: "фото → трек",
+        title: "Музыка из фотографии",
+        description: "Сфотографируйте кого-то, место или предмет. Нейросеть распознает настроение и напишет песню.",
+    },
+    {
+        id: "link",
+        badge: "в одно касание",
+        title: "Трек по ссылке",
+        description: "Отправьте ссылку на профиль — Трекопес изучит любимые темы и сделает персональный трек.",
+    },
+    {
+        id: "style",
+        badge: "вдохновение",
+        title: "Выберите стиль",
+        description: "Поп, инди или синтвейв? Подберите референс — и получите песню с нужным звучанием.",
+    },
+    {
+        id: "fast",
+        badge: "быстрый старт",
+        title: "Готовый текст — готовый трек",
+        description: "Вставьте текст, добавьте пару подсказок и получите за минуту демо-песню.",
+    },
+]
 
-    const color = `var(--hue-${selectedItem})`
-
+function FMCarouselComponent() {
     return (
-        <div style={container}>
-            <motion.button
-                initial={false}
-                animate={{ backgroundColor: color }}
-                aria-label="Previous"
-                style={button}
-                onClick={() => setSlide(-1)}
-                whileFocus={{ outline: `2px solid ${color}` }}
-                whileTap={{ scale: 0.9 }}
-            >
-                <ArrowLeft />
-            </motion.button>
-            <AnimatePresence
-                custom={direction}
-                initial={false}
-                mode="popLayout"
-            >
-                <Slide key={selectedItem} color={color} />
-            </AnimatePresence>
-            <motion.button
-                initial={false}
-                animate={{ backgroundColor: color }}
-                aria-label="Next"
-                style={button}
-                onClick={() => setSlide(1)}
-                whileFocus={{ outline: `2px solid ${color}` }}
-                whileTap={{ scale: 0.9 }}
-            >
-                <ArrowRight />
-            </motion.button>
-        </div>
+        <section className={styles.scope}>
+            <div className={styles.root}>
+                <Swiper
+                    modules={[Navigation, Pagination, Autoplay]}
+                    loop
+                    pagination={{ clickable: true }}
+                    autoplay={{ delay: 4800, disableOnInteraction: false }}
+                    speed={650}
+                    className={styles.swiper}
+                    
+                >
+                    {slides.map((slide) => (
+                        <SwiperSlide key={slide.id}>
+                            <article className={styles.slide}>
+                                <div className={styles.slideContent}>
+                                    {slide.badge ? <span className={styles.badge}>{slide.badge}</span> : null}
+                                    <h3 className={styles.title}>{slide.title}</h3>
+                                    <p className={styles.description}>{slide.description}</p>
+                                </div>
+                            </article>
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
+            </div>
+        </section>
     )
 }
 
-const Slide = forwardRef(function Slide(
-    { color }: { color: string },
-    ref: React.Ref<HTMLDivElement>
-) {
-    const direction = usePresenceData()
-    return (
-        <motion.div
-            ref={ref}
-            initial={{ opacity: 0, x: direction * 50 }}
-            animate={{
-                opacity: 1,
-                x: 0,
-                transition: {
-                    delay: 0.2,
-                    type: "spring",
-                    visualDuration: 0.3,
-                    bounce: 0.4,
-                },
-            }}
-            exit={{ opacity: 0, x: direction * -50 }}
-            style={{ ...box, backgroundColor: color }}
-        />
-    )
-})
+const FMCarousel = memo(FMCarouselComponent)
 
-/**
- * ==============   Icons   ================
- */
-const iconsProps: SVGProps<SVGSVGElement> = {
-    xmlns: "http://www.w3.org/2000/svg",
-    width: "24",
-    height: "24",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-}
-
-function ArrowLeft() {
-    return (
-        <svg {...iconsProps}>
-            <path d="m12 19-7-7 7-7" />
-            <path d="M19 12H5" />
-        </svg>
-    )
-}
-
-function ArrowRight() {
-    return (
-        <svg {...iconsProps}>
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-        </svg>
-    )
-}
-
-/**
- * ==============   Styles   ================
- */
-
-const container: React.CSSProperties = {
-    display: "flex",
-    position: "relative",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 10,
-}
-
-const box: React.CSSProperties = {
-    width: 150,
-    height: 150,
-    backgroundColor: "#0cdcf7",
-    borderRadius: "10px",
-}
-
-const button: React.CSSProperties = {
-    backgroundColor: "#0cdcf7",
-    width: 40,
-    height: 40,
-    borderRadius: "50%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-    zIndex: 1,
-    outlineOffset: 2,
-}
+export default FMCarousel
