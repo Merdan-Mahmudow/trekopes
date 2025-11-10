@@ -1,11 +1,29 @@
 import { Box, Text, VStack, Grid, Textarea } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useStore } from "@tanstack/react-store";
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
 import { ProPayScreen } from "../ProPay";
 import { useIsPro } from "../../../store/user";
 import { ArtistParams } from "../ArtistParams";
-import type { GenerationParams, Artist } from "../ArtistParams";
+import { TrackLoadingScreen } from "../TrackLoading";
+import {
+    createStyleGenerationDraft,
+    type StyleGenerationDraft,
+    type GenerationDraft,
+} from "../../../types/generation";
+import {
+    setGenerationScenario,
+    updateGenerationScenario,
+    useGenerationScenario,
+    useGenerationDraft,
+    resetGenerationDraft,
+} from "../../../store/generation";
+import store, { setGenerationPrompt } from "../../../store";
+import { buildCreateGenerationRequest } from "../../../utils/generationPayload";
+import { createWebAppGeneration } from "../../../api/webapp";
+import { useTracks } from "../../../hooks/useTracks";
+import { toaster } from "../../ui/toaster";
 type StyleGenerateScreenProps = {
     onClose: () => void;
 };
@@ -13,17 +31,125 @@ type StyleGenerateScreenProps = {
 // delete button "Отмена"
 
 export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
-    const [currentStep, setCurrentStep] = useState<"select" | "prompt">("select");
+    const [currentStep, setCurrentStep] = useState<"select" | "prompt" | "loading">("select");
     const [proStep, setProStep] = useState(false);
     const isPro = useIsPro();
     const [prompt, setPrompt] = useState("");
-    const [, setSelectedArtist] = useState<Artist | null>(null);
     const promptRef = useRef<HTMLTextAreaElement>(null);
-    const [, setGenerationParams] = useState<GenerationParams | null>(null);
+    const scenarioState = useGenerationScenario();
+    const generationDraft = useGenerationDraft();
+    const token = useStore(store, (state) => state.auth.token);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const { loadTracks } = useTracks();
+
+    useEffect(() => {
+        if (!scenarioState || scenarioState.mode !== "style") {
+            setGenerationScenario(createStyleGenerationDraft());
+        }
+    }, [scenarioState]);
+
+    useEffect(() => {
+        if (scenarioState?.mode === "style") {
+            if (
+                typeof scenarioState.prompt === "string" &&
+                scenarioState.prompt !== prompt
+            ) {
+                setPrompt(scenarioState.prompt);
+            }
+        }
+    }, [scenarioState, prompt]);
+
+    const patchStyleScenario = useCallback(
+        (updater: (draft: StyleGenerationDraft) => StyleGenerationDraft) => {
+            updateGenerationScenario((scenario) => {
+                const base =
+                    scenario && scenario.mode === "style"
+                        ? { ...scenario }
+                        : createStyleGenerationDraft();
+                return updater(base);
+            });
+        },
+        [updateGenerationScenario]
+    );
+
+    const handlePromptChange = useCallback(
+        (value: string) => {
+            setPrompt(value);
+            setGenerationPrompt(value);
+            patchStyleScenario((draft) => ({
+                ...draft,
+                prompt: value,
+            }));
+        },
+        [patchStyleScenario]
+    );
 
     const handleGenerate = async () => {
-        if (isPro) onClose();
-        else setProStep(true);
+        if (!isPro) {
+            setProStep(true);
+            return;
+        }
+
+        setError(null);
+        setIsSubmitting(true);
+        try {
+            const draft = generationDraft;
+            if (!draft?.scenario || draft.scenario.mode !== "style") {
+                throw new Error("Заполните параметры генерации");
+            }
+
+            const updatedScenario = {
+                ...draft.scenario,
+                prompt,
+            };
+
+            const effectiveDraft: GenerationDraft = {
+                ...draft,
+                prompt,
+                scenario: updatedScenario,
+            };
+
+            const payload = buildCreateGenerationRequest(effectiveDraft);
+
+            if (!token) {
+                throw new Error("Нет токена авторизации");
+            }
+
+            await createWebAppGeneration(token, payload);
+
+            setGenerationScenario(updatedScenario);
+            setGenerationPrompt(payload.prompt);
+            setCurrentStep("loading");
+
+            try {
+                await loadTracks();
+            } catch (loadError) {
+                console.error(loadError);
+            }
+
+            resetGenerationDraft();
+            toaster.create({
+                type: "success",
+                title: "Генерация запущена",
+                description: "Следи за списком — трек появится после обработки.",
+            });
+        } catch (err) {
+            console.error(err);
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Не удалось запустить генерацию"
+            );
+            toaster.create({
+                type: "error",
+                title: "Ошибка запуска генерации",
+                description:
+                    err instanceof Error ? err.message : "Попробуйте ещё раз позже.",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
     // focus if current step is "prompt" is active and not focused
     useEffect(() => {
@@ -43,14 +169,20 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
         <VStack gap={4} w="full" color="white">
             {currentStep === "select" ? (
                 <ArtistParams
+                    mode="collect"
                     onBack={onClose}
                     onCancel={onClose}
                     onGenerate={({ artist, params }) => {
-                        setSelectedArtist(artist);
-                        setGenerationParams(params);
+                        patchStyleScenario((draft) => ({
+                            ...draft,
+                            artist,
+                            params,
+                        }));
                         setCurrentStep("prompt");
                     }}
                 />
+            ) : currentStep === "loading" ? (
+                <TrackLoadingScreen />
             ) : (
                 <>
                     <Box w="full" bg={COLOR.kit.darkGray} borderRadius="24px" p={6}>
@@ -65,7 +197,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                             <Textarea
                                 value={prompt}
                                 ref={promptRef}
-                                onChange={(e) => setPrompt(e.target.value)}
+                                onChange={(e) => handlePromptChange(e.target.value)}
                                 placeholder="Например: лирический трек о ночном городе и надежде"
                                 fontSize="16px"
                                 lineHeight="130%"
@@ -91,11 +223,16 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                         <BrandButton
                             onClick={handleGenerate}
                             w="full"
-                            disabled={!prompt.trim()}
+                            disabled={!prompt.trim() || isSubmitting}
                         >
                             Сгенерировать
                         </BrandButton>
                     </Grid>
+                    {error && (
+                        <Text color="red.300" fontSize="sm" textAlign="center">
+                            {error}
+                        </Text>
+                    )}
                 </>
             )}
         </VStack>

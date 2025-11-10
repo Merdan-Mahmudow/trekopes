@@ -1,32 +1,33 @@
 import { Box, Text, VStack, Input, Icon, Flex, Grid, GridItem, Button, Slider } from "@chakra-ui/react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaPaw } from 'react-icons/fa';
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
 import { TrackLoadingScreen } from "../TrackLoading";
-
-export type Artist = {
-    id: string;
-    name: string;
-    avatar: string;
-};
-
-export type GenerationParams = {
-    tempo: number;
-    mood?: string | null;
-    style?: string | null;
-    voice?: 'male' | 'female' | 'both' | null;
-};
+import type { Artist, GenerationParams, GenerationDraft } from "../../../types/generation";
+import { useStore } from "@tanstack/react-store";
+import store, {
+  setGenerationPrompt,
+  setGenerationScenario,
+  updateGenerationScenario,
+  resetGenerationDraft,
+} from "../../../store";
+import { useGenerationDraft } from "../../../store/generation";
+import { buildCreateGenerationRequest } from "../../../utils/generationPayload";
+import { createWebAppGeneration } from "../../../api/webapp";
+import { useTracks } from "../../../hooks/useTracks";
+import { toaster } from "../../ui/toaster";
 
 type ArtistParamsProps = {
+    mode?: "collect" | "submit";
     onBack: () => void;
     onCancel: () => void;
-    onGenerate: (data: { artist: Artist | null, params: GenerationParams }) => void;
+    onGenerate?: (data: { artist: Artist | null; params: GenerationParams }) => void | boolean | Promise<void | boolean>;
 };
 
 
 
-export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps) {
+export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: ArtistParamsProps) {
     const [tempo, setTempo] = useState(105);
     const [activeTab, setActiveTab] = useState<"mode" | "params">("mode");
     const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +40,11 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
         style: null,
         voice: null
     });
+    const generationDraft = useGenerationDraft();
+    const token = useStore(store, (state) => state.auth.token);
+    const [error, setError] = useState<string | null>(null);
+    const { loadTracks } = useTracks();
+
     const TEMPO_COLORS = {
         slow: (generationParams.tempo >= 60 && generationParams.tempo <= 90) ? COLOR.kit.orange : COLOR.kit.smoke,
         medium: (generationParams.tempo >= 91 && generationParams.tempo <= 120) ? COLOR.kit.orange : COLOR.kit.smoke,
@@ -58,15 +64,126 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
 
     const filteredArtists = useMemo(() => artists.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())), [artists, searchQuery]);
 
-    const handleParamsChange = (key: keyof GenerationParams, value: number | string) => {
-        setGenerationParams(prev => ({ ...prev, [key]: value }));
-    };
+    useEffect(() => {
+        const scenario = generationDraft?.scenario;
+        if (!scenario) return;
+
+        if ("artist" in scenario && scenario.artist) {
+            setSelectedArtist(scenario.artist);
+        }
+        if ("params" in scenario && scenario.params) {
+            setGenerationParams({
+                tempo: scenario.params.tempo ?? 105,
+                mood: scenario.params.mood ?? null,
+                style: scenario.params.style ?? null,
+                voice: scenario.params.voice ?? null,
+            });
+            setTempo(scenario.params.tempo ?? 105);
+        }
+    }, [generationDraft]);
+
+    const handleParamsChange = useCallback((key: keyof GenerationParams, value: number | string) => {
+        setGenerationParams(prev => {
+            const next = { ...prev, [key]: value };
+            updateGenerationScenario((scenario) => {
+                if (!scenario) return scenario;
+                if ("params" in scenario) {
+                    return {
+                        ...scenario,
+                        params: { ...next },
+                    } as typeof scenario;
+                }
+                return scenario;
+            });
+            return next;
+        });
+    }, [updateGenerationScenario]);
+
+    const handleSelectArtist = useCallback((artist: Artist) => {
+        setSelectedArtist(artist);
+        updateGenerationScenario((scenario) => {
+            if (!scenario) return scenario;
+            if ("artist" in scenario) {
+                return {
+                    ...scenario,
+                    artist,
+                } as typeof scenario;
+            }
+            return scenario;
+        });
+    }, [updateGenerationScenario]);
 
     const handleGenerate = async () => {
+        setError(null);
         setIsGenerating(true);
         try {
-            setIsLoading(true)
-            onGenerate({ artist: activeTab === "mode" ? selectedArtist : null, params: generationParams });
+            const selection = {
+                artist: activeTab === "mode" ? selectedArtist : null,
+                params: generationParams,
+            };
+
+            const callbackResult = await onGenerate?.(selection);
+
+            if (mode === "collect" || callbackResult === false) {
+                setIsGenerating(false);
+                return;
+            }
+
+            setIsLoading(true);
+
+            const scenario = generationDraft?.scenario;
+            if (!scenario) {
+                throw new Error("Нет данных сценария для генерации");
+            }
+
+            const updatedScenario = {
+                ...scenario,
+                artist: selection.artist,
+                params: selection.params,
+            } as typeof scenario;
+
+            const effectiveDraft: GenerationDraft = {
+                ...generationDraft,
+                scenario: updatedScenario,
+            };
+
+            const payload = buildCreateGenerationRequest(effectiveDraft);
+
+            if (!token) {
+                throw new Error("Нет токена авторизации");
+            }
+
+            await createWebAppGeneration(token, payload);
+
+            setGenerationScenario(updatedScenario);
+            setGenerationPrompt(payload.prompt);
+
+            try {
+                await loadTracks();
+            } catch (loadError) {
+                console.error(loadError);
+            }
+
+            resetGenerationDraft();
+            toaster.create({
+                type: "success",
+                title: "Генерация запущена",
+                description: "Мы уведомим, когда трек будет готов.",
+            });
+        } catch (err) {
+            console.error(err);
+            setIsLoading(false);
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Не удалось запустить генерацию"
+            );
+            toaster.create({
+                type: "error",
+                title: "Ошибка запуска генерации",
+                description:
+                    err instanceof Error ? err.message : "Попробуйте ещё раз позже.",
+            });
         } finally {
             setIsGenerating(false);
         }
@@ -121,7 +238,7 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                                         w={"full"}
                                         py={4}
                                         cursor="pointer"
-                                        onClick={() => setSelectedArtist(artist)}
+                                        onClick={() => handleSelectArtist(artist)}
                                         borderRadius="16px"
                                         bg={selectedArtist?.id === artist.id ? COLOR.kit.orange : "#1E1E20"}
                                         _hover={{ bg: selectedArtist?.id === artist.id ? COLOR.kit.orange : "#2A2A2D" }}
@@ -233,6 +350,11 @@ export function ArtistParams({ onBack, onCancel, onGenerate }: ArtistParamsProps
                             </Flex>
                         </Flex>
                     </BrandButton>
+                    {error && (
+                        <Text color="red.300" fontSize="sm" textAlign="center">
+                            {error}
+                        </Text>
+                    )}
                 </VStack>
             </Box >
 

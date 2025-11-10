@@ -1,6 +1,6 @@
 import { Flex, Image, Text } from "@chakra-ui/react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LuPlus } from "react-icons/lu";    
+import { LuPlus } from "react-icons/lu";
 import { BsChatDots } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
 import { useStore } from "@tanstack/react-store";
@@ -8,7 +8,7 @@ import store from "../../store";
 
 export function Balance() {
     const navigate = useNavigate();
-    const user = useStore(store, (state) => state.user)
+    const user = useStore(store, (state) => state.user);
 
     return <>
         <Flex
@@ -17,7 +17,9 @@ export function Balance() {
             pt={"9px"}
             gap={3}
             alignItems={"center"}>
-                <Link to="/chat"><BsChatDots size={"22px"} color={COLOR.brand.orange}/></Link>
+            <Link to="/chat">
+                <BsChatDots size={"22px"} color={COLOR.brand.orange} />
+            </Link>
             <Flex
                 w={"fit"}
                 borderRadius={"full"}
@@ -26,14 +28,14 @@ export function Balance() {
                 bg={COLOR.kit.darkGray}
                 gap={"4px"}
                 onClick={() => navigate({ to: "/tarrifs" })}
-                >
+            >
                 <Image
                     w={"20px"}
                     h={"20px"}
-                    src="https://storage.yandexcloud.net/trekopes/paw.svg" 
+                    src="https://storage.yandexcloud.net/trekopes/paw.svg"
                 />
                 
-                <Text>{user.balance}</Text>
+                <Text>{user.limit}</Text>
                 <LuPlus size={13} color={COLOR.kit.orange} />
             </Flex>
         </Flex>

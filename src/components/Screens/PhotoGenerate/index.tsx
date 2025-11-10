@@ -2,7 +2,7 @@ import {
     Box, Button, Heading, Text, VStack, Icon, Flex, Image,
     FileUpload
 } from "@chakra-ui/react";
-import { useState, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArtistParams } from "../ArtistParams";
 import Webcam from "react-webcam";
 import { MdCameraswitch, MdPhotoCamera } from "react-icons/md";
@@ -10,6 +10,24 @@ import { Toaster } from "../../../components/ui/toaster";
 import { LuUpload } from "react-icons/lu";
 import { ProPayScreen } from "../ProPay";
 import { useIsPro } from "../../../store/user";
+import {
+    setGenerationScenario,
+    updateGenerationScenario,
+    useGenerationScenario,
+} from "../../../store/generation";
+import {
+    createPhotoGenerationDraft,
+    type GenerationDraftPhoto,
+    type PhotoGenerationDraft,
+} from "../../../types/generation";
+
+const readFileAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
 
 export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     const [screen, setScreen] = useState<
@@ -19,6 +37,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     const [imgSrc, setImgSrc] = useState<string | null>(null);
     const [facingMode, setFacingMode] = useState<"user" | "environment">("user"); // ✅ новое состояние
     const isPro = useIsPro();
+    const scenarioState = useGenerationScenario();
 
     const webcamRef = useRef<Webcam>(null);
 
@@ -28,6 +47,70 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
         facingMode,
     };
 
+    useEffect(() => {
+        if (!scenarioState || scenarioState.mode !== "photo") {
+            setGenerationScenario(createPhotoGenerationDraft());
+        }
+    }, [scenarioState]);
+
+    useEffect(() => {
+        if (
+            scenarioState &&
+            scenarioState.mode === "photo" &&
+            scenarioState.photo?.dataUrl &&
+            !imgSrc
+        ) {
+            setImgSrc(scenarioState.photo.dataUrl);
+            setScreen((prev) => (prev === "select" ? "preview" : prev));
+        }
+    }, [scenarioState, imgSrc]);
+
+    const patchPhotoScenario = useCallback(
+        (updater: (draft: PhotoGenerationDraft) => PhotoGenerationDraft) => {
+            updateGenerationScenario((scenario) => {
+                const base =
+                    scenario && scenario.mode === "photo"
+                        ? { ...scenario }
+                        : createPhotoGenerationDraft();
+                return updater(base);
+            });
+        },
+        [updateGenerationScenario]
+    );
+
+    const updatePhotoDraft = useCallback(
+        (photo: GenerationDraftPhoto | null) => {
+            patchPhotoScenario((draft) => ({
+                ...draft,
+                photo,
+            }));
+        },
+        [patchPhotoScenario]
+    );
+
+    const handleFileAccept = useCallback(
+        async (event: { files: Array<File | Promise<File>> }) => {
+            const first = event?.files?.[0];
+            if (!first) return;
+            const file = first instanceof File ? first : await first;
+            if (!file) return;
+
+            try {
+                const dataUrl = await readFileAsDataUrl(file);
+                setImgSrc(dataUrl);
+                setScreen("preview");
+                updatePhotoDraft({
+                    source: "upload",
+                    dataUrl,
+                    mimeType: file.type,
+                    fileName: file.name,
+                });
+            } catch (error) {
+                console.error("Failed to read file", error);
+            }
+        },
+        [updatePhotoDraft]
+    );
 
     // ✅ Снимок
     const capture = useCallback(() => {
@@ -35,8 +118,13 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
         if (imageSrc) {
             setImgSrc(imageSrc);
             setScreen("preview");
+            updatePhotoDraft({
+                source: "camera",
+                dataUrl: imageSrc,
+                mimeType: "image/jpeg",
+            });
         }
-    }, []);
+    }, [updatePhotoDraft]);
 
     // ✅ Переключение между камерами
     const toggleCamera = () => {
@@ -51,8 +139,11 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
                     onBack={() => setScreen("preview")}
                     onCancel={onClose}
                     onGenerate={() => {
-                        if (isPro) onClose();
-                        else setScreen("pro");
+                        if (!isPro) {
+                            setScreen("pro");
+                            return false;
+                        }
+                        return true;
                     }}
                 />
             </VStack>
@@ -85,6 +176,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
                     onClick={() => {
                         setImgSrc(null);
                         setScreen("select");
+                        updatePhotoDraft(null);
                     }}
                 >
                     Выбрать другое
@@ -145,7 +237,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
         <VStack gap={4} p={6} w="full" color="white">
             <Heading size="lg">Песня по фото</Heading>
             <Text color="#8A8A8A">Загрузите фото, чтобы создать трек</Text>
-            <FileUpload.Root maxW="xl" alignItems="stretch" onFileAccept={async (e) => {setImgSrc(URL.createObjectURL(await e.files[0])); setScreen("preview")}} accept={["image/*"]}>
+            <FileUpload.Root maxW="xl" alignItems="stretch" onFileAccept={handleFileAccept} accept={["image/*"]}>
                 <FileUpload.HiddenInput />
                 <FileUpload.Dropzone>
                     <Icon size="md" color="fg.muted">

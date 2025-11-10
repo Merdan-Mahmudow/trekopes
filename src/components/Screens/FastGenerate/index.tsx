@@ -1,16 +1,88 @@
 import { Button, Heading, Text, Textarea, VStack } from "@chakra-ui/react"
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useStore } from "@tanstack/react-store"
 import { COLOR } from "../../../components/ui/colors"
 import { ProPayScreen } from "../ProPay"
+import { TrackLoadingScreen } from "../TrackLoading"
 import { useIsPro } from "../../../store/user"
+import {
+	setGenerationScenario,
+	setGenerationPrompt,
+	updateGenerationScenario,
+	useGenerationScenario,
+	useGenerationDraft,
+	resetGenerationDraft,
+} from "../../../store/generation"
+import store from "../../../store"
+import {
+	createFastGenerationDraft,
+	type FastGenerationDraft,
+	type GenerationDraft,
+} from "../../../types/generation"
+import { buildCreateGenerationRequest } from "../../../utils/generationPayload"
+import { createWebAppGeneration } from "../../../api/webapp"
+import { useTracks } from "../../../hooks/useTracks"
+import { toaster } from "../../ui/toaster"
 
 export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void }) => {
 	const [prompt, setPrompt] = useState("")
-	const [screen, setScreen] = useState<"form" | "pro">("form")
+	const [screen, setScreen] = useState<"form" | "pro" | "loading">("form")
 	const isPro = useIsPro()
+	const scenarioState = useGenerationScenario()
+	const generationDraft = useGenerationDraft()
+	const token = useStore(store, (state) => state.auth.token)
+	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const { loadTracks } = useTracks()
+
+	useEffect(() => {
+		if (!scenarioState || scenarioState.mode !== "fast") {
+			setGenerationScenario(createFastGenerationDraft())
+		}
+	}, [scenarioState])
+
+	useEffect(() => {
+		if (scenarioState?.mode === "fast") {
+			if (
+				typeof scenarioState.prompt === "string" &&
+				scenarioState.prompt !== prompt
+			) {
+				setPrompt(scenarioState.prompt)
+			}
+		}
+	}, [scenarioState, prompt])
+
+	const patchFastScenario = useCallback(
+		(updater: (draft: FastGenerationDraft) => FastGenerationDraft) => {
+			updateGenerationScenario((scenario) => {
+				const base =
+					scenario && scenario.mode === "fast"
+						? { ...scenario }
+						: createFastGenerationDraft()
+				return updater(base)
+			})
+		},
+		[updateGenerationScenario]
+	)
+
+	const handlePromptChange = useCallback(
+		(value: string) => {
+			setPrompt(value)
+			setGenerationPrompt(value)
+			patchFastScenario((draft) => ({
+				...draft,
+				prompt: value,
+			}))
+		},
+		[patchFastScenario]
+	)
 
 	if (screen === "pro" && !isPro) {
 		return <ProPayScreen onBack={() => setScreen("form")} onPay={_onClose} />
+	}
+
+	if (screen === "loading") {
+		return <TrackLoadingScreen />
 	}
 
 	return (
@@ -19,7 +91,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			<Text color={COLOR.kit.smoke}>Опишите идею песни или вставьте готовый текст</Text>
 			<Textarea
 				value={prompt}
-				onChange={(e) => setPrompt(e.target.value)}
+				onChange={(e) => handlePromptChange(e.target.value)}
 				placeholder="Например: лирический трек о ночном городе и надежде"
 				minH="160px"
 				bg={COLOR.kit.darkGray}
@@ -38,17 +110,81 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 				color={COLOR.kit.white}
 				_disabled={{ opacity: 0.5, cursor: "not-allowed" }}
 				_hover={{ bg: COLOR.brand.orange700 }}
-				disabled={!prompt.trim()}
-				onClick={() => {
-					if (isPro) {
-						_onClose()
-					} else {
+				disabled={!prompt.trim() || isSubmitting}
+				onClick={async () => {
+					if (!isPro) {
 						setScreen("pro")
+						return
+					}
+
+					setError(null)
+					setIsSubmitting(true)
+					try {
+						const draft = generationDraft
+						if (!draft?.scenario || draft.scenario.mode !== "fast") {
+							throw new Error("Заполните описание для генерации")
+						}
+
+						const updatedScenario = {
+							...draft.scenario,
+							prompt,
+						}
+
+						const effectiveDraft: GenerationDraft = {
+							...draft,
+							prompt,
+							scenario: updatedScenario,
+						}
+
+						const payload = buildCreateGenerationRequest(effectiveDraft)
+
+						if (!token) {
+							throw new Error("Нет токена авторизации")
+						}
+
+						await createWebAppGeneration(token, payload)
+
+						setGenerationScenario(updatedScenario)
+						setGenerationPrompt(payload.prompt)
+						setScreen("loading")
+
+						try {
+							await loadTracks()
+						} catch (loadError) {
+							console.error(loadError)
+						}
+
+						resetGenerationDraft()
+						toaster.create({
+							type: "success",
+							title: "Генерация запущена",
+							description: "Новый трек появится в списке после обработки.",
+						})
+					} catch (err) {
+						console.error(err)
+						setError(
+							err instanceof Error
+								? err.message
+								: "Не удалось запустить генерацию"
+						)
+						toaster.create({
+							type: "error",
+							title: "Ошибка запуска генерации",
+							description:
+								err instanceof Error ? err.message : "Попробуйте ещё раз позже.",
+						})
+					} finally {
+						setIsSubmitting(false)
 					}
 				}}
 			>
 				Сгенерировать
 			</Button>
+			{error && (
+				<Text color="red.300" fontSize="sm">
+					{error}
+				</Text>
+			)}
 		</VStack>
 	);
 };

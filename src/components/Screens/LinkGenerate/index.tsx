@@ -1,11 +1,20 @@
 import { Box, Heading, Text, VStack, Input, Icon, Flex, Grid } from "@chakra-ui/react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaLink } from 'react-icons/fa';
 import { COLOR } from "../../../components/ui/colors";
 import { BrandButton, GrayButton } from "../../../components/ui/button";
 import { ArtistParams } from "../ArtistParams";
 import { ProPayScreen } from "../ProPay";
 import { useIsPro } from "../../../store/user";
+import {
+    setGenerationScenario,
+    updateGenerationScenario,
+    useGenerationScenario,
+} from "../../../store/generation";
+import {
+    createLinkGenerationDraft,
+    type LinkGenerationDraft,
+} from "../../../types/generation";
 
 interface LinkGenerateProps {
     onClose?: () => void;
@@ -17,6 +26,38 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     const [error, setError] = useState<string | null>(null);
     const [currentScreen, setCurrentScreen] = useState<"link" | "artist" | "params" | "loading" | "pro">("link");
     const isPro = useIsPro();
+    const scenarioState = useGenerationScenario();
+
+    useEffect(() => {
+        if (!scenarioState || scenarioState.mode !== "link") {
+            setGenerationScenario(createLinkGenerationDraft());
+        }
+    }, [scenarioState]);
+
+    useEffect(() => {
+        if (
+            scenarioState &&
+            scenarioState.mode === "link" &&
+            scenarioState.link &&
+            !link
+        ) {
+            setLink(scenarioState.link);
+            setCurrentScreen("artist");
+        }
+    }, [scenarioState, link]);
+
+    const patchLinkScenario = useCallback(
+        (updater: (draft: LinkGenerationDraft) => LinkGenerationDraft) => {
+            updateGenerationScenario((scenario) => {
+                const base =
+                    scenario && scenario.mode === "link"
+                        ? { ...scenario }
+                        : createLinkGenerationDraft();
+                return updater(base);
+            });
+        },
+        [updateGenerationScenario]
+    );
     // дальнейшие шаги выполняются в общем компоненте ArtistParams
 
     const validateVKLink = (url: string): boolean => {
@@ -66,6 +107,10 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
         try {
             // Имитация анализа ссылки
             await new Promise(resolve => setTimeout(resolve, 1500));
+            patchLinkScenario((draft) => ({
+                ...draft,
+                link: normalizedLink,
+            }));
             setCurrentScreen("artist");
         } catch (err) {
             setError("Ошибка при анализе профиля. Попробуйте еще раз.");
@@ -75,11 +120,11 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     };
 
     const handleGenerate = async () => {
-        if (isPro) {
-            onClose && onClose();
-        } else {
+        if (!isPro) {
             setCurrentScreen("pro");
+            return false;
         }
+        return true;
     };
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,6 +227,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
             </Flex>
 
             <ArtistParams
+                mode="submit"
                 onBack={() => setCurrentScreen("link")}
                 onCancel={() => onClose && onClose()}
                 onGenerate={() => handleGenerate()}

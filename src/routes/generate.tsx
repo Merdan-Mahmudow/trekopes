@@ -15,6 +15,19 @@ import { PhotoGenerateScreen } from '../components/Screens/PhotoGenerate'
 import FMCarousel from '../components/Slider'
 import { StyleGenerateScreen } from '../components/Screens/StyleGenerate'
 import { FastGenerateScreen } from '../components/Screens/FastGenerate'
+import {
+    resetGenerationDraft,
+    setGenerationScenario,
+    setGenerationType,
+} from '../store/generation'
+import {
+    createFastGenerationDraft,
+    createLinkGenerationDraft,
+    createPhotoGenerationDraft,
+    createStyleGenerationDraft,
+    createTextGenerationDraft,
+} from '../types/generation'
+import type { SongGenerationType } from '../types/webapp'
 
 
 
@@ -39,8 +52,32 @@ function RouteComponent() {
     }
 
     const handleChangeType = (type: "text" | "photo"| "link" | "style" | "fast" | null) => {
-        setIsPopupOpen(true);
+        if (!type) {
+            return;
+        }
+
+        const typeToGenerationMap: Record<Exclude<typeof type, null>, SongGenerationType> = {
+            text: "scenario",
+            photo: "photo",
+            link: "link",
+            style: "style",
+            fast: "text",
+        };
+
+        const scenarioFactory = {
+            text: createTextGenerationDraft,
+            photo: createPhotoGenerationDraft,
+            link: createLinkGenerationDraft,
+            style: createStyleGenerationDraft,
+            fast: createFastGenerationDraft,
+        } as const;
+
+        resetGenerationDraft();
+        setGenerationType(typeToGenerationMap[type]);
+        setGenerationScenario(scenarioFactory[type]());
+
         setGenType(type);
+        setIsPopupOpen(true);
     } 
 // const slides = [
 //     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 1</Box>},

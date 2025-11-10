@@ -1,6 +1,6 @@
 import { COLOR } from '../../../components/ui/colors'
 import { Box, Button, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
-import { useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
 import { LuBaby } from 'react-icons/lu'
@@ -16,6 +16,16 @@ import { DiaologWindow } from '../../../components/Dialog'
 import { ProPayScreen } from '../ProPay'
 import { useNavigate } from '@tanstack/react-router'
 import { useIsPro } from '../../../store/user'
+import {
+    setGenerationScenario,
+    updateGenerationScenario,
+    useGenerationScenario,
+} from '../../../store/generation'
+import {
+    createTextGenerationDraft,
+    type GenerationDraftAnswer,
+    type TextGenerationDraft,
+} from '../../../types/generation'
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -200,8 +210,15 @@ export function TextGenerateScreen() {
     const [showProReminder, setShowProReminder] = useState(false);
     const [showProScreen, setShowProScreen] = useState(false);
     const isPro = useIsPro();
+    const scenarioState = useGenerationScenario();
     const [step, setStep] = useState<Step>('category');
     const [selectedCategory, setSelectedCategory] = useState<ChangeButtonProps['category'] | null>(null);
+
+    useEffect(() => {
+        if (!scenarioState || scenarioState.mode !== "text") {
+            setGenerationScenario(createTextGenerationDraft());
+        }
+    }, [scenarioState]);
 
     const withIconBackground = (icon: ReactNode): ReactNode => (
         <Box
@@ -247,6 +264,65 @@ export function TextGenerateScreen() {
     const qList = found ? found.questions : null;
     const currentQuestion = qList?.[currentIndex];
 
+    const patchTextScenario = useCallback(
+        (updater: (draft: TextGenerationDraft) => TextGenerationDraft) => {
+            updateGenerationScenario((scenario) => {
+                const base =
+                    scenario && scenario.mode === "text"
+                        ? { ...scenario }
+                        : createTextGenerationDraft();
+                return updater(base);
+            });
+        },
+        [updateGenerationScenario]
+    );
+
+    const syncAnswersFromStorage = useCallback(() => {
+        try {
+            const raw = localStorage.getItem("qa_answers");
+            const parsed: Record<string, string> = raw ? JSON.parse(raw) : {};
+
+            const answers: GenerationDraftAnswer[] = Object.entries(parsed)
+                .map(([key, value]) => {
+                    const id = Number(key);
+                    if (!Number.isFinite(id)) {
+                        return null;
+                    }
+                    const questionSource = qList?.find((question) => question.qNum === id);
+                    const questionText = questionSource?.qText ?? `Вопрос ${id}`;
+                    return {
+                        id,
+                        question: questionText,
+                        answer: value,
+                    };
+                })
+                .filter((entry): entry is GenerationDraftAnswer => Boolean(entry));
+
+            const summary = answers
+                .filter((answer) => answer.answer?.trim())
+                .map((answer) => `${answer.question}: ${answer.answer}`)
+                .join("\n");
+
+            patchTextScenario((draft) => ({
+                ...draft,
+                answers,
+                summary: summary.length > 0 ? summary : null,
+            }));
+        } catch {
+            patchTextScenario((draft) => ({
+                ...draft,
+                answers: [],
+                summary: null,
+            }));
+        }
+    }, [patchTextScenario, qList]);
+
+    useEffect(() => {
+        if (step === 'questions' || step === 'results' || step === 'artist-params') {
+            syncAnswersFromStorage();
+        }
+    }, [step, syncAnswersFromStorage]);
+
     // Показ напоминания о PRO после 3-го вопроса (один раз за сессию)
     if (step === 'questions' && selectedCategory && qList && currentIndex === 3 && !showProReminder) {
         const isPro = localStorage.getItem('is_pro') === 'true';
@@ -265,14 +341,17 @@ export function TextGenerateScreen() {
             // Если это последний вопрос, переходим к результатам
             setStep('results');
         }
+        syncAnswersFromStorage();
     };
 
     const handleFinishResults = () => {
+        syncAnswersFromStorage();
         setStep('artist-params');
     };
 
     const handlePrev = () => {
         if (currentIndex > 0) setCurrentIndex((i) => i - 1);
+        syncAnswersFromStorage();
     };
 
     const handleCategorySelect = (category: ChangeButtonProps['category']) => {
@@ -280,6 +359,17 @@ export function TextGenerateScreen() {
         setCurrentIndex(0);
         setStep('intro');
         setShowProReminder(false);
+        const mappedCategory = categoryMap[category] ?? category;
+        try {
+            localStorage.setItem('qa_category', mappedCategory);
+            localStorage.removeItem('qa_answers');
+        } catch {
+            // ignore storage errors
+        }
+        patchTextScenario(() => ({
+            ...createTextGenerationDraft(),
+            category: mappedCategory,
+        }));
     };
 
     const handleCloseDialog = () => {
@@ -290,16 +380,27 @@ export function TextGenerateScreen() {
         setStep('audience');
     }
 
-    const handleSelectAudience = (_value: string) => {
+    const handleSelectAudience = (value: string) => {
         setCurrentIndex(0);
         setStep('questions');
         setShowProReminder(false);
+        patchTextScenario((draft) => ({
+            ...draft,
+            audience: value,
+        }));
     }
 
     const handleBackToCategories = () => {
         setSelectedCategory(null);
         setCurrentIndex(0);
         setStep('category');
+        try {
+            localStorage.removeItem('qa_answers');
+            localStorage.removeItem('qa_category');
+        } catch {
+            // ignore
+        }
+        patchTextScenario(() => createTextGenerationDraft());
     }
 
     return (
@@ -404,13 +505,15 @@ export function TextGenerateScreen() {
                         transition={{ duration: 0.3 }}
                     >
                         <ArtistParams
+                mode="submit"
                             onBack={() => setStep('results')}
                             onCancel={handleBackToCategories}
-                            onGenerate={() => {
-                                if (isPro) {
-                                    handleBackToCategories();
-                                }
-                                else setShowProScreen(true)
+                onGenerate={() => {
+                    if (!isPro) {
+                        setShowProScreen(true);
+                        return false;
+                    }
+                    return true;
                             }}
                         />
                     </MotionDiv>

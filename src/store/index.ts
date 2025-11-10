@@ -1,12 +1,31 @@
 import { Store } from "@tanstack/react-store";
-import type { SongItem } from "../types/songs";
+import type {
+  GenerationDto,
+  PaginationMeta,
+  SongGenerationType,
+} from "../types/webapp";
+import type {
+  Artist,
+  GenerationDraft,
+  GenerationDraftPhoto,
+  GenerationDraftScenario,
+  GenerationParams,
+} from "../types/generation";
+import { createInitialGenerationDraft } from "../types/generation";
 
 export type UserState = {
-  avatar: string;
-  name: string;
-  balance: number;
-  isPro: boolean;
-  [key: string]: unknown;
+  id: string;
+  telegram_chat_id: number;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  limit: number;
+  used_limit: number;
+  bonus_limit: number;
+  ref?: number | null;
+  ref_gift_activated?: boolean;
+  ref_gave_first_payment_bonus?: boolean;
+  isPro?: boolean;
 };
 
 type AuthState = {
@@ -18,13 +37,21 @@ const initialAuthState: AuthState = {
 };
 
 const initialUserState: UserState = {
-  avatar: "",
-  name: "",
-  balance: 0,
+  id: "",
+  telegram_chat_id: 0,
+  username: undefined,
+  first_name: undefined,
+  last_name: undefined,
+  limit: 0,
+  used_limit: 0,
+  bonus_limit: 0,
+  ref: undefined,
+  ref_gift_activated: undefined,
+  ref_gave_first_payment_bonus: undefined,
   isPro: false,
 };
 
-const store = new Store({
+const initialStoreState = {
   player: {
     src: undefined as string | undefined,
     isVisible: false,
@@ -53,9 +80,15 @@ const store = new Store({
     error: undefined as string | undefined,
   },
   music: {
-    songs: [] as SongItem[],
+    generations: [] as GenerationDto[],
+    meta: null as PaginationMeta | null,
   },
-});
+  generationDraft: createInitialGenerationDraft(),
+};
+
+const store = new Store(initialStoreState);
+
+type StoreState = typeof initialStoreState;
 
 export const setDockActive = (page: "left" | "center" | "right") => {
   store.setState((state) => ({
@@ -117,9 +150,194 @@ export const setSubscriptionError = (error?: string) => {
   }));
 };
 
-export const setLibrarySongs = (songs: SongItem[]) => {
+export const setMusicGenerations = (
+  generations: GenerationDto[],
+  meta?: PaginationMeta
+) => {
   store.setState((state) => ({
     ...state,
-    music: { ...state.music, songs }
+    music: {
+      ...state.music,
+      generations,
+      meta: meta ?? state.music.meta,
+    },
   }));
+};
+
+const cloneArtist = (artist: Artist | null | undefined): Artist | null =>
+  artist ? { ...artist } : null;
+
+const cloneParams = (
+  params: GenerationParams | null | undefined
+): GenerationParams | null =>
+  params
+    ? {
+        tempo: params.tempo,
+        mood: params.mood ?? null,
+        style: params.style ?? null,
+        voice: params.voice ?? null,
+      }
+    : null;
+
+const clonePhoto = (
+  photo: GenerationDraftPhoto | null | undefined
+): GenerationDraftPhoto | null =>
+  photo
+    ? {
+        ...photo,
+      }
+    : null;
+
+const cloneScenario = (
+  scenario: GenerationDraftScenario | null | undefined
+): GenerationDraftScenario | null => {
+  if (!scenario) return null;
+
+  switch (scenario.mode) {
+    case "text":
+      return {
+        ...scenario,
+        artist: cloneArtist(scenario.artist),
+        params: cloneParams(scenario.params),
+        answers: scenario.answers.map((answer) => ({ ...answer })),
+      };
+    case "photo":
+      return {
+        ...scenario,
+        artist: cloneArtist(scenario.artist),
+        params: cloneParams(scenario.params),
+        photo: clonePhoto(scenario.photo),
+      };
+    case "link":
+      return {
+        ...scenario,
+        artist: cloneArtist(scenario.artist),
+        params: cloneParams(scenario.params),
+      };
+    case "style":
+      return {
+        ...scenario,
+        artist: cloneArtist(scenario.artist),
+        params: cloneParams(scenario.params),
+      };
+    case "fast":
+      return {
+        ...scenario,
+        artist: cloneArtist(scenario.artist),
+        params: cloneParams(scenario.params),
+      };
+    default:
+      return scenario;
+  }
+};
+
+const cloneDraft = (
+  draft: GenerationDraft | null | undefined
+): GenerationDraft => {
+  const base = draft ?? createInitialGenerationDraft();
+
+  return {
+    ...base,
+    scenario: cloneScenario(base.scenario),
+    metadata: base.metadata ? { ...base.metadata } : undefined,
+  };
+};
+
+const withDraftUpdate = (
+  state: StoreState,
+  updater: (draft: GenerationDraft) => GenerationDraft
+): StoreState => {
+  const current = cloneDraft(state.generationDraft);
+  const next = cloneDraft(updater(current));
+
+  return {
+    ...state,
+    generationDraft: next,
+  };
+};
+
+export const resetGenerationDraft = () => {
+  store.setState((state) => ({
+    ...state,
+    generationDraft: createInitialGenerationDraft(),
+  }));
+};
+
+export const setGenerationDraft = (draft: GenerationDraft) => {
+  store.setState((state) => ({
+    ...state,
+    generationDraft: cloneDraft(draft),
+  }));
+};
+
+export const setGenerationType = (type: SongGenerationType | null) => {
+  store.setState((state) =>
+    withDraftUpdate(state, (draft) => ({
+      ...draft,
+      type,
+    }))
+  );
+};
+
+export const setGenerationPrompt = (prompt: string | null) => {
+  store.setState((state) =>
+    withDraftUpdate(state, (draft) => ({
+      ...draft,
+      prompt,
+    }))
+  );
+};
+
+export const setGenerationTemplate = (options: {
+  templateId?: string | null;
+  templateArtistId?: string | null;
+}) => {
+  store.setState((state) =>
+    withDraftUpdate(state, (draft) => ({
+      ...draft,
+      templateId:
+        options.templateId !== undefined ? options.templateId : draft.templateId,
+      templateArtistId:
+        options.templateArtistId !== undefined
+          ? options.templateArtistId
+          : draft.templateArtistId,
+    }))
+  );
+};
+
+export const setGenerationMetadata = (
+  metadata: Record<string, unknown> | undefined
+) => {
+  store.setState((state) =>
+    withDraftUpdate(state, (draft) => ({
+      ...draft,
+      metadata: metadata ? { ...metadata } : undefined,
+    }))
+  );
+};
+
+export const setGenerationScenario = (
+  scenario: GenerationDraftScenario | null
+) => {
+  store.setState((state) =>
+    withDraftUpdate(state, (draft) => ({
+      ...draft,
+      scenario: cloneScenario(scenario),
+    }))
+  );
+};
+
+export const updateGenerationScenario = (
+  updater: (
+    scenario: GenerationDraftScenario | null
+  ) => GenerationDraftScenario | null
+) => {
+  store.setState((state) =>
+    withDraftUpdate(state, (draft) => ({
+      ...draft,
+      scenario: cloneScenario(
+        updater(cloneScenario(draft.scenario))
+      ),
+    }))
+  );
 };

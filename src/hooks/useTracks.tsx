@@ -1,24 +1,22 @@
-import type { Telegram } from "telegram-web-app";
-import { request } from "../libs/request"
-import type { SongsPayload } from "../types/songs"
+import { useStore } from "@tanstack/react-store";
+import { getWebAppGenerations } from "../api/webapp";
+import store, { setMusicGenerations } from "../store";
+import type { GetGenerationsQuery, GetGenerationsResponse } from "../types/webapp";
 
-// Query функции (для получения данных)
-export const getTelegramUserId = (): string | undefined => {
-    const tg: Telegram = window.Telegram;
-    const id = tg.WebApp.initDataUnsafe.user?.id;
-    return id ? String(id) : undefined;
-}
+export function useTracks(query?: GetGenerationsQuery) {
+    const token = useStore(store, (state) => state.auth.token);
 
-export function useTracks() {
-    const loadTracks = async () => {
-        const response = await request('get', `/get-songs/231956392`)
-        return response.data as SongsPayload
+    const loadTracks = async (): Promise<GetGenerationsResponse> => {
+        if (!token) {
+            throw new Error("Auth token is not available");
+        }
+        const response = await getWebAppGenerations(token, query);
+        setMusicGenerations(response.data, response.meta);
+        return response;
     };
 
     return {
-
-        
-        // Старый API для совместимости
         loadTracks,
-    }
+        token,
+    };
 }

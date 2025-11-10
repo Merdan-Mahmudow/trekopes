@@ -38,8 +38,15 @@ function RootComponent() {
 
   useEffect(() => {
     if (isUserSuccess && user?.data) {
-      setUserState(user.data as Partial<UserState>);
+      const userData = user.data as Partial<UserState>;
+      const availableLimit =
+        (userData.limit ?? 0) + (userData.bonus_limit ?? 0) - (userData.used_limit ?? 0);
+      setUserState({
+        ...userData,
+        isPro: availableLimit > 0,
+      });
       setIsPreload(false);
+      console.log(user.data);
     }
   }, [isUserSuccess, user]);
 

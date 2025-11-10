@@ -38,22 +38,28 @@ export type GenerationStatus =
   | "completed"
   | "failed";
 
+export type SongFileEntry = {
+  url?: string;
+  active?: boolean;
+  [key: string]: unknown;
+};
+
 export type SongDto = {
   id: string;
   status: string;
-  prompt?: string;
-  title?: string;
-  style?: string;
-  lyrics?: string;
-  author?: string;
-  rating?: number;
-  duration?: number;
+  prompt?: string | null;
+  title?: string | null;
+  style?: string | null;
+  lyrics?: string | null;
+  author?: string | null;
+  rating?: number | null;
+  duration?: number | null;
   created_at: string;
   updated_at: string;
-  download_url?: string;
-  files?: unknown[];
-  error_message?: string;
-  error_type?: string;
+  download_url?: string | null;
+  files?: SongFileEntry[] | null;
+  error_message?: string | null;
+  error_type?: string | null;
 };
 
 export type GenerationDto = {
@@ -61,20 +67,20 @@ export type GenerationDto = {
   generation_type: SongGenerationType;
   status: GenerationStatus;
   prompt: string;
-  template_id?: string;
-  song_id?: string;
-  song?: SongDto;
-  generated_lyrics?: string;
-  generated_title?: string;
-  generated_style?: string;
-  suno_task_id?: string;
-  error_type?: string;
-  error_message?: string;
-  metadata?: unknown[];
-  gpt_started_at?: string;
-  gpt_completed_at?: string;
-  suno_started_at?: string;
-  suno_completed_at?: string;
+  template_id?: string | null;
+  song_id?: string | null;
+  song?: SongDto | null;
+  generated_lyrics?: string | null;
+  generated_title?: string | null;
+  generated_style?: string | null;
+  suno_task_id?: string | null;
+  error_type?: string | null;
+  error_message?: string | null;
+  metadata?: Record<string, unknown>[] | null;
+  gpt_started_at?: string | null;
+  gpt_completed_at?: string | null;
+  suno_started_at?: string | null;
+  suno_completed_at?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -106,4 +112,18 @@ export type CreateGenerationResponse =
 
 export type GetGenerationByIdResponse = ApiSuccessResponse<GenerationDto>;
 
-export type GetMeResponse = ApiSuccessResponse<Record<string, unknown>>;
+export type ChatDto = {
+  id: string;
+  telegram_chat_id: number;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  limit: number;
+  used_limit: number;
+  bonus_limit: number;
+  ref?: number | null;
+  ref_gift_activated?: boolean;
+  ref_gave_first_payment_bonus?: boolean;
+};
+
+export type GetMeResponse = ApiSuccessResponse<ChatDto>;
