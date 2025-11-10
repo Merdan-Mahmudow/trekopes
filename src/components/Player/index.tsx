@@ -489,10 +489,8 @@ const handleProgressPointerDown = useCallback((e: ReactPointerEvent<HTMLDivEleme
     <Box
       role="region"
       aria-label="Audio player"
-      position="sticky"
-      top={0}
-      left={0}
-      w="100%"
+      position="relative"
+      w="100vw"
       zIndex={1200}
       bg="#1c1c1e"
       color="#f2f2f2"

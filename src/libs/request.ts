@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 
 const api = axios.create({
-    baseURL: "https://trekopes.ru/api",
+    baseURL: "https://bot-test.tpekollec.ru/api",
     timeout: 10_000
 })
 

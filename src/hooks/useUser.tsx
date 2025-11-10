@@ -1,48 +1,58 @@
-import { request } from "../libs/request";
-import type { Telegram } from "telegram-web-app";
 import { useQuery } from "@tanstack/react-query";
+import type { Telegram } from "telegram-web-app";
+import { getWebAppMe, loginWebApp } from "../api/webapp";
+import type { GetMeResponse, LoginResponse } from "../types/webapp";
 
-const getTelegramUserId = (): string | undefined => {
+export const getTelegramUserId = (): string | undefined => {
     const tg: Telegram = window.Telegram;
     const id = tg.WebApp.initDataUnsafe.user?.id;
     return id ? String(id) : undefined;
 }
 
-// Query функция
-async function getUserQueryFn() {
-    const userId = getTelegramUserId();
-    if (!userId) throw new Error("User ID not available");
-    const response = await request('get', `/get-user/${userId}`);
-    return response.data;
-}
+export function useAuth() {
 
-export function useUser() {
-    const userId = getTelegramUserId();
+    const telegram = window.Telegram;
+    const initData = telegram.WebApp.initData;
 
-    const userQuery = useQuery({
-        queryKey: ['user', userId],
-        queryFn: getUserQueryFn,
-        enabled: !!userId,
+    async function getToken(): Promise<LoginResponse> {
+        return loginWebApp({
+            initData: initData.toString()
+        });
+    }
+
+    const {
+        data: tokenResponse,
+        isSuccess: isTokenSuccess
+    } = useQuery({
+        queryKey: ['webapp-token'],
+        queryFn: getToken,
     });
 
-    // Старый API для совместимости
+    const bearerToken = tokenResponse?.data.token;
+
+    async function getUser(): Promise<GetMeResponse> {
+        if (!bearerToken) {
+            throw new Error("Bearer token is not available");
+        }
+        return getWebAppMe(bearerToken);
+    }
+
+    const {
+        data: user,
+        isSuccess: isUserSuccess
+    } = useQuery({
+        queryKey: ['webapp-user', bearerToken],
+        queryFn: getUser,
+        enabled: Boolean(bearerToken) && isTokenSuccess,
+    });
+
     return {
-        // Новый API с useQuery
-        user: userQuery,
-        
-        // Старый API для совместимости
-        getUser: async () => {
-            return getUserQueryFn();
-        },
+        getToken,
+        getUser,
+        token: bearerToken,
+        tokenResponse,
+        user,
+        isTokenSuccess,
+        isUserSuccess
     };
-}
-
-// Отдельный хук для удобства
-export function useUserData() {
-    const userId = getTelegramUserId();
-    return useQuery({
-        queryKey: ['user', userId],
-        queryFn: getUserQueryFn,
-        enabled: !!userId,
-    });
 }
