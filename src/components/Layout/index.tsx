@@ -56,7 +56,7 @@ export function Layout() {
                     </Box>
                 )}
 
-                <Box minH={0} overflow="auto">
+                <Box overflowY="auto" overflowX="hidden" w="100vw">
                     <Outlet />
                 </Box>
                 {isDockVisible && <NavBar />}
