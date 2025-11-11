@@ -23,19 +23,6 @@ html {
   text-rendering: optimizeLegibility;
 }
 
-body {
-  background-image: linear-gradient(#343A3F 0%, #232528 100%);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  min-height: 100dvh; /* Динамическая высота viewport */
-  
-  /* Системный шрифт по умолчанию */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  
-  /* Плавные переходы (отключаются при prefers-reduced-motion) */
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
 /* Отключение анимаций для пользователей с prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -144,7 +131,6 @@ button, .text-wrap {
   /* Единая структура карточки */
   display: flex;
   flex-direction: column;
-  background: var(--card-bg, rgba(36, 35, 35, 1));
   border-radius: 0.75rem;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
