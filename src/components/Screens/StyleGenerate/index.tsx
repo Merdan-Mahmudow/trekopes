@@ -170,6 +170,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             {currentStep === "select" ? (
                 <ArtistParams
                     mode="collect"
+                    displayMode="artist"
                     onBack={onClose}
                     onCancel={onClose}
                     onGenerate={({ artist, params }) => {

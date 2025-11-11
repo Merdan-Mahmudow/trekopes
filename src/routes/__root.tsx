@@ -27,6 +27,8 @@ function RootComponent() {
   useEffect(() => {
     if (tg) {
       tg.WebApp.setHeaderColor(COLOR.bg.hex.subtle);
+      tg.WebApp.enableClosingConfirmation();
+      tg.WebApp.expand();
     }
   }, [tg]);
 

@@ -18,8 +18,11 @@ import { createWebAppGeneration } from "../../../api/webapp";
 import { useTracks } from "../../../hooks/useTracks";
 import { toaster } from "../../ui/toaster";
 
+type ArtistParamsDisplayMode = "full" | "artist";
+
 type ArtistParamsProps = {
     mode?: "collect" | "submit";
+    displayMode?: ArtistParamsDisplayMode;
     onBack: () => void;
     onCancel: () => void;
     onGenerate?: (data: { artist: Artist | null; params: GenerationParams }) => void | boolean | Promise<void | boolean>;
@@ -27,11 +30,23 @@ type ArtistParamsProps = {
 
 
 
-export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: ArtistParamsProps) {
+export function ArtistParams({ mode = "submit", displayMode = "full", onBack, onCancel, onGenerate }: ArtistParamsProps) {
+    const isArtistOnly = displayMode === "artist";
+    const artists: Artist[] = useMemo(() => ([
+        { id: "none", name: "Не выбрано", avatar: "❔" },
+        { id: "1", name: "Мияги", avatar: "👨‍🎤" },
+        { id: "2", name: "Скриптонит", avatar: "🎵" },
+        { id: "3", name: "Zivert", avatar: "🎶" },
+        { id: "4", name: "Клава Кока", avatar: "🎤" },
+        { id: "5", name: "ICEGERGERT", avatar: "🎸" },
+        { id: "6", name: "Макс Корж", avatar: "🎹" },
+        { id: "7", name: "Баста", avatar: "🎺" },
+        { id: "8", name: "KSON", avatar: "🎻" },
+    ]), []);
     const [tempo, setTempo] = useState(105);
     const [activeTab, setActiveTab] = useState<"mode" | "params">("mode");
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+    const [selectedArtistId, setSelectedArtistId] = useState<string>(() => artists[0]?.id ?? "none");
     const [isGenerating, setIsGenerating] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [generationParams, setGenerationParams] = useState<GenerationParams>({
@@ -49,27 +64,36 @@ export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: 
         slow: (generationParams.tempo >= 60 && generationParams.tempo <= 90) ? COLOR.kit.orange : COLOR.kit.smoke,
         medium: (generationParams.tempo >= 91 && generationParams.tempo <= 120) ? COLOR.kit.orange : COLOR.kit.smoke,
         fast: (generationParams.tempo >= 121 && generationParams.tempo <= 180) ? COLOR.kit.orange : COLOR.kit.smoke,
-    }
-    const artists: Artist[] = useMemo(() => ([
-        { id: "1", name: "Не выбрано", avatar: "❔" },
-        { id: "2", name: "Мияги", avatar: "👨‍🎤" },
-        { id: "3", name: "Скриптонит", avatar: "🎵" },
-        { id: "4", name: "Zivert", avatar: "🎶" },
-        { id: "5", name: "Клава Кока", avatar: "🎤" },
-        { id: "6", name: "ICEGERGERT", avatar: "🎸" },
-        { id: "7", name: "Макс Корж", avatar: "🎹" },
-        { id: "8", name: "Баста", avatar: "🎺" },
-        { id: "9", name: "KSON", avatar: "🎻" },
-    ]), []);
+    };
 
-    const filteredArtists = useMemo(() => artists.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())), [artists, searchQuery]);
+    const filteredArtists = useMemo(
+        () => artists.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())),
+        [artists, searchQuery]
+    );
+    useEffect(() => {
+        if (isArtistOnly) {
+            setActiveTab("mode");
+        }
+    }, [isArtistOnly]);
+
+    const normalizeArtist = useCallback(
+        (artistId: string | null): Artist | null => {
+            if (!artistId || artistId === "none") {
+                return null;
+            }
+            return artists.find((artist) => artist.id === artistId) ?? null;
+        },
+        [artists]
+    );
 
     useEffect(() => {
         const scenario = generationDraft?.scenario;
         if (!scenario) return;
 
         if ("artist" in scenario && scenario.artist) {
-            setSelectedArtist(scenario.artist);
+            setSelectedArtistId(scenario.artist.id ?? "none");
+        } else {
+            setSelectedArtistId("none");
         }
         if ("params" in scenario && scenario.params) {
             setGenerationParams({
@@ -100,13 +124,13 @@ export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: 
     }, [updateGenerationScenario]);
 
     const handleSelectArtist = useCallback((artist: Artist) => {
-        setSelectedArtist(artist);
+        setSelectedArtistId(artist.id ?? "none");
         updateGenerationScenario((scenario) => {
             if (!scenario) return scenario;
             if ("artist" in scenario) {
                 return {
                     ...scenario,
-                    artist,
+                    artist: artist.id === "none" ? null : artist,
                 } as typeof scenario;
             }
             return scenario;
@@ -117,8 +141,9 @@ export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: 
         setError(null);
         setIsGenerating(true);
         try {
+            const normalizedArtist = normalizeArtist(selectedArtistId);
             const selection = {
-                artist: activeTab === "mode" ? selectedArtist : null,
+                artist: isArtistOnly || activeTab === "mode" ? normalizedArtist : null,
                 params: generationParams,
             };
 
@@ -197,30 +222,33 @@ export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: 
     return (
         <VStack gap={4} w="full" color="white">
             <Box w="full" bg={COLOR.kit.darkGray} borderRadius="24px" p={6}>
-                <Flex gap={4} mb={6}>
-                    <Box
-                        cursor="pointer"
-                        onClick={() => setActiveTab("mode")}
-                        borderBottom={activeTab === "mode" ? `2px solid ${COLOR.kit.orange}` : "2px solid transparent"}
-                        pb={2}
-                    >
-                        <Text color={activeTab === "mode" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "mode" ? "bold" : "normal"}>ПО АРТИСТУ</Text>
-                    </Box>
-                    <Box
-                        cursor="pointer"
-                        onClick={() => setActiveTab("params")}
-                        borderBottom={activeTab === "params" ? `2px solid ${COLOR.kit.orange}` : "2px solid transparent"}
-                        pb={2}
-                    >
-                        <Text color={activeTab === "params" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "params" ? "bold" : "normal"}>ПО ПАРАМЕТРАМ</Text>
-                    </Box>
-                </Flex>
+                {!isArtistOnly && (
+                    <Flex gap={4} mb={6}>
+                        <Box
+                            cursor="pointer"
+                            onClick={() => setActiveTab("mode")}
+                            borderBottom={activeTab === "mode" ? `2px solid ${COLOR.kit.orange}` : "2px solid transparent"}
+                            pb={2}
+                        >
+                            <Text color={activeTab === "mode" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "mode" ? "bold" : "normal"}>ПО АРТИСТУ</Text>
+                        </Box>
+                        <Box
+                            cursor="pointer"
+                            onClick={() => setActiveTab("params")}
+                            borderBottom={activeTab === "params" ? `2px solid ${COLOR.kit.orange}` : "2px solid transparent"}
+                            pb={2}
+                        >
+                            <Text color={activeTab === "params" ? COLOR.kit.orange : "#8A8A8A"} fontWeight={activeTab === "params" ? "bold" : "normal"}>ПО ПАРАМЕТРАМ</Text>
+                        </Box>
+                    </Flex>
+                )}
 
-                {activeTab === "mode" ? (
+                {isArtistOnly || activeTab === "mode" ? (
                     <VStack gap={4} w="full">
                         <Input
                             placeholder="Найти артиста"
                             value={searchQuery}
+                            w={"80vw"}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             bg="#1E1E20"
                             borderColor="#2A2A2D"
@@ -231,7 +259,7 @@ export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: 
                             _focus={{ borderColor: COLOR.kit.orange, boxShadow: "0 0 0 1px #F59A0E" }}
                         />
 
-                        <Grid templateColumns="repeat(auto-fill, minmax(100px, 1fr))" gap={4} w={"full"}>
+                        <Grid templateColumns="repeat(3, minmax(100px, 1fr))" gap={4} w="80vw">
                             {filteredArtists.map((artist) => (
                                 <GridItem key={artist.id} w="full">
                                     <VStack
@@ -240,14 +268,14 @@ export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: 
                                         cursor="pointer"
                                         onClick={() => handleSelectArtist(artist)}
                                         borderRadius="16px"
-                                        bg={selectedArtist?.id === artist.id ? COLOR.kit.orange : "#1E1E20"}
-                                        _hover={{ bg: selectedArtist?.id === artist.id ? COLOR.kit.orange : "#2A2A2D" }}
+                                        bg={selectedArtistId === artist.id ? COLOR.kit.orange : "#1E1E20"}
+                                        _hover={{ bg: selectedArtistId === artist.id ? COLOR.kit.orange : "#2A2A2D" }}
                                         transition="all 0.2s"
                                     >
-                                        <Box w="60px" h="60px" borderRadius="50%" bg={selectedArtist?.id === artist.id ? "white" : COLOR.kit.iconBg} display="flex" alignItems="center" justifyContent="center" fontSize="24px">
+                                        <Box w="60px" h="60px" borderRadius="50%" bg={selectedArtistId === artist.id ? "white" : COLOR.kit.iconBg} display="flex" alignItems="center" justifyContent="center" fontSize="24px">
                                             {artist.avatar}
                                         </Box>
-                                        <Text fontSize="xs" textAlign="center" color={selectedArtist?.id === artist.id ? "white" : "#8A8A8A"} fontWeight={selectedArtist?.id === artist.id ? "bold" : "normal"}>
+                                        <Text fontSize="xs" textAlign="center" color={selectedArtistId === artist.id ? "white" : "#8A8A8A"} fontWeight={selectedArtistId === artist.id ? "bold" : "normal"}>
                                             {artist.name}
                                         </Text>
                                     </VStack>
@@ -341,7 +369,11 @@ export function ArtistParams({ mode = "submit", onBack, onCancel, onGenerate }: 
                 }
 
                 <VStack gap={3} mt={6}>
-                    <BrandButton onClick={handleGenerate} disabled={isGenerating || (activeTab === "mode" && !selectedArtist)} w="full">
+                    <BrandButton
+                        onClick={handleGenerate}
+                        disabled={isGenerating || (!isArtistOnly && activeTab === "mode" && (selectedArtistId === "none"))}
+                        w="full"
+                    >
                         <Flex alignItems="center" gap={2}>
                             <Text>Сгенерировать</Text>
                             <Flex alignItems="center" gap={1}>

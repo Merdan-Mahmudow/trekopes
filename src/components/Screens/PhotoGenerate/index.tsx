@@ -3,13 +3,13 @@ import {
     FileUpload
 } from "@chakra-ui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArtistParams } from "../ArtistParams";
 import Webcam from "react-webcam";
 import { MdCameraswitch, MdPhotoCamera } from "react-icons/md";
 import { Toaster } from "../../../components/ui/toaster";
 import { LuUpload } from "react-icons/lu";
 import { ProPayScreen } from "../ProPay";
 import { useIsPro } from "../../../store/user";
+import { GenerationParamsAccordion } from "../GenerationParamsAccordion";
 import {
     setGenerationScenario,
     updateGenerationScenario,
@@ -31,7 +31,7 @@ const readFileAsDataUrl = (file: File): Promise<string> =>
 
 export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     const [screen, setScreen] = useState<
-        "select" | "camera" | "preview" | "artistParams" | "pro"
+        "select" | "camera" | "preview" | "params" | "pro"
     >("select");
 
     const [imgSrc, setImgSrc] = useState<string | null>(null);
@@ -131,11 +131,11 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
         setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
     };
 
-    // ✅ ArtistParams
-    if (screen === "artistParams") {
+    // ✅ Параметры генерации
+    if (screen === "params") {
         return (
             <VStack gap={4} w="full" p={4}>
-                <ArtistParams
+                <GenerationParamsAccordion
                     onBack={() => setScreen("preview")}
                     onCancel={onClose}
                     onGenerate={() => {
@@ -162,7 +162,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
                     color="white"
                     borderRadius="16px"
                     _hover={{ bg: "#D98B0C" }}
-                    onClick={() => setScreen("artistParams")}
+                    onClick={() => setScreen("params")}
                 >
                     Использовать это фото
                 </Button>
@@ -229,7 +229,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     }
 
     if (screen === "pro" && !isPro) {
-        return <ProPayScreen onBack={() => setScreen("artistParams")} onPay={onClose} />
+        return <ProPayScreen onBack={() => setScreen("params")} onPay={onClose} />
     }
 
     // ✅ Главный экран

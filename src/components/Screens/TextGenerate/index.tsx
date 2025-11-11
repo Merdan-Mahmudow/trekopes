@@ -10,7 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { QuestionModal } from "../../../components/QuestionModal";
 import { questions as allQuestions } from "../../../components/ui/questions";
 import { ResultsComponent } from '../../../routes/questionsFinish'
-import { ArtistParams } from '../ArtistParams'
+import { GenerationParamsAccordion } from '../GenerationParamsAccordion'
 import { BrandButton, GrayButton } from '../../../components/ui/button'
 import { DiaologWindow } from '../../../components/Dialog'
 import { ProPayScreen } from '../ProPay'
@@ -504,16 +504,15 @@ export function TextGenerateScreen() {
                         exit={{ x: -100, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <ArtistParams
-                mode="submit"
+                        <GenerationParamsAccordion
                             onBack={() => setStep('results')}
                             onCancel={handleBackToCategories}
-                onGenerate={() => {
-                    if (!isPro) {
-                        setShowProScreen(true);
-                        return false;
-                    }
-                    return true;
+                            onGenerate={() => {
+                                if (!isPro) {
+                                    setShowProScreen(true);
+                                    return false;
+                                }
+                                return true;
                             }}
                         />
                     </MotionDiv>

@@ -9,9 +9,7 @@ import {
     Grid,
     GridItem,
     Icon,
-    defineConfig,
-    createSystem,
-    defaultConfig,
+    Skeleton,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { FaPlay } from "react-icons/fa";
@@ -28,47 +26,60 @@ import { HiOutlineDownload } from "react-icons/hi";
 import { TbTextRecognition } from "react-icons/tb";
 import { useState } from "react";
 import { Popup } from "../Popup";
+import { motion } from "framer-motion";
+import { useReducedMotion } from "../ui/accessibility";
+const MotionBox = motion(Box);
 
-const config = defineConfig({
-    theme: {
-        keyframes: {
-            wave: {
-                "0%, 100%": { transform: "scaleY(0.45)", opacity: "0.55" },
-                "40%": { transform: "scaleY(1.1)", opacity: "1" },
-                "60%": { transform: "scaleY(0.75)", opacity: "0.8" },
-            }
-        }
-    }
-})
-export const system = createSystem(defaultConfig, config)
-function LoadingWave() {
+export default function LoadingWave({
+    bars = 5,
+    barWidth = "6px",
+    barHeight = "34px",
+    duration = 1.3,
+    delayStep = 0.12,
+    startColor = "rgba(12,220,247,0.15)",
+    endColor = "rgba(12,220,247,0.9)",
+    glowColor = "rgba(12,220,247,0.55)",
+    label = "Загружаем треки...",
+    textColor = "#9BA0A6", // замените на COLOR.kit.smoke при необходимости
+    ...rest
+}) {
+    const prefersReducedMotion = useReducedMotion();
+
+
     return (
-        <HStack justify="center" py={6} gap={4}>
+        <HStack justify="center" py={6} gap={4} role="status" aria-live="polite" {...rest}>
             <HStack gap={2}>
-                {Array.from({ length: 5 }).map((_, idx) => (
-                    <Box
+                {Array.from({ length: bars }).map((_, idx) => (
+                    <MotionBox
                         key={idx}
-                        w="6px"
-                        h="34px"
+                        w={barWidth}
+                        h={barHeight}
                         borderRadius="full"
-                        bgGradient="linear(to-b, rgba(12,220,247,0.15), rgba(12,220,247,0.9))"
-                        boxShadow="0 0 12px rgba(12,220,247,0.55)"
-                        animationName="wave"
-                        animationDuration="1.3s"
-                        animationTimingFunction="ease-in-out"
-                        animationIterationCount="infinite"
-                        animationDelay={`${idx * 0.12}s`}
-                        transformOrigin="center bottom"
+                        bg={COLOR.kit.orange}
+                        style={{ transformOrigin: "center bottom" }}
+                        initial={{ scaleY: 0.6 }}
+                        animate={
+                            prefersReducedMotion
+                                ? { scaleY: 0.8 }
+                                : { scaleY: [0.45, 1, 0.45] }
+                        }
+                        transition={{
+                            duration: prefersReducedMotion ? 0 : duration,
+                            repeat: prefersReducedMotion ? 0 : Infinity,
+                            delay: idx * delayStep,
+                            ease: "easeInOut",
+                        }}
                     />
                 ))}
             </HStack>
-            <Text fontSize="sm" color={COLOR.kit.smoke} letterSpacing="0.02em">
-                Загружаем треки...
-            </Text>
+            {label ? (
+                <Text fontSize="sm" color={textColor} letterSpacing="0.02em">
+                    {label}
+                </Text>
+            ) : null}
         </HStack>
-    )
+    );
 }
-
 export function MusicList() {
     const { loadTracks, token } = useTracks();
     const musicState = useStore(store, (s) => s.music);
@@ -162,155 +173,161 @@ export function MusicList() {
 
     return (
         <>
-        <Box p={4} w="100%" pb={"10dvh"}>
-            <VStack gap={3} align="stretch">
-                {isLoading && <LoadingWave />}
+            <Box p={4} w="100%" pb={"10dvh"}>
+                <VStack gap={3} align="stretch">
+                    {isLoading && <LoadingWave />}
 
-                {error && (
-                    <Box bg="red.900" color="white" p={3} borderRadius="md">
-                        Ошибка при загрузке треков.
-                    </Box>
-                )}
+                    {error && (
+                        <Box bg="red.900" color="white" p={3} borderRadius="md">
+                            Ошибка при загрузке треков.
+                        </Box>
+                    )}
 
-                {!isLoading && !error && (
-                    <>
-                        {generations && generations.length > 0 ? (
-                            generations
-                                .filter((generation: GenerationDto) => generation.status !== 'failed')
-                                .map((generation: GenerationDto) => {
-                                    const url = getTrackUrl(generation);
-                                    const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
-                                    const author = generation.song?.author ?? "Трекопёс";
-                                    return (
-                                        <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl">
-                                            <HStack justify="space-between">
-                                                <HStack gap={3} align="center">
-                                                    <Button
-                                                        onClick={() => handlePlay(generation, generations)}
-                                                        aria-label={`Play ${title}`}
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        colorScheme="orange"
-                                                    >
-                                                        {playerState.currentTrackId === (generation.song?.id ?? generation.id) && playerState.isPlaying ? (
-                                                            <><BsPauseFill /></>
-                                                        ) : (
-                                                            <><FaPlay /></>
-                                                        )}
-                                                    </Button>
-                                                    <Box>
-                                                        <Text fontWeight={600} lineClamp={1}>{title}</Text>
-                                                        <Text fontSize="sm" color="gray.300">
-                                                            {author}
-                                                        </Text>
-                                                    </Box>
-                                                </HStack>
-
-                                                <HStack>
-                                                    <Text color="gray.300">{formatDuration(generation.song?.duration)}</Text>
-                                                    {(
-                                                        generation.generated_lyrics ||
-                                                        generation.song?.lyrics
-                                                    ) && (
-                                                        <IconButton
-                                                            aria-label="show-lyrics"
-                                                            size="md"
-                                                            variant={"ghost"}
-                                                            onClick={() =>
-                                                                setLyricsModal({
-                                                                    title,
-                                                                    lyrics:
-                                                                        generation.generated_lyrics ||
-                                                                        generation.song?.lyrics ||
-                                                                        "",
-                                                                    style:
-                                                                        generation.generated_style ||
-                                                                        generation.song?.style ||
-                                                                        undefined,
-                                                                    status: generation.status,
-                                                                })
-                                                            }
+                    {!isLoading && !error && (
+                        <>
+                            {generations && generations.length > 0 ? (
+                                generations
+                                    .filter((generation: GenerationDto) => generation.song?.status !== 'failed' && generation.status !== 'failed')
+                                    .map((generation: GenerationDto) => {
+                                        const url = getTrackUrl(generation);
+                                        const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
+                                        const author = generation.song?.author ?? "Трекопёс";
+                                        const status = generation.status;
+                                        if (status === 'processing') {
+                                            return (
+                                                <Skeleton key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" />
+                                            )
+                                        }
+                                        return (
+                                            <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl">
+                                                <HStack justify="space-between">
+                                                    <HStack gap={3} align="center">
+                                                        <Button
+                                                            onClick={() => handlePlay(generation, generations)}
+                                                            aria-label={`Play ${title}`}
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            colorScheme="orange"
                                                         >
-                                                            <TbTextRecognition />
-                                                        </IconButton>
-                                                    )}
-                                                    {url && (
-                                                        <a href={url} target="_blank" rel="noopener noreferrer">
-                                                            <IconButton aria-label="download" size="md" variant={"ghost"}>
-                                                                <HiOutlineDownload />
-                                                            </IconButton>
-                                                        </a>
-                                                    )}
+                                                            {playerState.currentTrackId === (generation.song?.id ?? generation.id) && playerState.isPlaying ? (
+                                                                <><BsPauseFill /></>
+                                                            ) : (
+                                                                <><FaPlay /></>
+                                                            )}
+                                                        </Button>
+                                                        <Box>
+                                                            <Text fontWeight={600} lineClamp={1}>{title}</Text>
+                                                            <Text fontSize="sm" color="gray.300">
+                                                                {author}
+                                                            </Text>
+                                                        </Box>
+                                                    </HStack>
+
+                                                    <HStack>
+                                                        <Text color="gray.300">{formatDuration(generation.song?.duration)}</Text>
+                                                        {(
+                                                            generation.generated_lyrics ||
+                                                            generation.song?.lyrics
+                                                        ) && (
+                                                                <IconButton
+                                                                    aria-label="show-lyrics"
+                                                                    size="md"
+                                                                    variant={"ghost"}
+                                                                    onClick={() =>
+                                                                        setLyricsModal({
+                                                                            title,
+                                                                            lyrics:
+                                                                                generation.generated_lyrics ||
+                                                                                generation.song?.lyrics ||
+                                                                                "",
+                                                                            style:
+                                                                                generation.generated_style ||
+                                                                                generation.song?.style ||
+                                                                                undefined,
+                                                                            status: generation.status,
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    <TbTextRecognition />
+                                                                </IconButton>
+                                                            )}
+                                                        {url && (
+                                                            <a href={url} target="_blank" rel="noopener noreferrer">
+                                                                <IconButton aria-label="download" size="md" variant={"ghost"}>
+                                                                    <HiOutlineDownload />
+                                                                </IconButton>
+                                                            </a>
+                                                        )}
+                                                    </HStack>
                                                 </HStack>
-                                            </HStack>
-                                        </Box>
-                                    );
-                                })
-                        ) : (
-                            <Grid gridTemplateRows={"repeat(3, 1fr)"} justifyContent={"center"} h={"80dvh"}>
-                                <GridItem></GridItem>
-                                <GridItem display={"flex"} color={COLOR.kit.orange}>
-                                    <Link to='/generate' style={{ display: "flex", alignItems: "center", flexDirection: "column", width: "100%" }}>
-                                        <Icon fontSize={"6xl"} children={<LuCopyPlus />} />
-                                        <Text color={COLOR.kit.orange} fontSize={"xl"} fontWeight={"bolder"}>Создать трек</Text>
-                                    </Link>
-                                </GridItem>
-                                <GridItem></GridItem>
+                                            </Box>
+                                        );
+                                    })
+                            ) : (
+                                <Grid gridTemplateRows={"repeat(3, 1fr)"} justifyContent={"center"} h={"80dvh"}>
+                                    <GridItem></GridItem>
+                                    <GridItem display={"flex"} color={COLOR.kit.orange}>
+                                        <Link to='/generate' style={{ display: "flex", alignItems: "center", flexDirection: "column", width: "100%" }}>
+                                            <Icon fontSize={"6xl"} children={<LuCopyPlus />} />
+                                            <Text color={COLOR.kit.orange} fontSize={"xl"} fontWeight={"bolder"}>Создать трек</Text>
+                                        </Link>
+                                    </GridItem>
+                                    <GridItem></GridItem>
 
-                            </Grid>
-                        )}
-                    </>
-                )}
-            </VStack>
-        </Box>
-        <Popup
-            open={Boolean(lyricsModal)}
-            title={lyricsModal?.title ?? ""}
-            onOpenChange={() => setLyricsModal(null)}
-        >
-            <VStack
-                align="stretch"
-                gap={4}
-                color={COLOR.kit.orangeWhite}
-                maxH="70dvh"
-                overflowY="auto"
-            >
-
-                <VStack align="stretch" gap={2} fontSize="md">
-                    {lyricsModal?.lyrics.split("\n").map((line, index) => {
-                        const trimmed = line.trim();
-                        if (!trimmed) {
-                            return <Box key={`empty-${index}`} h="4" />;
-                        }
-                        const isSection =
-                            trimmed.startsWith("[") && trimmed.endsWith("]");
-                        const sectionLabel = isSection
-                            ? trimmed
-                                  .replace(/^\[|\]$/g, "")
-                                  .replace(/intro/i, "Интро")
-                                  .replace(/outro/i, "Аутро")
-                                  .replace(/verse/i, "Куплет")
-                                  .replace(/chorus/i, "Припев")
-                                  .replace(/bridge/i, "Бридж")
-                                  .replace(/hook/i, "Хук")
-                                  .replace(/pre[-\s]?chorus/i, "Препев")
-                            : trimmed;
-                        return (
-                            <Text
-                                key={`${sectionLabel}-${index}`}
-                                fontWeight={isSection ? "semibold" : "normal"}
-                                fontSize={"md"}
-                                color={isSection ? COLOR.kit.orange : COLOR.kit.orangeWhite}
-                                textTransform={isSection ? "uppercase" : "none"}
-                                letterSpacing={isSection ? "0.08em" : "normal"}
-                            >
-                                {sectionLabel}
-                            </Text>
-                        );
-                    })}
+                                </Grid>
+                            )}
+                        </>
+                    )}
                 </VStack>
-            </VStack>
-        </Popup>
+            </Box>
+            <Popup
+                open={Boolean(lyricsModal)}
+                title={lyricsModal?.title ?? ""}
+                onOpenChange={() => setLyricsModal(null)}
+            >
+                <VStack
+                    align="stretch"
+                    gap={4}
+                    color={COLOR.kit.orangeWhite}
+                    maxH="70dvh"
+                    overflowY="auto"
+                >
+
+                    <VStack align="stretch" gap={2} fontSize="md">
+                        {lyricsModal?.lyrics.split("\n").map((line, index) => {
+                            const trimmed = line.trim();
+                            if (!trimmed) {
+                                return <Box key={`empty-${index}`} h="4" />;
+                            }
+                            const isSection =
+                                trimmed.startsWith("[") && trimmed.endsWith("]");
+                            const sectionLabel = isSection
+                                ? trimmed
+                                    .replace(/^\[|\]$/g, "")
+                                    .replace(/intro/i, "Интро")
+                                    .replace(/outro/i, "Аутро")
+                                    .replace(/verse/i, "Куплет")
+                                    .replace(/chorus/i, "Припев")
+                                    .replace(/bridge/i, "Бридж")
+                                    .replace(/hook/i, "Хук")
+                                    .replace(/pre[-\s]?chorus/i, "Препев")
+                                : trimmed;
+                            return (
+                                <Text
+                                    key={`${sectionLabel}-${index}`}
+                                    fontWeight={isSection ? "semibold" : "normal"}
+                                    fontSize={"md"}
+                                    color={isSection ? COLOR.kit.orange : COLOR.kit.orangeWhite}
+                                    textTransform={isSection ? "uppercase" : "none"}
+                                    letterSpacing={isSection ? "0.08em" : "normal"}
+                                >
+                                    {sectionLabel}
+                                </Text>
+                            );
+                        })}
+                    </VStack>
+                </VStack>
+            </Popup>
         </>
     );
 }

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FaLink } from 'react-icons/fa';
 import { COLOR } from "../../../components/ui/colors";
 import { BrandButton, GrayButton } from "../../../components/ui/button";
-import { ArtistParams } from "../ArtistParams";
+import { GenerationParamsAccordion } from "../GenerationParamsAccordion";
 import { ProPayScreen } from "../ProPay";
 import { useIsPro } from "../../../store/user";
 import {
@@ -24,7 +24,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     const [link, setLink] = useState("");
     const [isValidating, setIsValidating] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [currentScreen, setCurrentScreen] = useState<"link" | "artist" | "params" | "loading" | "pro">("link");
+    const [currentScreen, setCurrentScreen] = useState<"link" | "params" | "pro">("link");
     const isPro = useIsPro();
     const scenarioState = useGenerationScenario();
 
@@ -42,7 +42,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
             !link
         ) {
             setLink(scenarioState.link);
-            setCurrentScreen("artist");
+            setCurrentScreen("params");
         }
     }, [scenarioState, link]);
 
@@ -58,7 +58,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
         },
         [updateGenerationScenario]
     );
-    // дальнейшие шаги выполняются в общем компоненте ArtistParams
+    // дальнейшие шаги выполняются в общем компоненте параметров
 
     const validateVKLink = (url: string): boolean => {
         // Проверяем различные форматы ссылок ВКонтакте
@@ -111,7 +111,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
                 ...draft,
                 link: normalizedLink,
             }));
-            setCurrentScreen("artist");
+            setCurrentScreen("params");
         } catch (err) {
             setError("Ошибка при анализе профиля. Попробуйте еще раз.");
         } finally {
@@ -215,19 +215,14 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     }
 
     if (currentScreen === "pro" && !isPro) {
-        return <ProPayScreen onBack={() => setCurrentScreen("artist")} onPay={() => onClose && onClose()} />
+        return <ProPayScreen onBack={() => setCurrentScreen("params")} onPay={() => onClose && onClose()} />
     }
 
-    // Экран после ссылки: используем общий компонент ArtistParams
+    // Экран после ссылки: используем аккордеон параметров
     return (
         <VStack gap={4} w="full" color="white">
-            <Flex gap={2} alignItems="center" p={3} bg={COLOR.kit.darkGray} borderRadius="12px" w="full">
-                <Icon as={FaLink} color="#4CAF50" />
-                <Text fontSize="sm" color="#4CAF50">Ссылка: ⚡ загружена</Text>
-            </Flex>
 
-            <ArtistParams
-                mode="submit"
+            <GenerationParamsAccordion
                 onBack={() => setCurrentScreen("link")}
                 onCancel={() => onClose && onClose()}
                 onGenerate={() => handleGenerate()}

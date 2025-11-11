@@ -9,8 +9,7 @@ export const getTelegramUserId = (): string | undefined => {
     return id ? String(id) : undefined;
 }
 
-const DEV_INIT_DATA =
-    "query_id=AAEW_7xnAgAAABb_vGcKeok3&user=%7B%22id%22%3A6035406614%2C%22first_name%22%3A%22M%20E%20R%20D%20A%20N%20%E2%9C%9D%EF%B8%8F%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22softp04%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2F04uRrvMW8SVXYvvp7E3x2C3g7KPQQein1L6ueb53ePgKjyqKUfB6iSRM6i3IJ0LT.svg%22%7D&auth_date=1762789868&signature=Z3aDbZh0hGUfma4aW91kSuoy03PCFGtHEGRVccoAknhDB0dJL3KzRrifgfTMb5vytr4bRliCo8CADtlYr7P3Aw&hash=53de365d6138953b28e87dedfe36b3ca36fe6a21c32bc2fd719f13e2bdfe501d";
+const DEV_INIT_DATA ="query_id=AAEW_7xnAgAAABb_vGfnyFvx&user=%7B%22id%22%3A6035406614%2C%22first_name%22%3A%22M%20E%20R%20D%20A%20N%20%E2%9C%9D%EF%B8%8F%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22softp04%22%2C%22language_code%22%3A%22ru%22%2C%22is_premium%22%3Atrue%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2F04uRrvMW8SVXYvvp7E3x2C3g7KPQQein1L6ueb53ePgKjyqKUfB6iSRM6i3IJ0LT.svg%22%7D&auth_date=1762877356&signature=LY-hmof1fd1drhPyVFw6olelSi6VjFzbqnGu4MR_D7waqWhLnr-C5HD4AFeOSTH5HlKsXaLtHhGEEQizBTC1Ag&hash=be97efe10fdcb8ca2ebba704b2e14e2f0f4628015f2fe6be4138e5b4c6967b6b"
 
 export function useAuth() {
     const telegram = window.Telegram;
