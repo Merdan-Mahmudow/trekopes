@@ -29,6 +29,7 @@ function RootComponent() {
       tg.WebApp.setHeaderColor(COLOR.bg.hex.subtle);
       tg.WebApp.enableClosingConfirmation();
       tg.WebApp.expand();
+      tg.WebApp.disableVerticalSwipes();
     }
   }, [tg]);
 
