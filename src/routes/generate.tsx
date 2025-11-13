@@ -6,8 +6,8 @@ import { useEffect, useState } from 'react'
 import { setDockActive } from '../store'
 import { TextGenerateScreen } from '../components/Screens/TextGenerate'
 import { LinkGenerate } from '../components/Screens/LinkGenerate'
-import { IoCameraOutline } from 'react-icons/io5'
-import { FaLink } from 'react-icons/fa'
+// import { IoCameraOutline } from 'react-icons/io5'
+// import { FaLink } from 'react-icons/fa'
 import { BsFileText } from "react-icons/bs";
 import { TbTextSize } from "react-icons/tb";
 import { GiMusicalNotes } from "react-icons/gi";
@@ -95,24 +95,24 @@ function RouteComponent() {
             icon: <BsFileText />,
             iconSize: '5xl' as const,
         },
-        {
-            type: 'photo' as const,
-            title: 'Песня по фото',
-            description: 'Сфотографируйте человека, место или предмет - Трекопес напишет трек',
-            icon: <IoCameraOutline />,
-            iconSize: '5xl' as const,
-        },
-        {
-            type: 'link' as const,
-            title: 'Песня по ссылке',
-            description: 'Кидай ссылку на свой профиль в ВК или профиль друга - я все изучу и сделаю песню',
-            icon: <FaLink />,
-            iconSize: '4xl' as const,
-        },
+        // {
+        //     type: 'photo' as const,
+        //     title: 'Песня по фото',
+        //     description: 'Сфотографируйте человека, место или предмет - Трекопес напишет трек',
+        //     icon: <IoCameraOutline />,
+        //     iconSize: '5xl' as const,
+        // },
+        // {
+        //     type: 'link' as const,
+        //     title: 'Песня по ссылке',
+        //     description: 'Кидай ссылку на свой профиль в ВК или профиль друга - я все изучу и сделаю песню',
+        //     icon: <FaLink />,
+        //     iconSize: '4xl' as const,
+        // },
         {
             type: 'style' as const,
-            title: 'Песня по стилю',
-            description: 'Выбери сценарий и заполни анкету - получишь персональную песню',
+            title: 'Песня по артисту',
+            description: 'Выбери артиста',
             icon: <GiMusicalNotes />,
             iconSize: '5xl' as const,
         },

@@ -5,10 +5,11 @@ import { BrandButton } from '../components/ui/button'
 import type { Telegram } from 'telegram-web-app'
 import { RiTelegram2Line } from 'react-icons/ri'
 import { useEffect } from 'react'
-import { setDockActive } from '../store'
+import store, { setDockActive } from '../store'
 import { BsPeople } from 'react-icons/bs'
 import { FaRegCircle } from "react-icons/fa";
 import { FaRegCheckCircle } from "react-icons/fa";
+import { useStore } from '@tanstack/react-store'
 
 
 
@@ -19,6 +20,8 @@ export const Route = createFileRoute('/referral')({
 function RouteComponent() {
 
     const tg: Telegram = window.Telegram;
+
+    const user = useStore(store, (state) => state.user);
     const refLink = `https://t.me/TPEKOllEC_BOT?start=${tg.WebApp.initDataUnsafe.user?.id}`
     useEffect(() => {
         setDockActive("left")
@@ -29,35 +32,36 @@ function RouteComponent() {
 
     }
 
+
     // JSON-список карточек (можно вынести в отдельный файл/источник при необходимости)
     const REWARDS = [
         {
             id: 'r1',
             title: 'За 1 друга - 1 лапка',
             subtitle: '*за последующих в случае оплаты',
-            bg: COLOR.kit.smoke,
-            unlocked: true,
+            bg: user.referrals_signup_count >= 1 ? COLOR.kit.smoke : COLOR.kit.darkGray,
+            unlocked: user.referrals_signup_count >= 1,
         },
         {
             id: 'r10',
             title: 'За 10 друзей - PRO',
             subtitle: '',
-            bg: COLOR.kit.darkGray,
-            unlocked: false,
+            bg: user.referrals_signup_count >= 10 ? COLOR.kit.smoke : COLOR.kit.darkGray,
+            unlocked: user.referrals_signup_count >= 10,
         },
         {
             id: 'r20',
             title: 'За 20 друзей - 20% с оплат',
             subtitle: '',
-            bg: COLOR.kit.darkGray,
-            unlocked: false,
+            bg: user.referrals_signup_count >= 20 ? COLOR.kit.smoke : COLOR.kit.darkGray,
+            unlocked: user.referrals_signup_count >= 20,
         },
         {
             id: 'r50',
             title: 'За 50 друзей - Partner PRO',
             subtitle: '',
-            bg: COLOR.kit.darkGray,
-            unlocked: false,
+            bg: user.referrals_signup_count >= 50 ? COLOR.kit.smoke : COLOR.kit.darkGray,
+            unlocked: user.referrals_signup_count >= 50,
         },
     ] as const
 

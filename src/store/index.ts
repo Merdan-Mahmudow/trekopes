@@ -22,9 +22,8 @@ export type UserState = {
   limit: number;
   used_limit: number;
   bonus_limit: number;
-  ref?: number | null;
-  ref_gift_activated?: boolean;
-  ref_gave_first_payment_bonus?: boolean;
+  referrals_signup_count: number;
+  referrals_purchase_count: number;
   isPro?: boolean;
 };
 
@@ -45,9 +44,8 @@ const initialUserState: UserState = {
   limit: 0,
   used_limit: 0,
   bonus_limit: 0,
-  ref: undefined,
-  ref_gift_activated: undefined,
-  ref_gave_first_payment_bonus: undefined,
+  referrals_signup_count: 0,
+  referrals_purchase_count: 0,
   isPro: false,
 };
 

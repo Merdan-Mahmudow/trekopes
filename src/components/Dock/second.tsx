@@ -12,14 +12,21 @@ const MotionPath = motion.path;
 const NavBar = () => {
   const path = useLocation()
   const [active, setActive] = useState<"left" | "center" | "right" | "none">("none");
-  useEffect(() => {
-    setActive(path.pathname == "/referral" ? "left" :
-      path.pathname == "/generate" ? "center" :
-        path.pathname == "/profile" ? "right" : "left")
-  }, [path.pathname, active])
   const [convexParams, setConvexParams] = useState({ centerX: 200, width: 95, height: 15 });
   const [svgWidth, setSvgWidth] = useState(400);
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (path.pathname === "/referral") {
+      setActive("left");
+    } else if (path.pathname === "/generate") {
+      setActive("center");
+    } else if (path.pathname === "/profile") {
+      setActive("right");
+    } else {
+      setActive("none");
+    }
+  }, [path.pathname])
 
   useEffect(() => {
     const handleResize = () => {
@@ -38,11 +45,19 @@ const NavBar = () => {
   };
 
   const changeConvexParams = () => {
-    setConvexParams({ centerX: positions[active], width: 90, height: 13 });
-    setTimeout(() => {
-      setConvexParams({ centerX: positions[active], width: 95, height: 15 });
-    }, 400);
+    if (active === "none") {
+      setConvexParams({ centerX: positions[active], width: 0, height: 0 });
+    } else {
+      setConvexParams({ centerX: positions[active], width: 90, height: 13 });
+      setTimeout(() => {
+        setConvexParams({ centerX: positions[active], width: 95, height: 15 });
+      }, 400);
+    }
   };
+
+  useEffect(() => {
+    changeConvexParams();
+  }, [active])
 
   const createPath = (centerX: number) => {
     const waveWidth = convexParams.width;

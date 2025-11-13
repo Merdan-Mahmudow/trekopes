@@ -127,3 +127,43 @@ export type ChatDto = {
 };
 
 export type GetMeResponse = ApiSuccessResponse<ChatDto>;
+
+// Payment types
+export type PaymentStatus = 
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+export type PaymentDto = {
+  uuid: string;
+  pack_id: number;
+  is_recurring: boolean;
+  status: PaymentStatus;
+  amount: number;
+  currency: string;
+  payment_url?: string | null;
+  email?: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string | null;
+  error_message?: string | null;
+};
+
+export type CreatePaymentRequest = {
+  pack_id: number;
+  is_recurring: boolean;
+  email?: string;
+};
+
+export type CreatePaymentResponse = ApiSuccessResponse<PaymentDto>;
+
+export type GetPaymentsQuery = {
+  limit?: number;
+  offset?: number;
+};
+
+export type GetPaymentsResponse = ApiSuccessResponse<PaymentDto[]>;
+
+export type GetPaymentByUUIDResponse = ApiSuccessResponse<PaymentDto>;

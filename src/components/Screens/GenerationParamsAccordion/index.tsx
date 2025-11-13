@@ -61,7 +61,6 @@ const voiceOptions = [
 export function GenerationParamsAccordion({
     mode = "submit",
     onBack,
-    onCancel,
     onGenerate,
 }: GenerationParamsAccordionProps) {
     const [tempo, setTempo] = useState(105);
@@ -206,9 +205,6 @@ export function GenerationParamsAccordion({
     if (isLoading) {
         return <TrackLoadingScreen />;
     }
-    useEffect(() => {
-        onCancel && onCancel();
-    }, [onCancel]);
     return (
         <VStack gap={4} w="full" color="white">
             <Box w="full" borderRadius="24px" p={6}>

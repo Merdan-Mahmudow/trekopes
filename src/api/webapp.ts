@@ -2,10 +2,15 @@ import { request } from "../libs/request";
 import type {
   CreateGenerationRequest,
   CreateGenerationResponse,
+  CreatePaymentRequest,
+  CreatePaymentResponse,
   GetGenerationByIdResponse,
   GetGenerationsQuery,
   GetGenerationsResponse,
   GetMeResponse,
+  GetPaymentByUUIDResponse,
+  GetPaymentsQuery,
+  GetPaymentsResponse,
   LoginRequest,
   LoginResponse
 } from "../types/webapp";
@@ -77,6 +82,52 @@ export async function getWebAppMe(token: string): Promise<GetMeResponse> {
   const response = await request<GetMeResponse>(
     "get",
     `${WEBAPP_PREFIX}/me`,
+    undefined,
+    {
+      headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function getWebAppPayments(
+  token: string,
+  params?: GetPaymentsQuery
+): Promise<GetPaymentsResponse> {
+  const response = await request<GetPaymentsResponse>(
+    "get",
+    `${WEBAPP_PREFIX}/payments`,
+    undefined,
+    {
+      params,
+      headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function createWebAppPayment(
+  token: string,
+  payload: CreatePaymentRequest
+): Promise<CreatePaymentResponse> {
+  const response = await request<CreatePaymentResponse>(
+    "post",
+    `${WEBAPP_PREFIX}/payments`,
+    payload,
+    {
+      headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function getWebAppPaymentByUUID(
+  token: string,
+  uuid: string
+): Promise<GetPaymentByUUIDResponse> {
+  const response = await request<GetPaymentByUUIDResponse>(
+    "get",
+    `${WEBAPP_PREFIX}/payments/${uuid}`,
     undefined,
     {
       headers: authHeaders(token)

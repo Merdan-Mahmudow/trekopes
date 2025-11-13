@@ -15,7 +15,7 @@ import { BrandButton, GrayButton } from '../../../components/ui/button'
 import { DiaologWindow } from '../../../components/Dialog'
 import { ProPayScreen } from '../ProPay'
 import { useNavigate } from '@tanstack/react-router'
-import { useIsPro } from '../../../store/user'
+import { useIsPro, useUser } from '../../../store/user'
 import {
     setGenerationScenario,
     updateGenerationScenario,
@@ -108,7 +108,7 @@ const OptionButton = ({ option, onClick }: OptionButtonProps) => (
     </Button>
 )
 
-type Step = 'category' | 'intro' | 'audience' | 'questions' | 'results' | 'artist-params'
+type Step = 'category' | 'intro' | 'audience' | 'questions' | 'results' | 'generation-params' | 'pro-pay'
 
 const SCENARIO_CONFIGS: Record<ChangeButtonProps['category'], ScenarioConfig> = {
     'broken-heart': {
@@ -208,11 +208,15 @@ const SCENARIO_CONFIGS: Record<ChangeButtonProps['category'], ScenarioConfig> = 
 export function TextGenerateScreen() {
     const navigate = useNavigate()
     const [showProReminder, setShowProReminder] = useState(false);
-    const [showProScreen, setShowProScreen] = useState(false);
+    const [skipClicked, setSkipClicked] = useState(false);
     const isPro = useIsPro();
+    const user = useUser();
     const scenarioState = useGenerationScenario();
     const [step, setStep] = useState<Step>('category');
     const [selectedCategory, setSelectedCategory] = useState<ChangeButtonProps['category'] | null>(null);
+    
+    // showProReminder должен быть true только если у пользователя пустой баланс
+    const hasEmptyBalance = user.limit === 0;
 
     useEffect(() => {
         if (!scenarioState || scenarioState.mode !== "text") {
@@ -318,20 +322,25 @@ export function TextGenerateScreen() {
     }, [patchTextScenario, qList]);
 
     useEffect(() => {
-        if (step === 'questions' || step === 'results' || step === 'artist-params') {
+        if (step === 'questions' || step === 'results' || step === 'generation-params') {
             syncAnswersFromStorage();
         }
     }, [step, syncAnswersFromStorage]);
 
-    // Показ напоминания о PRO после 3-го вопроса (один раз за сессию)
-    if (step === 'questions' && selectedCategory && qList && currentIndex === 3 && !showProReminder) {
-        const isPro = localStorage.getItem('is_pro') === 'true';
-        const alreadyShown = localStorage.getItem('pro_reminder_shown') === 'true';
-        if (!isPro && !alreadyShown) {
+    // Показ напоминания о PRO после 3-го вопроса, если баланс пустой
+    useEffect(() => {
+        if (step === 'questions' && selectedCategory && qList && currentIndex === 3 && hasEmptyBalance && !showProReminder && !skipClicked) {
             setShowProReminder(true);
-            localStorage.setItem('pro_reminder_shown', 'true');
         }
-    }
+    }, [step, selectedCategory, qList, currentIndex, hasEmptyBalance, showProReminder, skipClicked]);
+    
+    // Если баланс пополнился и мы на шаге pro-pay, возвращаемся к artist-params
+    useEffect(() => {
+        if (step === 'pro-pay' && !hasEmptyBalance && !isPro) {
+            setStep('generation-params');
+            setSkipClicked(false);
+        }
+    }, [step, hasEmptyBalance, isPro]);
 
 
     const handleNext = () => {
@@ -346,7 +355,7 @@ export function TextGenerateScreen() {
 
     const handleFinishResults = () => {
         syncAnswersFromStorage();
-        setStep('artist-params');
+        setStep('generation-params');
     };
 
     const handlePrev = () => {
@@ -359,6 +368,7 @@ export function TextGenerateScreen() {
         setCurrentIndex(0);
         setStep('intro');
         setShowProReminder(false);
+        setSkipClicked(false); // Сбрасываем состояние при выборе новой категории
         const mappedCategory = categoryMap[category] ?? category;
         try {
             localStorage.setItem('qa_category', mappedCategory);
@@ -373,7 +383,12 @@ export function TextGenerateScreen() {
     };
 
     const handleCloseDialog = () => {
-        setShowProReminder(false)
+        setShowProReminder(false);
+    }
+    
+    const handleSkipReminder = () => {
+        setShowProReminder(false);
+        setSkipClicked(true);
     }
 
     const handleStartScenario = () => {
@@ -394,6 +409,8 @@ export function TextGenerateScreen() {
         setSelectedCategory(null);
         setCurrentIndex(0);
         setStep('category');
+        setShowProReminder(false);
+        setSkipClicked(false); // Сбрасываем состояние при возврате к категориям
         try {
             localStorage.removeItem('qa_answers');
             localStorage.removeItem('qa_category');
@@ -444,8 +461,7 @@ export function TextGenerateScreen() {
                                 {scenarioConfig.subtitle}
                             </Text>
                             <Box
-                                borderWidth="1px"
-                                borderColor={COLOR.kit.orangeWhite}
+                                bg={COLOR.kit.gray}
                                 borderRadius="2xl"
                                 px={4}
                                 py={3}
@@ -496,9 +512,9 @@ export function TextGenerateScreen() {
                     >
                         <ResultsComponent onFinish={handleFinishResults} />
                     </MotionDiv>
-                ) : step === 'artist-params' ? (
+                ) : step === 'generation-params' ? (
                     <MotionDiv
-                        key="artist-params"
+                        key="generation-params"
                         initial={{ x: 100, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: -100, opacity: 0 }}
@@ -507,13 +523,31 @@ export function TextGenerateScreen() {
                         <GenerationParamsAccordion
                             onBack={() => setStep('results')}
                             onCancel={handleBackToCategories}
-                            onGenerate={() => {
-                                if (!isPro) {
-                                    setShowProScreen(true);
-                                    return false;
+                            onGenerate={async () => {
+                                // Если баланс пустой и пользователь не PRO, переходим на экран оплаты после нажатия "Утвердить"
+                                if (!isPro && hasEmptyBalance) {
+                                    // Переходим на экран оплаты после нажатия кнопки "Сгенерировать"
+                                    setStep('pro-pay');
+                                    return false; // Блокируем генерацию
                                 }
-                                return true;
+                                return true; // Продолжаем генерацию если баланс есть
                             }}
+                        />
+                    </MotionDiv>
+                ) : step === 'pro-pay' && !isPro ? (
+                    <MotionDiv
+                        key="pro-pay"
+                        initial={{ x: 100, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -100, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <ProPayScreen 
+                            onBack={() => {
+                                setStep('generation-params');
+                                setSkipClicked(false);
+                            }} 
+                            onPay={() => navigate({ to: '/subscription', search: { tarrif: 'pro', source: 'propay' } })} 
                         />
                     </MotionDiv>
                 ) : (
@@ -548,8 +582,8 @@ export function TextGenerateScreen() {
                 footer={(
                     <>
                         <Grid gridTemplateColumns={"1fr 1fr"} w={"full"}>
-                            <GrayButton w='full' onClick={() => {setShowProReminder(false)}}>Пропустить</GrayButton>
-                            <BrandButton w='full'>Купить PRO</BrandButton>
+                            <GrayButton w='full' onClick={handleSkipReminder}>Пропустить</GrayButton>
+                            <BrandButton w='full' onClick={() => navigate({ to: '/subscription', search: { tarrif: 'pro', source: 'propay' } })}>Купить PRO</BrandButton>
                         </Grid>
                     </>
                 )}
@@ -572,9 +606,7 @@ export function TextGenerateScreen() {
                     </Text>
                 </Box>
             </DiaologWindow>
-            {showProScreen && !isPro && (
-                <ProPayScreen onBack={() => setShowProScreen(false)} onPay={() => navigate({ to: '/subscription', search: { tarrif: 'pro', source: 'propay' } })} />
-            )}
+           
         </>
     )
 }
