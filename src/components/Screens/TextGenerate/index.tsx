@@ -330,6 +330,12 @@ export function TextGenerateScreen() {
             // Если нет quest, сразу переходим к вопросам (для категории others)
             setCurrentIndex(0);
             setStep('questions');
+            // Сохраняем parent: null для questionsFinish
+            try {
+                localStorage.removeItem('qa_parent');
+            } catch {
+                // ignore
+            }
         }
     }
 
@@ -349,6 +355,12 @@ export function TextGenerateScreen() {
             setCurrentIndex(0);
             setStep('questions');
             setShowProReminder(false);
+            // Сохраняем parent в localStorage для questionsFinish
+            try {
+                localStorage.setItem('qa_parent', value);
+            } catch {
+                // ignore
+            }
             patchTextScenario((draft) => ({
                 ...draft,
                 audience: value,
@@ -367,6 +379,7 @@ export function TextGenerateScreen() {
         try {
             localStorage.removeItem('qa_answers');
             localStorage.removeItem('qa_category');
+            localStorage.removeItem('qa_parent');
         } catch {
             // ignore
         }

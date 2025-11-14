@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { Box, Text, Separator, Grid, Flex, IconButton, Input } from '@chakra-ui/react'
-import { questions as allQuestions } from '../components/ui/questions'
+import { questions as allQuestions, type QuestionCategory, type QuestionSet } from '../components/ui/questions'
 import { MdEdit, MdCheck } from 'react-icons/md'
 import { COLOR } from '../components/ui/colors'
 import { BrandButton } from '../components/ui/button'
@@ -16,17 +16,50 @@ interface ResultsComponentProps {
 
 export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
     const [answers, setAnswers] = useState<Record<number, string>>({})
-    const [questions, setQuestions] = useState<string[] | null>(null)
     const [editingAnswer, setEditingAnswer] = useState<number | null>(null)
     const [tempAnswer, setTempAnswer] = useState("")
     const inputRef = useRef<HTMLInputElement | null>(null);
 
-    useEffect(() => {
-    if (editingAnswer !== null && inputRef.current) {
-        inputRef.current.focus();
-    }
-}, [editingAnswer]);
+    // Получаем категорию и parent из localStorage
+    const category = useMemo(() => {
+        try {
+            return localStorage.getItem('qa_category') ?? null;
+        } catch {
+            return null;
+        }
+    }, []);
 
+    const parent = useMemo(() => {
+        try {
+            const stored = localStorage.getItem('qa_parent');
+            // Если значение есть и не пустое, возвращаем его, иначе null
+            return stored && stored !== 'null' ? stored : null;
+        } catch {
+            return null;
+        }
+    }, []);
+
+    // Находим QuestionSet с нужным parent
+    const questionSet: QuestionSet | undefined = useMemo(() => {
+        if (!category) return undefined;
+        const questionCategory: QuestionCategory | undefined = allQuestions.find((q) => q.category === category);
+        if (!questionCategory) return undefined;
+        
+        return parent
+            ? questionCategory.form.questions.find((qs) => qs.parent === parent)
+            : questionCategory.form.questions.find((qs) => qs.parent === null);
+    }, [category, parent]);
+
+    // Получаем тексты вопросов из QuestionSet
+    const questionTexts = useMemo(() => {
+        return questionSet?.questions.map(q => q.text) ?? [];
+    }, [questionSet]);
+
+    useEffect(() => {
+        if (editingAnswer !== null && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [editingAnswer]);
 
     const handleSaveAnswer = (index: number) => {
         if (tempAnswer.trim()) {
@@ -44,7 +77,7 @@ export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
     }
 
     useEffect(() => {
-        // load answers
+        // Загружаем ответы из localStorage
         try {
             const rawA = localStorage.getItem('qa_answers')
             const parsedA = rawA ? JSON.parse(rawA) : {}
@@ -57,64 +90,13 @@ export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
         } catch {
             setAnswers({})
         }
-
-        // try: 1) category saved -> use questions from local file; 2) fallback to qa_questions in localStorage
-        try {
-            const storedCategory = localStorage.getItem('qa_category')
-            if (storedCategory) {
-                const found = allQuestions.find(q => q.category === storedCategory)
-                if (found) {
-                    setQuestions(found.questions.map(item => item.qText))
-                    return
-                }
-            }
-
-            const rawQ = localStorage.getItem('qa_questions')
-            if (rawQ) {
-                const parsedQ = JSON.parse(rawQ)
-                if (Array.isArray(parsedQ)) setQuestions(parsedQ)
-                else if (typeof parsedQ === 'object' && parsedQ !== null) {
-                    // объект вида {1: "text"} -> массив
-                    const arr: string[] = []
-                    Object.keys(parsedQ).forEach(k => {
-                        const n = Number(k)
-                        if (!Number.isNaN(n)) arr[n - 1] = parsedQ[k]
-                    })
-                    setQuestions(arr)
-                } else {
-                    setQuestions(null)
-                }
-            } else {
-                setQuestions(null)
-            }
-        } catch {
-            setQuestions(null)
-        }
     }, [])
 
     const maxIndex = (() => {
         const ansMax = Object.keys(answers).reduce((m, k) => Math.max(m, Number(k) || 0), 0)
-        const qMax = questions ? questions.length : 0
+        const qMax = questionTexts.length
         return Math.max(ansMax, qMax)
     })()
-
-    const rows = []
-    for (let i = 1; i <= Math.max(1, maxIndex); i++) {
-        const qText = questions ? (questions[i - 1] ?? `Вопрос ${i}`) : `Вопрос ${i}`
-        const answer = answers[i] ?? ''
-        const unanswered = !answer || answer.trim() === ''
-        rows.push(
-            <Box key={i} w="100%" textAlign={"start"}>
-                <Text fontWeight="semibold" textDecoration={unanswered ? 'line-through' : 'none'}>
-                    {qText}
-                </Text>
-                <Text ml={2}>
-                    {unanswered ? '— (не отвечали)' : answer}
-                </Text>
-                <Separator my={1} color={"white"} />
-            </Box>
-        )
-    }
     const renderAnswer = (qText: string, answer: string, index: number, unanswered: boolean) => {
         if (editingAnswer === index) {
             return (
@@ -171,8 +153,8 @@ export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
     }
 
     const questionsAndAnswers = []
-    for (let i = 1; i <= Math.max(1, maxIndex); i++) {
-        const qText = questions ? (questions[i - 1] ?? `Вопрос ${i}`) : `Вопрос ${i}`
+    for (let i = 0; i < Math.max(1, maxIndex); i++) {
+        const qText = questionTexts[i] ?? `Вопрос ${i + 1}`
         const answer = answers[i] ?? ''
         const unanswered = !answer || answer.trim() === ''
         questionsAndAnswers.push(renderAnswer(qText, answer, i, unanswered))

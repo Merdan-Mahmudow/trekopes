@@ -1,12 +1,11 @@
 import { QuestionModal } from '../components/QuestionModal';
 import { createFileRoute } from '@tanstack/react-router'
 import z from 'zod';
-import { questions } from '../components/ui/questions';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const questionSearchSchema = z.object({
-    category: z.enum(['self', 'friend', 'broken-heart', 'love', 'relation', 'baby', 'hero', 'congrats', 'others']),
-    // qcategory: z.enum(['me', 'friends', 'heart-crack', 'lover', 'relation', 'baby', 'hero', 'congrats', 'others']),
+    category: z.string(),
+    parent: z.string().nullable().optional(),
 })
 
 export const Route = createFileRoute('/question')({
@@ -21,45 +20,22 @@ function RouteComponent() {
 
     // маппинг категорий (маршрут -> файл)
     const categoryMap: Record<string, string> = {
-        'friend': 'friends',
-        'broken-heart': 'heart-crack',
+        'friend': 'friend',
+        'broken-heart': 'broken-heart',
         'love': 'lover',
-        // остальные совпадают: self, relation, baby, hero, congrats, others
+        'relation': 'family',
+        'baby': 'baby',
+        'hero': 'hero',
+        'congrats': 'congrats',
+        'others': 'others',
     };
 
     const lookup = params?.category ? (categoryMap[params.category] ?? params.category) : undefined;
-    const found = lookup ? questions.find(q => q.category === lookup) : undefined;
-    const qList = found ? found.questions : null;
-
-    // сохраняем выбранную категорию и тексты вопросов в localStorage,
-    // чтобы итоговая страница могла отобразить сами вопросы
-    useEffect(() => {
-      try {
-        if (lookup) {
-          localStorage.setItem('qa_category', lookup);
-        }
-        if (qList) {
-          const texts = qList.map(q => q.qText);
-          localStorage.setItem('qa_questions', JSON.stringify(texts));
-        }
-      } catch {
-        // ignore
-      }
-    }, [lookup, qList]);
-
-    // --- состояние для текущего вопроса
+    const parent = params?.parent ?? null;
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    if (!qList || qList.length === 0) {
-      return <div>Вопросы не найдены для категории: {params?.category}</div>
-    }
-
-    const currentQuestion = qList[currentIndex];
-
     const handleNext = () => {
-      if (currentIndex < qList.length - 1) {
-        setCurrentIndex((i) => i + 1);
-      }
+      setCurrentIndex((i) => i + 1);
     }
 
     const handlePrev = () => {
@@ -68,18 +44,18 @@ function RouteComponent() {
       }
     }
 
+    if (!lookup) {
+      return <div>Категория не указана</div>
+    }
+
     return (
-      <>
-        <QuestionModal
-          key={currentQuestion.qNum}
-          qNum={currentQuestion.qNum}
-          qText={currentQuestion.qText}
-          qHolder={currentQuestion.qHolder}
-          onNext={handleNext}
-          onPrev={handlePrev}
-          isFirst={currentIndex === 0}
-          isLast={currentIndex === qList.length - 1}
-        />
-      </>
+      <QuestionModal
+        key={currentIndex}
+        category={lookup}
+        parent={parent}
+        currentIndex={currentIndex}
+        onNext={handleNext}
+        onPrev={handlePrev}
+      />
     )
 }

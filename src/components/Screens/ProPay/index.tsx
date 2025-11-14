@@ -68,7 +68,7 @@ export const ProPayScreen = ({ onBack, onPay }: ProPayScreenProps) => {
                         position="relative"
                     >
                         <Image 
-                            src={"/pay_img.png"} 
+                            src={"/pay_img.PNG"} 
                             alt="Иллюстрация оплаты PRO-тарифа" 
                             w="100%"
                             h="100%"
