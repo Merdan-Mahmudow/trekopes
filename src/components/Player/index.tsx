@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import type { PointerEvent as ReactPointerEvent } from 'react'
+// import type { PointerEvent as ReactPointerEvent } from 'react'
 import { Box, Flex, Button, Text, HStack, IconButton, Image, CloseButton } from '@chakra-ui/react'
 import { BsPlayFill, BsPauseFill, BsSkipBackwardFill, BsSkipForwardFill } from 'react-icons/bs'
 import store from '../../store'
@@ -26,8 +26,8 @@ export function Player() {
   const [current, setCurrent] = useState(0)
   const [status, setStatus] = useState<PlayerStatus>('idle')
   const seekingRef = useRef(false)
-  const progressRef = useRef<HTMLDivElement | null>(null)
-  const [isScrubbing, setIsScrubbing] = useState(false)
+  // const progressRef = useRef<HTMLDivElement | null>(null)
+  // const [isScrubbing, setIsScrubbing] = useState(false)
 
   // Initialize audio element
   useEffect(() => {
@@ -215,19 +215,19 @@ export function Player() {
 
 const HAVE_METADATA = 1;
 
-function getClientX(e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>): number | null {
-  // Сначала тач, потом мышь
-  // На touchend клиентХ лежит в changedTouches
-  // На некоторых девайсах событие может прилететь дважды (tap -> click) — снаружи отсей.
-  // Здесь просто извлекаем координату.
-  // @ts-ignore
-  if ('changedTouches' in e && e.changedTouches?.[0]) return e.changedTouches[0].clientX;
-  // @ts-ignore
-  if ('touches' in e && e.touches?.[0]) return e.touches[0].clientX;
-  // @ts-ignore
-  if ('clientX' in e && typeof e.clientX === 'number') return e.clientX;
-  return null;
-}
+// function getClientX(e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>): number | null {
+//   // Сначала тач, потом мышь
+//   // На touchend клиентХ лежит в changedTouches
+//   // На некоторых девайсах событие может прилететь дважды (tap -> click) — снаружи отсей.
+//   // Здесь просто извлекаем координату.
+//   // @ts-ignore
+//   if ('changedTouches' in e && e.changedTouches?.[0]) return e.changedTouches[0].clientX;
+//   // @ts-ignore
+//   if ('touches' in e && e.touches?.[0]) return e.touches[0].clientX;
+//   // @ts-ignore
+//   if ('clientX' in e && typeof e.clientX === 'number') return e.clientX;
+//   return null;
+// }
 
 function resolveDuration(a: HTMLAudioElement, fallback?: number): number | null {
   // Нормальная duration
@@ -294,52 +294,52 @@ const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
   }
 }, [duration, playerState.currentTrackId])
 
-const seekByClientX = useCallback((clientX: number | null, emitTelemetry: boolean) => {
-  const bar = progressRef.current
-  if (!bar) return
-  if (!Number.isFinite(clientX)) return
-  const rect = bar.getBoundingClientRect()
-  const width = rect?.width ?? 0
-  if (!Number.isFinite(width) || width <= 0) return
-  const x = (clientX as number) - rect.left
-  const percentRaw = x / width
-  seekToPercent(percentRaw, emitTelemetry)
-}, [seekToPercent])
+// const seekByClientX = useCallback((clientX: number | null, emitTelemetry: boolean) => {
+//   const bar = progressRef.current
+//   if (!bar) return
+//   if (!Number.isFinite(clientX)) return
+//   const rect = bar.getBoundingClientRect()
+//   const width = rect?.width ?? 0
+//   if (!Number.isFinite(width) || width <= 0) return
+//   const x = (clientX as number) - rect.left
+//   const percentRaw = x / width
+//   seekToPercent(percentRaw, emitTelemetry)
+// }, [seekToPercent])
 
-const handleSeek = useCallback((
-  e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-) => {
-  e.preventDefault()
-  e.stopPropagation()
-  seekingRef.current = true
-  const cx = getClientX(e)
-  seekByClientX(cx, true)
-  seekingRef.current = false
-}, [seekByClientX])
+// const handleSeek = useCallback((
+//   e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+// ) => {
+//   e.preventDefault()
+//   e.stopPropagation()
+//   seekingRef.current = true
+//   const cx = getClientX(e)
+//   seekByClientX(cx, true)
+//   seekingRef.current = false
+// }, [seekByClientX])
 
-const handleProgressPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-  if (!duration) return
-  e.preventDefault()
-  e.stopPropagation()
-  seekingRef.current = true
-  setIsScrubbing(true)
-  seekByClientX(e.clientX, false)
+// const handleProgressPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+//   if (!duration) return
+//   e.preventDefault()
+//   e.stopPropagation()
+//   seekingRef.current = true
+//   setIsScrubbing(true)
+//   seekByClientX(e.clientX, false)
 
-  const handleMove = (event: PointerEvent) => {
-    seekByClientX(event.clientX, false)
-  }
+//   const handleMove = (event: PointerEvent) => {
+//     seekByClientX(event.clientX, false)
+//   }
 
-  const handleUp = (event: PointerEvent) => {
-    seekByClientX(event.clientX, true)
-    seekingRef.current = false
-    setIsScrubbing(false)
-    document.removeEventListener('pointermove', handleMove)
-    document.removeEventListener('pointerup', handleUp)
-  }
+//   const handleUp = (event: PointerEvent) => {
+//     seekByClientX(event.clientX, true)
+//     seekingRef.current = false
+//     setIsScrubbing(false)
+//     document.removeEventListener('pointermove', handleMove)
+//     document.removeEventListener('pointerup', handleUp)
+//   }
 
-  document.addEventListener('pointermove', handleMove)
-  document.addEventListener('pointerup', handleUp)
-}, [duration, seekByClientX])
+//   document.addEventListener('pointermove', handleMove)
+//   document.addEventListener('pointerup', handleUp)
+// }, [duration, seekByClientX])
 
   const handleNext = useCallback(() => {
     if (playerState.queue && playerState.currentIndex !== undefined) {
@@ -642,25 +642,6 @@ const handleProgressPointerDown = useCallback((e: ReactPointerEvent<HTMLDivEleme
         h="3px"
         bg="#2a2a2d"
         cursor="pointer"
-        ref={progressRef}
-        onClick={handleSeek}
-        onPointerDown={handleProgressPointerDown}
-        onMouseMove={(e) => {
-          if (!duration) return
-          const rect = e.currentTarget.getBoundingClientRect()
-          const x = e.clientX - rect.left
-          const percent = Math.max(0, Math.min(1, x / rect.width))
-          const hoverIndicator = e.currentTarget.querySelector('.hover-indicator') as HTMLElement
-          if (hoverIndicator) {
-            hoverIndicator.style.width = `${percent * 100}%`
-          }
-        }}
-        onMouseLeave={(e) => {
-          const hoverIndicator = e.currentTarget.querySelector('.hover-indicator') as HTMLElement
-          if (hoverIndicator) {
-            hoverIndicator.style.width = '0%'
-          }
-        }}
       >
         {/* Hover indicator */}
         <Box
@@ -694,7 +675,7 @@ const handleProgressPointerDown = useCallback((e: ReactPointerEvent<HTMLDivEleme
           position="absolute"
           top="50%"
           left={`${clampedProgress}%`}
-          transform={`translate(0, -50%) scale(${isScrubbing ? 1.25 : 1})`}
+          transform={`translate(0, -50%) scale(1)`}
           transition="transform 0.12s ease, box-shadow 0.15s ease"
           w="9px"
           h="9px"

@@ -3,12 +3,11 @@ import { Box, Button, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
-import { LuBaby } from 'react-icons/lu'
 import { RiHomeHeartLine, RiShieldStarLine } from 'react-icons/ri'
 import { TbHeartBroken, TbHeart, TbConfetti } from 'react-icons/tb'
 import { AnimatePresence, motion } from "framer-motion";
 import { QuestionModal } from "../../../components/QuestionModal";
-import { questions as allQuestions } from "../../../components/ui/questions";
+import { questions as allQuestions, type QuestionCategory, type QuestItem } from "../../../components/ui/questions";
 import { ResultsComponent } from '../../../routes/questionsFinish'
 import { GenerationParamsAccordion } from '../GenerationParamsAccordion'
 import { BrandButton, GrayButton } from '../../../components/ui/button'
@@ -43,7 +42,7 @@ const buttonStyle = {
 type ChangeButtonProps = {
     icon: any,
     title: string,
-    category: 'self' | 'friend' | 'broken-heart' | 'love' | 'relation' | 'baby' | 'hero' | 'congrats' | 'others',
+    category: string,
     onClick?: () => void,
     isSelected?: boolean
 }
@@ -67,152 +66,37 @@ const ChangeButton = ({ icon, title, onClick, isSelected }: ChangeButtonProps) =
     )
 }
 
-type ScenarioOption = {
-    value: string,
-    label: string,
-}
-
-type ScenarioConfig = {
-    title: string,
-    subtitle: string,
-    instruction: string,
-    question: string,
-    options: ScenarioOption[],
-}
-
-const optionButtonStyle = {
-    ...buttonStyle,
-    justifyContent: 'center' as const,
-}
-
 type OptionButtonProps = {
-    option: ScenarioOption,
-    onClick: () => void,
+    option: { label: string; value: string };
+    onClick: () => void;
 }
 
 const OptionButton = ({ option, onClick }: OptionButtonProps) => (
     <Button
-        justifyContent={optionButtonStyle.justifyContent}
-        w={optionButtonStyle.w}
-        h={optionButtonStyle.h}
-        className={optionButtonStyle.className}
-        fontSize={optionButtonStyle.fontSize}
-        bg={optionButtonStyle.bg}
-        boxShadow={optionButtonStyle.boxShadow}
-        color={optionButtonStyle.color}
-        rounded={optionButtonStyle.rounded}
+        justifyContent="center"
+        w="full"
+        h="70px"
+        className="font-doloman"
+        fontSize="13pt"
+        bg={COLOR.kit.darkGray}
+        boxShadow="0 4px 12px rgba(0, 0, 0, 0.2)"
+        color="white"
+        rounded="2xl"
         onClick={onClick}
-        outline={"none"}
+        outline="none"
     >
         {option.label}
     </Button>
 )
 
-type Step = 'category' | 'intro' | 'audience' | 'questions' | 'results' | 'generation-params' | 'pro-pay'
-
-const SCENARIO_CONFIGS: Record<ChangeButtonProps['category'], ScenarioConfig> = {
-    'broken-heart': {
-        title: '💔 Анкета «Для разбитого сердца»',
-        subtitle: 'Песня-переосмысление после расставания — бережно, честно, со смыслом.',
-        instruction: 'Можно пропускать любые вопросы — просто переходите дальше.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'ex-male', label: '🧔 Бывшему' },
-            { value: 'ex-female', label: '👩 Бывшей' },
-        ],
-    },
-    love: {
-        title: '💖 Анкета «Для любимого человека»',
-        subtitle: 'Признание в любви, годовщина, свадьба, романтика — всё, что от сердца.',
-        instruction: 'Любой пункт можно пропустить.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'lover-male', label: '🧑 Любимому' },
-            { value: 'lover-female', label: '👩 Любимой' },
-        ],
-    },
-    self: {
-        title: '🌿 Анкета «Про себя»',
-        subtitle: 'Личная история, путь, характер, внутренний монолог.',
-        instruction: 'Отвечайте выборочно — пропуски допустимы.',
-        question: 'Выберите пол:',
-        options: [
-            { value: 'self-male', label: '🧑 Мужской' },
-            { value: 'self-female', label: '👩 Женский' },
-        ],
-    },
-    baby: {
-        title: '🍼 Анкета «Про ребёнка»',
-        subtitle: 'Песня о малыше — от нежных колыбельных до выпускного из садика.',
-        instruction: 'Можно отвечать не на всё.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'baby-boy', label: '🧒 Мальчик' },
-            { value: 'baby-girl', label: '👧 Девочка' },
-        ],
-    },
-    friend: {
-        title: '🎓 Анкета «Для друзей и коллег»',
-        subtitle: 'Подарок другу, коллеге, наставнику или всей команде — с теплом и юмором.',
-        instruction: 'Пропуски разрешены.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'friend-male', label: '🧑 Мужчине' },
-            { value: 'friend-female', label: '👩 Женщине' },
-        ],
-    },
-    relation: {
-        title: '👨‍👩‍👧‍👦 Анкета «Для близких»',
-        subtitle: 'Мама, папа, брат, сестра — семейная история в музыке.',
-        instruction: 'Отвечайте как удобно — можно пропускать.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'family-male', label: '🧔 Мужчине' },
-            { value: 'family-female', label: '👩 Женщине' },
-        ],
-    },
-    hero: {
-        title: '🎖️ Анкета «О герое или солдате»',
-        subtitle: 'О тех, кто защищает и спасает — от врачей до спасателей.',
-        instruction: 'Любые вопросы можно пропускать.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'hero-male', label: '🧑‍🚒 Мужчине' },
-            { value: 'hero-female', label: '👩‍⚕️ Женщине' },
-        ],
-    },
-    congrats: {
-        title: '🎈 Анкета «Праздник и поздравление»',
-        subtitle: 'День рождения, юбилей, Новый год — яркий музыкальный подарок.',
-        instruction: 'Заполняйте частично — это нормально.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'congrats-male', label: '🧑 Мужчине' },
-            { value: 'congrats-female', label: '👩 Женщине' },
-        ],
-    },
-    others: {
-        title: '🧩 Анкета «Другое»',
-        subtitle: 'Любая тема — проект, команда, событие, город, бренд, хобби.',
-        instruction: 'Можно пропустить любой пункт.',
-        question: 'Кому посвящается песня?',
-        options: [
-            { value: 'other-male', label: '🧑 Мужчине' },
-            { value: 'other-female', label: '👩 Женщине' },
-        ],
-    },
-}
-
-
-// --- Конец компонента Итоги ответов ---
 export function TextGenerateScreen() {
     const navigate = useNavigate()
     const [showProReminder, setShowProReminder] = useState(false);
     const [skipClicked, setSkipClicked] = useState(false);
     const isPro = useIsPro();
     const user = useUser();
-    const scenarioState = useGenerationScenario();
-    const [step, setStep] = useState<Step>('category');
+        const scenarioState = useGenerationScenario();
+        const [step, setStep] = useState<string>('category');
     const [selectedCategory, setSelectedCategory] = useState<ChangeButtonProps['category'] | null>(null);
     
     // showProReminder должен быть true только если у пользователя пустой баланс
@@ -242,31 +126,42 @@ export function TextGenerateScreen() {
         { icon: withIconBackground(<FaRegFaceSmile />), title: "Про себя", category: 'self' },
         { icon: withIconBackground(<BsPeople />), title: "Для друзей и для коллег", category: 'friend' },
         { icon: withIconBackground(<TbHeartBroken />), title: "Для разбитого сердца", category: 'broken-heart' },
-        { icon: withIconBackground(<TbHeart />), title: "Для любимого человека", category: 'love' },
+        { icon: withIconBackground(<TbHeart />), title: "Для любимого человека", category: 'lover' },
         { icon: withIconBackground(<RiHomeHeartLine />), title: "Для близких", category: 'relation' },
-        { icon: withIconBackground(<LuBaby />), title: "Про ребёнка", category: 'baby' },
+        // { icon: withIconBackground(<LuBaby />), title: "Про ребёнка", category: 'baby' },
         { icon: withIconBackground(<RiShieldStarLine />), title: "О герое или солдате", category: 'hero' },
         { icon: withIconBackground(<TbConfetti />), title: "Для поздравления", category: 'congrats' },
         { icon: withIconBackground(<BsMagic />), title: "Другое", category: 'others' },
     ];
 
-    const scenarioConfig = selectedCategory ? SCENARIO_CONFIGS[selectedCategory] : null;
 
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [questSelections, setQuestSelections] = useState<string[]>([]); // Хранит выбранные значения из quest
+    const [currentQuestIndex, setCurrentQuestIndex] = useState(0); // Индекс текущего quest
 
     const categoryMap: Record<string, string> = {
-        friend: "friends",
-        "broken-heart": "heart-crack",
+        friend: "friend",
+        "broken-heart": "broken-heart",
         love: "lover",
+        relation: "family",
+        baby: "baby",
+        hero: "hero",
+        congrats: "congrats",
+        others: "others",
     };
 
     const lookup = selectedCategory
         ? categoryMap[selectedCategory] ?? selectedCategory
         : undefined;
 
-    const found = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
-    const qList = found ? found.questions : null;
-    const currentQuestion = qList?.[currentIndex];
+    const found: QuestionCategory | undefined = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
+    
+    // Получаем текущий quest элемент
+    const currentQuestItem: QuestItem | undefined = found?.form.quest?.[currentQuestIndex];
+    
+    // Получаем финальный выбранный parent (последний элемент в questSelections)
+    // Это значение должно соответствовать parent в QuestionSet
+    const finalParent = questSelections.length > 0 ? questSelections[questSelections.length - 1] : null;
 
     const patchTextScenario = useCallback(
         (updater: (draft: TextGenerationDraft) => TextGenerationDraft) => {
@@ -286,14 +181,21 @@ export function TextGenerateScreen() {
             const raw = localStorage.getItem("qa_answers");
             const parsed: Record<string, string> = raw ? JSON.parse(raw) : {};
 
+            // Получаем вопросы из questions.ts
+            const questionCategory = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
+            const questionSet = finalParent
+                ? questionCategory?.form.questions.find((qs) => qs.parent === finalParent)
+                : questionCategory?.form.questions.find((qs) => qs.parent === null);
+
             const answers: GenerationDraftAnswer[] = Object.entries(parsed)
                 .map(([key, value]) => {
                     const id = Number(key);
                     if (!Number.isFinite(id)) {
                         return null;
                     }
-                    const questionSource = qList?.find((question) => question.qNum === id);
-                    const questionText = questionSource?.qText ?? `Вопрос ${id}`;
+                    // Используем индекс вопроса
+                    const questionSource = questionSet?.questions[id];
+                    const questionText = questionSource?.text ?? `Вопрос ${id + 1}`;
                     return {
                         id,
                         question: questionText,
@@ -319,7 +221,7 @@ export function TextGenerateScreen() {
                 summary: null,
             }));
         }
-    }, [patchTextScenario, qList]);
+    }, [patchTextScenario, lookup, finalParent]);
 
     useEffect(() => {
         if (step === 'questions' || step === 'results' || step === 'generation-params') {
@@ -329,10 +231,10 @@ export function TextGenerateScreen() {
 
     // Показ напоминания о PRO после 3-го вопроса, если баланс пустой
     useEffect(() => {
-        if (step === 'questions' && selectedCategory && qList && currentIndex === 3 && hasEmptyBalance && !showProReminder && !skipClicked) {
+        if (step === 'questions' && selectedCategory && currentIndex === 3 && hasEmptyBalance && !showProReminder && !skipClicked) {
             setShowProReminder(true);
         }
-    }, [step, selectedCategory, qList, currentIndex, hasEmptyBalance, showProReminder, skipClicked]);
+    }, [step, selectedCategory, currentIndex, hasEmptyBalance, showProReminder, skipClicked]);
     
     // Если баланс пополнился и мы на шаге pro-pay, возвращаемся к artist-params
     useEffect(() => {
@@ -344,9 +246,16 @@ export function TextGenerateScreen() {
 
 
     const handleNext = () => {
-        if (qList && currentIndex < qList.length - 1) {
+        // Получаем количество вопросов для проверки
+        const questionCategory = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
+        const questionSet = finalParent
+            ? questionCategory?.form.questions.find((qs) => qs.parent === finalParent)
+            : questionCategory?.form.questions.find((qs) => qs.parent === null);
+        const totalQuestions = questionSet?.questions.length ?? 0;
+
+        if (currentIndex < totalQuestions - 1) {
             setCurrentIndex((i) => i + 1);
-        } else if (qList && currentIndex === qList.length - 1) {
+        } else if (currentIndex === totalQuestions - 1) {
             // Если это последний вопрос, переходим к результатам
             setStep('results');
         }
@@ -359,13 +268,32 @@ export function TextGenerateScreen() {
     };
 
     const handlePrev = () => {
-        if (currentIndex > 0) setCurrentIndex((i) => i - 1);
+        if (currentIndex > 0) {
+            setCurrentIndex((i) => i - 1);
+        } else {
+            // Если это первый вопрос, возвращаемся к последнему quest или к intro
+            if (questSelections.length > 0 && found?.form.quest && found.form.quest.length > 0) {
+                const lastSelection = questSelections[questSelections.length - 1];
+                const lastQuestIndex = found.form.quest.findIndex((q) => q.parent === lastSelection);
+                if (lastQuestIndex >= 0) {
+                    setCurrentQuestIndex(lastQuestIndex);
+                    setStep('audience');
+                } else {
+                    setStep('intro');
+                }
+            } else {
+                // Для категорий без quest (например, others) возвращаемся к intro
+                setStep('intro');
+            }
+        }
         syncAnswersFromStorage();
     };
 
     const handleCategorySelect = (category: ChangeButtonProps['category']) => {
         setSelectedCategory(category);
         setCurrentIndex(0);
+        setQuestSelections([]);
+        setCurrentQuestIndex(0);
         setStep('intro');
         setShowProReminder(false);
         setSkipClicked(false); // Сбрасываем состояние при выборе новой категории
@@ -392,22 +320,47 @@ export function TextGenerateScreen() {
     }
 
     const handleStartScenario = () => {
-        setStep('audience');
+        // Находим первый quest с parent: null или undefined (не указан)
+        const firstQuest = found?.form.quest?.find((q) => q.parent === null || q.parent === undefined);
+        if (firstQuest) {
+            const firstQuestIndex = found?.form.quest?.findIndex((q) => q.parent === null || q.parent === undefined) ?? 0;
+            setCurrentQuestIndex(firstQuestIndex);
+            setStep('audience');
+        } else {
+            // Если нет quest, сразу переходим к вопросам (для категории others)
+            setCurrentIndex(0);
+            setStep('questions');
+        }
     }
 
     const handleSelectAudience = (value: string) => {
-        setCurrentIndex(0);
-        setStep('questions');
-        setShowProReminder(false);
-        patchTextScenario((draft) => ({
-            ...draft,
-            audience: value,
-        }));
+        const newSelections = [...questSelections, value];
+        setQuestSelections(newSelections);
+        
+        // Ищем следующий quest с parent равным выбранному значению
+        const nextQuest = found?.form.quest?.find((q) => q.parent === value);
+        
+        if (nextQuest) {
+            // Есть следующий quest - остаемся на шаге audience
+            setCurrentQuestIndex(found?.form.quest?.findIndex((q) => q.parent === value) ?? 0);
+            setShowProReminder(false);
+        } else {
+            // Нет следующего quest - переходим к вопросам
+            setCurrentIndex(0);
+            setStep('questions');
+            setShowProReminder(false);
+            patchTextScenario((draft) => ({
+                ...draft,
+                audience: value,
+            }));
+        }
     }
 
     const handleBackToCategories = () => {
         setSelectedCategory(null);
         setCurrentIndex(0);
+        setQuestSelections([]);
+        setCurrentQuestIndex(0);
         setStep('category');
         setShowProReminder(false);
         setSkipClicked(false); // Сбрасываем состояние при возврате к категориям
@@ -447,7 +400,7 @@ export function TextGenerateScreen() {
                             </Grid>
                         </Box>
                     </MotionDiv>
-                ) : step === 'intro' && scenarioConfig ? (
+                ) : step === 'intro' && selectedCategory ? (
                     <MotionDiv
                         key="scenario-intro"
                         initial={{ x: -100, opacity: 0 }}
@@ -456,9 +409,27 @@ export function TextGenerateScreen() {
                         transition={{ duration: 0.3 }}
                     >
                         <Box px={5} py={8} color={COLOR.kit.orangeWhite}>
-                            <Heading size="lg" mb={3}>{scenarioConfig.title}</Heading>
+                            <Heading size="lg" mb={3}>
+                                {selectedCategory === 'self' && '🌿 Анкета «Про себя»'}
+                                {selectedCategory === 'friend' && '🎓 Анкета «Для друзей и коллег»'}
+                                {selectedCategory === 'broken-heart' && '💔 Анкета «Для разбитого сердца»'}
+                                {selectedCategory === 'love' && '💖 Анкета «Для любимого человека»'}
+                                {selectedCategory === 'relation' && '👨‍👩‍👧‍👦 Анкета «Для близких»'}
+                                {selectedCategory === 'baby' && '🍼 Анкета «Про ребёнка»'}
+                                {selectedCategory === 'hero' && '🎖️ Анкета «О герое или солдате»'}
+                                {selectedCategory === 'congrats' && '🎈 Анкета «Праздник и поздравление»'}
+                                {selectedCategory === 'others' && '🧩 Анкета «Другое»'}
+                            </Heading>
                             <Text fontSize="lg" color={COLOR.kit.smoke} mb={6}>
-                                {scenarioConfig.subtitle}
+                                {selectedCategory === 'self' && 'Личная история, путь, характер, внутренний монолог.'}
+                                {selectedCategory === 'friend' && 'Подарок другу, коллеге, наставнику или всей команде — с теплом и юмором.'}
+                                {selectedCategory === 'broken-heart' && 'Песня-переосмысление после расставания — бережно, честно, со смыслом.'}
+                                {selectedCategory === 'love' && 'Признание в любви, годовщина, свадьба, романтика — всё, что от сердца.'}
+                                {selectedCategory === 'relation' && 'Мама, папа, брат, сестра — семейная история в музыке.'}
+                                {selectedCategory === 'baby' && 'Песня о малыше — от нежных колыбельных до выпускного из садика.'}
+                                {selectedCategory === 'hero' && 'О тех, кто защищает и спасает — от врачей до спасателей.'}
+                                {selectedCategory === 'congrats' && 'День рождения, юбилей, Новый год — яркий музыкальный подарок.'}
+                                {selectedCategory === 'others' && 'Любая тема — проект, команда, событие, город, бренд, хобби.'}
                             </Text>
                             <Box
                                 bg={COLOR.kit.gray}
@@ -468,7 +439,7 @@ export function TextGenerateScreen() {
                                 mb={8}
                                 color={COLOR.kit.smoke}
                             >
-                                {scenarioConfig.instruction}
+                                Можно пропускать любые вопросы — просто переходите дальше.
                             </Box>
                             <BrandButton w="full" mb={4} onClick={handleStartScenario}>
                                 Начать
@@ -478,7 +449,7 @@ export function TextGenerateScreen() {
                             </GrayButton>
                         </Box>
                     </MotionDiv>
-                ) : step === 'audience' && scenarioConfig ? (
+                ) : step === 'audience' && currentQuestItem ? (
                     <MotionDiv
                         key="scenario-audience"
                         initial={{ x: -100, opacity: 0 }}
@@ -487,9 +458,9 @@ export function TextGenerateScreen() {
                         transition={{ duration: 0.3 }}
                     >
                         <Box px={5} py={6} color={COLOR.kit.orangeWhite}>
-                            <Heading size="md" mb={2}>{scenarioConfig.question}</Heading>
+                            <Heading size="md" mb={2}>{currentQuestItem.text}</Heading>
                             <Grid gap={3} templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }} mt={4}>
-                                {scenarioConfig.options.map((option) => (
+                                {currentQuestItem.options.map((option) => (
                                     <OptionButton
                                         key={option.value}
                                         option={option}
@@ -497,7 +468,25 @@ export function TextGenerateScreen() {
                                     />
                                 ))}
                             </Grid>
-                            <GrayButton mt={6} w="full" onClick={() => setStep('intro')}>
+                            <GrayButton mt={6} w="full" onClick={() => {
+                                if (currentQuestIndex === 0 || questSelections.length === 0) {
+                                    setStep('intro');
+                                } else {
+                                    // Возврат к предыдущему quest
+                                    const prevSelections = questSelections.slice(0, -1);
+                                    setQuestSelections(prevSelections);
+                                    if (prevSelections.length === 0) {
+                                        // Возврат к первому quest с parent: null или undefined
+                                        const firstQuestIndex = found?.form.quest?.findIndex((q) => q.parent === null || q.parent === undefined) ?? 0;
+                                        setCurrentQuestIndex(firstQuestIndex >= 0 ? firstQuestIndex : 0);
+                                    } else {
+                                        // Находим quest, который соответствует предыдущему выбору
+                                        const prevValue = prevSelections[prevSelections.length - 1];
+                                        const prevQuestIndex = found?.form.quest?.findIndex((q) => q.parent === prevValue) ?? 0;
+                                        setCurrentQuestIndex(prevQuestIndex >= 0 ? prevQuestIndex : 0);
+                                    }
+                                }
+                            }}>
                                 Назад
                             </GrayButton>
                         </Box>
@@ -558,21 +547,18 @@ export function TextGenerateScreen() {
                         exit={{ x: 100, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
-                        {qList && currentQuestion && (
+                        {lookup && (
                             <QuestionModal
-                                key={currentQuestion.qNum}
-                                qNum={currentQuestion.qNum}
-                                qText={currentQuestion.qText}
-                                qHolder={currentQuestion.qHolder}
+                                key={`${lookup}-${finalParent}-${currentIndex}`}
+                                category={lookup}
+                                parent={finalParent}
+                                currentIndex={currentIndex}
                                 onNext={handleNext}
                                 onPrev={handlePrev}
-                                isFirst={currentIndex === 0}
-                                isLast={currentIndex === qList.length - 1}
                                 onBackToCategories={handleBackToCategories}
                                 onFinish={() => setStep('results')}
                             />
-                        )
-                        }
+                        )}
                     </MotionDiv>
                 )}
 

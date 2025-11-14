@@ -1,0 +1,162 @@
+/* Custom Plyr Player Styles - Dark theme with orange accent */
+
+.audio-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #1c1c1e;
+  color: #f2f2f2;
+  border-radius: 0.5rem;
+}
+
+.track-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cover {
+  width: 64px;
+  height: 64px;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  background-color: #2a2a2d;
+  flex-shrink: 0;
+}
+
+.track-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f2f2f2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #a6a6a6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Plyr dark theme overrides */
+.audio-wrapper :global(.plyr) {
+  --plyr-color-main: rgba(243, 146, 4, 1);
+  --plyr-audio-controls-background: #1c1c1e;
+  --plyr-audio-control-color: #f2f2f2;
+  --plyr-audio-control-color-hover: rgba(243, 146, 4, 1);
+  --plyr-audio-progress-buffered-background: rgba(255, 255, 255, 0.1);
+  --plyr-audio-range-track-background: rgba(255, 255, 255, 0.1);
+  --plyr-audio-range-thumb-background: rgba(243, 146, 4, 1);
+  --plyr-audio-range-thumb-active-shadow-width: 0;
+  --plyr-menu-background: #2a2a2d;
+  --plyr-menu-color: #f2f2f2;
+  --plyr-menu-border-color: rgba(255, 255, 255, 0.1);
+  --plyr-menu-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: transparent;
+  border-radius: 0.5rem;
+}
+
+.audio-wrapper :global(.plyr__controls) {
+  background: transparent;
+  padding: 0.75rem 0;
+  border: none;
+}
+
+.audio-wrapper :global(.plyr__control) {
+  color: #f2f2f2;
+  transition: color 0.2s ease;
+}
+
+.audio-wrapper :global(.plyr__control:hover),
+.audio-wrapper :global(.plyr__control[aria-expanded="true"]) {
+  background: transparent;
+  color: rgba(243, 146, 4, 1);
+}
+
+.audio-wrapper :global(.plyr__control.plyr__tab-focus),
+.audio-wrapper :global(.plyr__control:focus) {
+  outline: 2px solid rgba(243, 146, 4, 0.5);
+  outline-offset: 2px;
+}
+
+.audio-wrapper :global(.plyr__progress__played) {
+  background: rgba(243, 146, 4, 1);
+}
+
+.audio-wrapper :global(.plyr__volume__progress) {
+  background: rgba(243, 146, 4, 1);
+}
+
+.audio-wrapper :global(.plyr__progress__buffer) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.audio-wrapper :global(.plyr__progress__container) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.audio-wrapper :global(.plyr__progress__container:hover) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.audio-wrapper :global(.plyr__progress__played::after) {
+  background: rgba(243, 146, 4, 1);
+  box-shadow: 0 0 0 2px rgba(243, 146, 4, 0.3);
+}
+
+.audio-wrapper :global(.plyr__volume__progress__container) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.audio-wrapper :global(.plyr__volume__progress__container:hover) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.audio-wrapper :global(.plyr__volume__progress__container::after) {
+  background: rgba(243, 146, 4, 1);
+  box-shadow: 0 0 0 2px rgba(243, 146, 4, 0.3);
+}
+
+/* Hide video-specific controls */
+.audio-wrapper :global(.plyr__poster),
+.audio-wrapper :global(.plyr__captions),
+.audio-wrapper :global(.plyr__menu__container) {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .audio-wrapper {
+    padding: 0.75rem;
+  }
+
+  .cover {
+    width: 48px;
+    height: 48px;
+  }
+
+  .title {
+    font-size: 0.875rem;
+  }
+
+  .artist {
+    font-size: 0.75rem;
+  }
+}
+
+
+

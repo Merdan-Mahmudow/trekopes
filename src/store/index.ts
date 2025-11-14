@@ -68,9 +68,9 @@ const initialStoreState = {
   auth: initialAuthState,
   subscription: {
     plans: [
-      { id: "track", name: "TRACK", price: 250, period: "мес", perks: ["1 генерация в боте", "Выбор стиля/настроения", "Текст от пса"] },
-      { id: "pro", name: "PRO", price: 999, period: "мес", perks: ["10 PRO-треков", "Подробные сценарии", "По артисту/жанру/фото/ссылке"] },
-      { id: "ultra", name: "ULTRA", price: 5000, period: "мес", perks: ["1 PREMIUM-трек", "Гарантия результата", "20 PRO-генераций", "Обложка + оживление"] },
+      // { id: "track", name: "TRACK", price: 250, period: "мес", perks: ["1 генерация в боте", "Выбор стиля/настроения", "Текст от пса"] },
+      { id: "pro", name: "PRO", price: 1000, period: "мес", perks: ["10 PRO-треков", "Подробные сценарии", "По артисту/жанру/фото/ссылке"] },
+      { id: "ultra", name: "ULTRA", price: 5000, period: "мес", perks: ["25 PRO-треков", "Подробные сценарии", "По артисту/жанру/фото/ссылке"] },
     ] as Array<{ id: "track" | "pro" | "ultra"; name: string; price: number; period: string; perks: string[] }>,
     activeId: "track" as "track" | "pro" | "ultra",
     selectedId: undefined as ("track" | "pro" | "ultra") | undefined,

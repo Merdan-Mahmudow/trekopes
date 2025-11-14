@@ -10,18 +10,17 @@ import type {
 } from "../types/webapp";
 import { useAuth } from "./useUser";
 
-// Маппинг тарифов на pack_id
+// Маппинг тарифов на pack_id (разовые покупки)
 export const TARIFF_TO_PACK_ID: Record<"track" | "pro" | "ultra", number> = {
-  track: 1, // Тариф TRACK
-  pro: 10, // Тариф PRO
-  ultra: 100, // Тариф ULTRA
+  track: 1, // 🎫 Базовый - 250 ₽, 1 трек, Разовая покупка
+  pro: 11, // 🚀 PRO - 1 000 ₽, 10 треков, Разовая покупка (без благотворительности)
+  ultra: 51, // 💼 ULTRA - 5 000 ₽, 25 треков, Разовая покупка (без благотворительности)
 };
 
 // Маппинг подписок на pack_id
-// TODO: Уточнить актуальные значения pack_id для подписок с бэкендом
 export const SUBSCRIPTION_TO_PACK_ID: Record<"pro" | "ultra", number> = {
-  pro: 10, // Подписка PRO (20 PRO-треков) - временно используется тот же pack_id
-  ultra: 100, // Подписка ULTRA (1 Premium + 50 PRO) - временно используется тот же pack_id
+  pro: 10, // ❤️ PRO - 990 ₽/мес, 20 треков, Подписка (с благотворительностью 30%)
+  ultra: 50, // 💎 PREMIUM - 4 990 ₽/мес, 50 треков, Подписка (с благотворительностью 30%)
 };
 
 /**
