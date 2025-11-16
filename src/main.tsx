@@ -6,7 +6,6 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import Scrollbar from "smooth-scrollbar"
 import OverscrollPlugin from 'smooth-scrollbar/plugins/overscroll';
-import type { Telegram } from "telegram-web-app";
 
 // Импорт стилей
 import "./style/root.css"
@@ -15,7 +14,6 @@ import "./style/keyframes.css"
 
 Scrollbar.use(OverscrollPlugin);
 
-const tg: Telegram = window.Telegram;
 
 Scrollbar.initAll({
   damping: 0.1,
