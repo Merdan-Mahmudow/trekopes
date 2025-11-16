@@ -25,13 +25,20 @@ function RootComponent() {
   } = useAuth();
 
   useEffect(() => {
-    if (tg) {
+    if (!tg) {
+      console.log("Telegram not found");
+      return;
+    }
+    try {
       tg.WebApp.ready();
       tg.WebApp.setHeaderColor(COLOR.bg.hex.subtle);
       tg.WebApp.enableClosingConfirmation();
       tg.WebApp.expand();
       tg.WebApp.disableVerticalSwipes();
+    } catch (error) {
+      console.log("Error: ", error);
     }
+      
   }, [tg]);
 
   useEffect(() => {
