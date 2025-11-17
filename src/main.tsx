@@ -12,6 +12,9 @@ import "./style/root.css"
 import "./style/fonts.css"
 import "./style/keyframes.css"
 
+import LogRocket from 'logrocket';
+LogRocket.init('avzlx1/trekopes');
+
 Scrollbar.use(OverscrollPlugin);
 
 

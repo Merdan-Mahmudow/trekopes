@@ -21,14 +21,40 @@ export function useAuth() {
         if (!rawInitData) {
             throw new Error("Telegram initData is not available");
         }
-        return loginWebApp({
-            initData: rawInitData.toString()
-        });
+        try {
+            return await loginWebApp({
+                initData: rawInitData.toString()
+            });
+        } catch (error: any) {
+            // Проверяем ошибки 500 или CORS
+            const status = error?.response?.status;
+            const isServerError = status >= 500 && status < 600;
+            
+            const isCorsError = 
+                error?.code === 'ERR_NETWORK' || 
+                error?.code === 'ECONNABORTED' ||
+                error?.message?.toLowerCase().includes('cors') ||
+                error?.message?.toLowerCase().includes('network error') ||
+                error?.message?.toLowerCase().includes('networkerror') ||
+                (error?.response === undefined && error?.request !== undefined && error?.code !== 'ECONNABORTED');
+            
+            console.log("[Auth] Ошибка логина:", { status, isServerError, isCorsError, error });
+            
+            if (isServerError || isCorsError) {
+                // Пробрасываем ошибку с флагом для показа экрана технических работ
+                const maintenanceError: any = new Error("Maintenance mode");
+                maintenanceError.isMaintenance = true;
+                throw maintenanceError;
+            }
+            throw error;
+        }
     }
 
     const {
         data: tokenResponse,
-        isSuccess: isTokenSuccess
+        isSuccess: isTokenSuccess,
+        error: tokenError,
+        isError: isTokenError
     } = useQuery({
         queryKey: ['webapp-token'],
         queryFn: getToken,
@@ -59,6 +85,8 @@ export function useAuth() {
         tokenResponse,
         user,
         isTokenSuccess,
-        isUserSuccess
+        isUserSuccess,
+        tokenError,
+        isTokenError
     };
 }

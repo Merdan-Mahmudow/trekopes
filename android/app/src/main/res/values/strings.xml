@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ТРЕКОПЁС</string>
+    <string name="title_activity_main">ТРЕКОПЁС</string>
+    <string name="package_name">com.trekopes.app</string>
+    <string name="custom_url_scheme">com.trekopes.app</string>
+</resources>

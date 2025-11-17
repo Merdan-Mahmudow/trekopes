@@ -124,6 +124,9 @@ export type ChatDto = {
   ref?: number | null;
   ref_gift_activated?: boolean;
   ref_gave_first_payment_bonus?: boolean;
+  referrals_signup_count: number;
+  referrals_purchase_count: number;
+  isPro?: boolean;
 };
 
 export type GetMeResponse = ApiSuccessResponse<ChatDto>;

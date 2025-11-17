@@ -136,6 +136,7 @@ export const TrackLoadingScreen = () => {
     <VStack
       gap={6}
       w="full"
+      overflow={"hidden"}
       color={COLOR.kit.white}
       align="stretch"
       px={{ base: 2, md: 4 }}
