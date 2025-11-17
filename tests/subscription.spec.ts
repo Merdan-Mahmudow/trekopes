@@ -27,12 +27,12 @@ test('ошибка создания платежа показывает пред
 });
 
 test('успешный платёж перенаправляет на страницу оплаты', async ({ page }) => {
-  await bootstrapApp(page);
+  // await bootstrapApp(page);
 
   await page.goto('/tarrifs');
-  await page.getByLabel('Тариф PRO').click();
+  await page.getByLabel('Подписка 1 Premium + 50 PRO').click();
 
-  await expect(page).toHaveURL(/\/subscription\?tarrif=pro/);
+  await expect(page).toHaveURL(/\/subscription\?tarrif=ultra/);
 
   await page.getByPlaceholder('name@example.com').fill('pro@example.com');
 

@@ -14,21 +14,21 @@ const getTelegramUserId = (): string | undefined => {
 // Query функции
 async function getUserPaymentsQueryFn(limit: number = 50, offset: number = 0) {
     const userId = getTelegramUserId();
-    if (!userId) throw new Error("User ID not available");
+    if (!userId) throw new Error("ID пользователя недоступен");
     const response = await request('get', `/get-payments/${userId}?limit=${limit}&offset=${offset}`);
     return response.data;
 }
 
 async function isNewUserQueryFn() {
     const userId = getTelegramUserId();
-    if (!userId) throw new Error("User ID not available");
+    if (!userId) throw new Error("ID пользователя недоступен");
     const response = await request('get', `/is-new-user/${userId}`);
     return response.data;
 }
 
 async function getPaymentQueryFn(payment_id: number) {
     const userId = getTelegramUserId();
-    if (!userId) throw new Error("User ID not available");
+    if (!userId) throw new Error("ID пользователя недоступен");
     const response = await request('get', `/get-payment/${userId}/${payment_id}`);
     return response.data;
 }
@@ -39,7 +39,7 @@ async function processPaymentMutationFn({ pack_id, is_recurring }: {
     is_recurring: boolean;
 }) {
     const userId = getTelegramUserId();
-    if (!userId) throw new Error("User ID not available");
+    if (!userId) throw new Error("ID пользователя недоступен");
     const response = await request('post', `/process-payment`, {
         telegramChatId: userId,
         pack_id: pack_id,

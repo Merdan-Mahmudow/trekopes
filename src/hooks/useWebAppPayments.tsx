@@ -32,7 +32,7 @@ export function useWebAppPayments(params?: GetPaymentsQuery) {
   return useQuery({
     queryKey: ["webapp-payments", token, params?.limit, params?.offset],
     queryFn: async () => {
-      if (!token) throw new Error("Token is not available");
+      if (!token) throw new Error("Токен недоступен");
       return getWebAppPayments(token, params);
     },
     enabled: !!token,
@@ -48,8 +48,8 @@ export function useWebAppPaymentByUUID(uuid: string | undefined) {
   return useQuery({
     queryKey: ["webapp-payment", token, uuid],
     queryFn: async () => {
-      if (!token) throw new Error("Token is not available");
-      if (!uuid) throw new Error("UUID is required");
+      if (!token) throw new Error("Токен недоступен");
+      if (!uuid) throw new Error("Требуется UUID");
       return getWebAppPaymentByUUID(token, uuid);
     },
     enabled: !!token && !!uuid,
@@ -65,7 +65,7 @@ export function useCreateWebAppPayment() {
 
   return useMutation({
     mutationFn: async (payload: CreatePaymentRequest) => {
-      if (!token) throw new Error("Token is not available");
+      if (!token) throw new Error("Токен недоступен");
       return createWebAppPayment(token, payload);
     },
     onSuccess: () => {

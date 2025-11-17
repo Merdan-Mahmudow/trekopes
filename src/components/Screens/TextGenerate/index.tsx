@@ -13,6 +13,7 @@ import { GenerationParamsAccordion } from '../GenerationParamsAccordion'
 import { BrandButton, GrayButton } from '../../../components/ui/button'
 import { DiaologWindow } from '../../../components/Dialog'
 import { ProPayScreen } from '../ProPay'
+import { TrackLoadingScreen } from '../TrackLoading'
 import { useNavigate } from '@tanstack/react-router'
 import { useIsPro, useUser } from '../../../store/user'
 import {
@@ -93,6 +94,7 @@ export function TextGenerateScreen() {
     const navigate = useNavigate()
     const [showProReminder, setShowProReminder] = useState(false);
     const [skipClicked, setSkipClicked] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const isPro = useIsPro();
     const user = useUser();
         const scenarioState = useGenerationScenario();
@@ -386,15 +388,19 @@ export function TextGenerateScreen() {
         patchTextScenario(() => createTextGenerationDraft());
     }
 
+    if (isLoading) {
+        return <TrackLoadingScreen />;
+    }
+
     return (
         <>
             <AnimatePresence mode="wait">
                 {step === 'category' ? (
                     <MotionDiv
                         key="category-list"
-                        initial={{ x: -100, opacity: 0 }}
+                        initial={{ x: 0, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: 100, opacity: 0 }}
+                        exit={{ x: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
                         <Box py={6} color={COLOR.kit.orangeWhite}>
@@ -534,6 +540,7 @@ export function TextGenerateScreen() {
                                 }
                                 return true; // Продолжаем генерацию если баланс есть
                             }}
+                            onLoadingStart={() => setIsLoading(true)}
                         />
                     </MotionDiv>
                 ) : step === 'pro-pay' && !isPro ? (

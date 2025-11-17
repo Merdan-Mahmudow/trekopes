@@ -33,6 +33,7 @@ type GenerationParamsAccordionProps = {
     onBack: () => void;
     onCancel: () => void;
     onGenerate?: (params: GenerationParams) => void | boolean | Promise<void | boolean>;
+    onLoadingStart?: () => void;
 };
 
 const moodOptions = [
@@ -62,6 +63,7 @@ export function GenerationParamsAccordion({
     mode = "submit",
     onBack,
     onGenerate,
+    onLoadingStart,
 }: GenerationParamsAccordionProps) {
     const [tempo, setTempo] = useState(105);
     const [generationParams, setGenerationParams] = useState<GenerationParams>({
@@ -72,7 +74,6 @@ export function GenerationParamsAccordion({
     });
     const [isGenerating, setIsGenerating] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const generationDraft = useGenerationDraft();
     const token = useStore(store, (state) => state.auth.token);
     const { loadTracks } = useTracks();
@@ -138,7 +139,6 @@ export function GenerationParamsAccordion({
     );
 
     const handleGenerate = async () => {
-        setError(null);
         setIsGenerating(true);
         try {
             const callbackResult = await onGenerate?.(generationParams);
@@ -149,6 +149,7 @@ export function GenerationParamsAccordion({
             }
 
             setIsLoading(true);
+            onLoadingStart?.();
 
             const scenario = generationDraft?.scenario;
             if (!scenario) {
@@ -191,11 +192,11 @@ export function GenerationParamsAccordion({
         } catch (err) {
             console.error(err);
             setIsLoading(false);
-            setError(err instanceof Error ? err.message : "Не удалось запустить генерацию");
+            const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
                 title: "Ошибка запуска генерации",
-                description: err instanceof Error ? err.message : "Попробуйте ещё раз позже.",
+                description: errorMessage,
             });
         } finally {
             setIsGenerating(false);
@@ -389,12 +390,6 @@ export function GenerationParamsAccordion({
                         <GrayButton onClick={onBack} disabled={isGenerating} w="full">
                             Назад
                         </GrayButton>
-
-                        {error && (
-                            <Text color="red.300" fontSize="sm" textAlign="center">
-                                {error}
-                            </Text>
-                        )}
                     </VStack>
                 </VStack>
             </Box>

@@ -19,7 +19,7 @@ Scrollbar.use(OverscrollPlugin);
 
 
 Scrollbar.initAll({
-  damping: 0.1,
+  damping: 1,
   plugins: {
     overscroll: {
       effect: "bounce"

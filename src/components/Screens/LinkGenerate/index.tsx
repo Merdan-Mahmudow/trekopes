@@ -15,6 +15,7 @@ import {
     createLinkGenerationDraft,
     type LinkGenerationDraft,
 } from "../../../types/generation";
+import { toaster } from "../../../components/ui/toaster";
 
 interface LinkGenerateProps {
     onClose?: () => void;
@@ -23,7 +24,6 @@ interface LinkGenerateProps {
 export function LinkGenerate({ onClose }: LinkGenerateProps) {
     const [link, setLink] = useState("");
     const [isValidating, setIsValidating] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [currentScreen, setCurrentScreen] = useState<"link" | "params" | "pro">("link");
     const isPro = useIsPro();
     const scenarioState = useGenerationScenario();
@@ -90,19 +90,26 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
 
     const handleLinkSubmit = async () => {
         if (!link.trim()) {
-            setError("Пожалуйста, введите ссылку");
+            toaster.create({
+                type: "error",
+                title: "Ошибка",
+                description: "Пожалуйста, введите ссылку",
+            });
             return;
         }
 
         const normalizedLink = normalizeLink(link);
         
         if (!validateVKLink(normalizedLink)) {
-            setError("Пожалуйста, введите корректную ссылку на профиль ВКонтакте");
+            toaster.create({
+                type: "error",
+                title: "Ошибка",
+                description: "Пожалуйста, введите корректную ссылку на профиль ВКонтакте",
+            });
             return;
         }
 
         setIsValidating(true);
-        setError(null);
 
         try {
             // Имитация анализа ссылки
@@ -113,7 +120,11 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
             }));
             setCurrentScreen("params");
         } catch (err) {
-            setError("Ошибка при анализе профиля. Попробуйте еще раз.");
+            toaster.create({
+                type: "error",
+                title: "Ошибка",
+                description: "Ошибка при анализе профиля. Попробуйте еще раз.",
+            });
         } finally {
             setIsValidating(false);
         }
@@ -129,9 +140,6 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setLink(e.target.value);
-        if (error) {
-            setError(null);
-        }
     };
 
     // Экран ввода ссылки
@@ -144,19 +152,6 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
                         Вставьте ссылку на профиль ВКонтакте, и мы создадим персональный трек
                     </Text>
                 </VStack>
-
-                {error && (
-                    <Box 
-                        w="full" 
-                        p={3} 
-                        bg="red.500" 
-                        borderRadius="12px" 
-                        color="white"
-                        fontSize="sm"
-                    >
-                        {error}
-                    </Box>
-                )}
 
                 <VStack gap={4} w="full">
                     <Input

@@ -38,17 +38,37 @@
   height: 200px;
   background: linear-gradient(135deg, #ff6a00, #ee0979);
   border-radius: 16px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.modalSlide {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .slideContent {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   max-width: 620px;
   text-align: center;
   color: #fff;
   height: 100%;
+  padding: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .badge {
@@ -56,29 +76,29 @@
   align-items: center;
   justify-content: center;
   padding: 6px 14px;
-  border-radius: 9999px;
+  border-radius: 100px;
   background: rgba(0, 0, 0, 0.28);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .title {
-  font-size: clamp(26px, 5vw, 40px);
+  font-size: clamp(20px, 4vw, 32px);
   font-weight: 700;
   line-height: 1.1;
 }
 
 .description {
-  font-size: clamp(16px, 4vw, 20px);
-  line-height: 1.55;
+  font-size: clamp(16px, 3vw, 20px);
+  line-height: 1.2;
   color: rgba(255, 255, 255, 0.92);
 }
 
 @media (max-width: 640px) {
   .slide {
-    padding: 24px 18px;
+    padding: 16px 12px;
   }
 
   .root {

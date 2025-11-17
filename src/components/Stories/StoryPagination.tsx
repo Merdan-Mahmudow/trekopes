@@ -38,6 +38,7 @@ export function StoryPagination({ total, activeIndex, progress }: StoryPaginatio
                 initial={{ width: "0%" }}
                 animate={{ width: `${Math.max(0, Math.min(1, progress)) * 100}%` }}
                 transition={{ duration: 0.05, ease: "linear" }}
+                borderRadius="full"
               />
             )}
             {!isActive && i < activeIndex && (

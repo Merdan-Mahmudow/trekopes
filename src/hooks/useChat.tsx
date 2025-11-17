@@ -14,7 +14,7 @@ const getTelegramUserId = (): string | undefined => {
 // Query функция
 async function getChatQueryFn() {
     const userId = getTelegramUserId();
-    if (!userId) throw new Error("User ID not available");
+    if (!userId) throw new Error("ID пользователя недоступен");
     const response = await request('get', `/get-chat/${userId}`);
     return response.data;
 }

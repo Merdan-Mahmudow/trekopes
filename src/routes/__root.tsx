@@ -6,6 +6,7 @@ import type { Telegram } from "telegram-web-app";
 import { COLOR } from '../components/ui/colors';
 import { PreLoader } from '../components/PreLoader';
 // import { MaintenanceScreen } from '../components/MaintenanceScreen';
+
 import { useAuth } from '../hooks/useUser';
 import { setAuthToken, setUserState, type UserState } from '../store';
 

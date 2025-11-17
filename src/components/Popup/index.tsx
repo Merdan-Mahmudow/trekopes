@@ -28,7 +28,8 @@ export const Popup = ({
     <Drawer.Root open={open} onFocusOutside={onFocusOutside} onOpenChange={onOpenChange} placement={"bottom"}>
       <Portal>
         <Drawer.Backdrop />
-        <Drawer.Positioner>
+        <Drawer.Positioner
+        >
           <Drawer.Content roundedTop="2xl" h={"90dvh"}>
             <Drawer.Header>
               <Drawer.Title

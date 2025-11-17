@@ -46,7 +46,6 @@ const initialUserState: UserState = {
   bonus_limit: 0,
   referrals_signup_count: 0,
   referrals_purchase_count: 0,
-  isPro: false,
 };
 
 const initialStoreState = {
@@ -75,7 +74,6 @@ const initialStoreState = {
     activeId: "track" as "track" | "pro" | "ultra",
     selectedId: undefined as ("track" | "pro" | "ultra") | undefined,
     isSaving: false as boolean,
-    error: undefined as string | undefined,
   },
   music: {
     generations: [] as GenerationDto[],
@@ -138,13 +136,6 @@ export const setSubscriptionSaving = (isSaving: boolean) => {
   store.setState((state) => ({
     ...state,
     subscription: { ...state.subscription, isSaving }
-  }));
-};
-
-export const setSubscriptionError = (error?: string) => {
-  store.setState((state) => ({
-    ...state,
-    subscription: { ...state.subscription, error }
   }));
 };
 

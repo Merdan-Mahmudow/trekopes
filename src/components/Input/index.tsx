@@ -46,7 +46,8 @@ export function ChatInput({
           size={"lg"}
           fontSize="16px"
           h={"38px"}
-          _focus={{ borderColor: COLOR.kit.orange }}
+          outline={"none"}
+          _focus={{ borderColor: COLOR.kit.orange, outline: "none" }}
         />
         <Button
           aria-label="Send"

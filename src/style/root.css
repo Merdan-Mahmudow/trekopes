@@ -180,6 +180,9 @@ label {
   align-items: center;
   justify-content: center;
 }
+button:hover {
+  background: transparent;
+}
 
 /* Видимый фокус для клавиатурной навигации */
 *:focus-visible {

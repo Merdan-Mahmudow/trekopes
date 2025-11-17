@@ -57,7 +57,6 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
     });
     const generationDraft = useGenerationDraft();
     const token = useStore(store, (state) => state.auth.token);
-    const [error, setError] = useState<string | null>(null);
     const { loadTracks } = useTracks();
 
     const TEMPO_COLORS = {
@@ -138,7 +137,6 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
     }, [updateGenerationScenario]);
 
     const handleGenerate = async () => {
-        setError(null);
         setIsGenerating(true);
         try {
             const normalizedArtist = normalizeArtist(selectedArtistId);
@@ -198,16 +196,11 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
         } catch (err) {
             console.error(err);
             setIsLoading(false);
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Не удалось запустить генерацию"
-            );
+            const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
                 title: "Ошибка запуска генерации",
-                description:
-                    err instanceof Error ? err.message : "Попробуйте ещё раз позже.",
+                description: errorMessage,
             });
         } finally {
             setIsGenerating(false);
@@ -382,11 +375,6 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                             </Flex>
                         </Flex>
                     </BrandButton>
-                    {error && (
-                        <Text color="red.300" fontSize="sm" textAlign="center">
-                            {error}
-                        </Text>
-                    )}
                 </VStack>
             </Box >
 

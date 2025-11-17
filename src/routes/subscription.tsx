@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
-import { Box, Flex, Heading, Text, List, Grid, GridItem, Alert, Input, Stack, Image } from '@chakra-ui/react'
+import { Box, Flex, Heading, Text, List, Grid, GridItem, Input, Stack, Image } from '@chakra-ui/react'
 import { COLOR } from '../components/ui/colors'
 import { BrandButton } from '../components/ui/button'
 import { useEffect, useMemo, useState } from 'react'
-import { usePlans, useActiveTarrifId, useSelectedTarrifId, setSelectedTarrif, useIsSavingSubscription, useSubscriptionError, setSubscriptionSaving, setSubscriptionError } from '../store/subscription'
+import { usePlans, useActiveTarrifId, useSelectedTarrifId, setSelectedTarrif, useIsSavingSubscription, setSubscriptionSaving } from '../store/subscription'
 import { useCreateWebAppPayment, createPaymentFromTariff } from '../hooks/useWebAppPayments'
-import { FaAngleLeft } from "react-icons/fa6";  
+import { FaAngleLeft } from "react-icons/fa6";
+import { toaster, Toaster } from '../components/ui/toaster'  
 
 export const Route = createFileRoute('/subscription')({
   component: RouteComponent,
@@ -51,7 +52,6 @@ function RouteComponent() {
   const activeId = useActiveTarrifId()
   const selectedId = useSelectedTarrifId()
   const isSavingStore = useIsSavingSubscription()
-  const error = useSubscriptionError()
   const createPayment = useCreateWebAppPayment()
   const [email, setEmail] = useState('')
 
@@ -109,7 +109,6 @@ function RouteComponent() {
     if (!current) return
 
     setSubscriptionSaving(true)
-    setSubscriptionError(undefined)
 
     try {
       console.log('payment_create_start', {
@@ -135,13 +134,22 @@ function RouteComponent() {
       if (response.data.payment_url) {
         window.location.href = response.data.payment_url
       } else {
-        setSubscriptionError('Не удалось получить ссылку на оплату')
         setSubscriptionSaving(false)
+        toaster.create({
+          type: "error",
+          title: "Ошибка",
+          description: "Не удалось получить ссылку на оплату. Попробуйте ещё раз.",
+        })
       }
     } catch (error: any) {
       console.error('payment_create_error', { error })
-      setSubscriptionError(error?.response?.data?.message || error?.message || 'Ошибка создания платежа')
       setSubscriptionSaving(false)
+      const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка создания платежа'
+      toaster.create({
+        type: "error",
+        title: "Ошибка создания платежа",
+        description: errorMessage,
+      })
     }
   }
 
@@ -302,12 +310,6 @@ function RouteComponent() {
               </Flex>
             </Box>
 
-            {error && (
-              <Alert.Root status='error' mt={3} mb={4} borderRadius='lg' bg="rgba(220, 38, 38, 0.1)" border="1px solid rgba(220, 38, 38, 0.3)">
-                <Alert.Description color="#EF4444">{error}</Alert.Description>
-              </Alert.Root>
-            )}
-
             <BrandButton
               w="full"
               onClick={handleConfirm}
@@ -321,6 +323,7 @@ function RouteComponent() {
           </Box>
         </GridItem>
       </Grid>
+      <Toaster />
     </Flex>
   )
 }

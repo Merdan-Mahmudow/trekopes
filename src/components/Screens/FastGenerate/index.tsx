@@ -32,7 +32,6 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 	const generationDraft = useGenerationDraft()
 	const token = useStore(store, (state) => state.auth.token)
 	const [isSubmitting, setIsSubmitting] = useState(false)
-	const [error, setError] = useState<string | null>(null)
 	const { loadTracks } = useTracks()
 
 	useEffect(() => {
@@ -99,6 +98,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 				borderRadius="2xl"
 				resize="vertical"
 				border="1px solid transparent"
+				outline={"none"}
 				_focus={{ borderColor: COLOR.kit.orange, boxShadow: "none" }}
 				_placeholder={{ color: COLOR.kit.smoke }}
 			/>
@@ -117,7 +117,6 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 						return
 					}
 
-					setError(null)
 					setIsSubmitting(true)
 					try {
 						const draft = generationDraft
@@ -162,16 +161,11 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 						})
 					} catch (err) {
 						console.error(err)
-						setError(
-							err instanceof Error
-								? err.message
-								: "Не удалось запустить генерацию"
-						)
+						const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
 						toaster.create({
 							type: "error",
 							title: "Ошибка запуска генерации",
-							description:
-								err instanceof Error ? err.message : "Попробуйте ещё раз позже.",
+							description: errorMessage,
 						})
 					} finally {
 						setIsSubmitting(false)
@@ -180,11 +174,6 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			>
 				Сгенерировать
 			</Button>
-			{error && (
-				<Text color="red.300" fontSize="sm">
-					{error}
-				</Text>
-			)}
 		</VStack>
 	);
 };

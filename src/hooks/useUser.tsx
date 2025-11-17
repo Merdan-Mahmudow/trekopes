@@ -19,7 +19,7 @@ export function useAuth() {
         const telegram = window.Telegram;
         const rawInitData = telegram?.WebApp?.initData || DEV_INIT_DATA;
         if (!rawInitData) {
-            throw new Error("Telegram initData is not available");
+            throw new Error("Данные Telegram недоступны");
         }
         try {
             return await loginWebApp({
@@ -42,7 +42,7 @@ export function useAuth() {
             
             if (isServerError || isCorsError) {
                 // Пробрасываем ошибку с флагом для показа экрана технических работ
-                const maintenanceError: any = new Error("Maintenance mode");
+                const maintenanceError: any = new Error("Режим технического обслуживания");
                 maintenanceError.isMaintenance = true;
                 throw maintenanceError;
             }
@@ -64,7 +64,7 @@ export function useAuth() {
 
     async function getUser(): Promise<GetMeResponse> {
         if (!bearerToken) {
-            throw new Error("Bearer token is not available");
+            throw new Error("Токен авторизации недоступен");
         }
         return getWebAppMe(bearerToken);
     }

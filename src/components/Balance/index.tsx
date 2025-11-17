@@ -15,6 +15,7 @@ export function Balance() {
         
             justifyContent={"space-arond"}
             pt={"9px"}
+            px={"16px"}
             gap={3}
             alignItems={"center"}>
             <Link to="/chat">
@@ -25,11 +26,13 @@ export function Balance() {
                 borderRadius={"full"}
                 p={"4px 12px"}
                 alignItems={"center"}
-                bg={COLOR.kit.darkGray}
-                gap={"4px"}
+                bg={'rgb(228, 37, 72)'}
+                gap={"3"}
                 onClick={() => navigate({ to: "/tarrifs" })}
             >
-                <Image
+                {user.limit > 0 ? (
+                    <>
+                       <Image
                     w={"20px"}
                     h={"20px"}
                     src="https://storage.yandexcloud.net/trekopes/paw.svg"
@@ -37,6 +40,10 @@ export function Balance() {
                 
                 <Text>{user.limit}</Text>
                 <LuPlus size={13} color={COLOR.kit.orange} />
+                    </>
+                ) : (
+                    <Text color={"white.400"} fontSize={"14px"} fontWeight={600}>Пополнить</Text>
+                )}
             </Flex>
         </Flex>
     </>

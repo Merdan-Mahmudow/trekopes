@@ -40,7 +40,6 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
     const generationDraft = useGenerationDraft();
     const token = useStore(store, (state) => state.auth.token);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const { loadTracks } = useTracks();
 
     useEffect(() => {
@@ -91,7 +90,6 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             return;
         }
 
-        setError(null);
         setIsSubmitting(true);
         try {
             const draft = generationDraft;
@@ -136,16 +134,11 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             });
         } catch (err) {
             console.error(err);
-            setError(
-                err instanceof Error
-                    ? err.message
-                    : "Не удалось запустить генерацию"
-            );
+            const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
                 title: "Ошибка запуска генерации",
-                description:
-                    err instanceof Error ? err.message : "Попробуйте ещё раз позже.",
+                description: errorMessage,
             });
         } finally {
             setIsSubmitting(false);
@@ -229,11 +222,6 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                             Сгенерировать
                         </BrandButton>
                     </Grid>
-                    {error && (
-                        <Text color="red.300" fontSize="sm" textAlign="center">
-                            {error}
-                        </Text>
-                    )}
                 </>
             )}
         </VStack>

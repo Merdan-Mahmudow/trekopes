@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6";
 import { COLOR } from "../../../components/ui/colors";
 
-const MotionBox = motion(Box);
 const MotionFlex = motion(Flex);
 
 type StepDisplay = {
@@ -53,6 +52,7 @@ export const TrackLoadingScreen = () => {
       return;
     }
 
+    // Increased interval delay to 3500ms
     const interval = window.setInterval(() => {
       setVisibleSteps((prev) => {
         if (prev.length === 0) {
@@ -81,7 +81,7 @@ export const TrackLoadingScreen = () => {
 
         return updated;
       });
-    }, 3200);
+    }, 3500); // Changed from 3200 to 3500
 
     return () => window.clearInterval(interval);
   }, [reduceMotion, stepsCount]);
@@ -135,48 +135,20 @@ export const TrackLoadingScreen = () => {
   return (
     <VStack
       gap={6}
-      w="full"
+      w="100vw"
+      h="100dvh"
+      position="fixed"
+      left={0}
+      right={0}
       overflow={"hidden"}
       color={COLOR.kit.white}
       align="stretch"
-      px={{ base: 2, md: 4 }}
-      py={{ base: 4, md: 6 }}
     >
-      <Box position="relative" w="full">
-        {!reduceMotion && (
-          <>
-            <MotionBox
-              position="absolute"
-              insetInlineStart="-120px"
-              insetBlockStart="-140px"
-              w="280px"
-              h="280px"
-              bg="radial-gradient(70% 70% at 50% 50%, rgba(243,146,4,0.4) 0%, rgba(243,146,4,0) 90%)"
-              filter="blur(18px)"
-              pointerEvents="none"
-              initial={{ opacity: 0.3 }}
-              animate={{ opacity: [0.35, 0.55, 0.35], scale: [0.9, 1.05, 0.9] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <MotionBox
-              position="absolute"
-              insetInlineEnd="-120px"
-              insetBlockEnd="-140px"
-              w="300px"
-              h="300px"
-              bg="radial-gradient(65% 65% at 50% 50%, rgba(98,74,255,0.35) 0%, rgba(98,74,255,0) 85%)"
-              filter="blur(20px)"
-              pointerEvents="none"
-              initial={{ opacity: 0.25 }}
-              animate={{ opacity: [0.25, 0.5, 0.25], scale: [1, 1.1, 1] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1.2 }}
-            />
-          </>
-        )}
+      <Box position="relative" w="full" overflow={"hidden"} rounded={"24px"}>
+
 
         <Box
           w="full"
-          backdropFilter="blur(24px)"
           p={{ base: 6, md: 8 }}
           display="flex"
           flexDirection="column"
@@ -185,8 +157,6 @@ export const TrackLoadingScreen = () => {
           position="relative"
           overflow="hidden"
           borderRadius="24px"
-          border="1px solid rgba(255, 255, 255, 0.06)"
-          bg="rgba(18, 18, 20, 0.75)"
         >
           <VStack gap={3} textAlign="center" zIndex={1}>
             <Heading size="lg">Готовим твой трек</Heading>
@@ -196,7 +166,7 @@ export const TrackLoadingScreen = () => {
           </VStack>
 
           <VStack w="full" gap={3} zIndex={1} overflow="hidden" minH="156px">
-            <AnimatePresence initial={false}>
+            <AnimatePresence initial={false} mode="popLayout">
               {visibleSteps.map((entry, position) => {
                 const step = steps[entry.stepIndex];
                 const status = getStatusByPosition(position);
@@ -209,15 +179,14 @@ export const TrackLoadingScreen = () => {
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -24 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    // Increased duration for a smoother transition
+                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} // Changed from 0.45 to 0.6
                     w="full"
                     align="center"
                     justify="center"
                     gap={4}
                     px={4}
                     py={3}
-
-
                   >
                     {renderStepIcon(status)}
                     <Text

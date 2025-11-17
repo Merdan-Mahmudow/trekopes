@@ -8,7 +8,7 @@ export function useTracks(query?: GetGenerationsQuery) {
 
     const loadTracks = async (): Promise<GetGenerationsResponse> => {
         if (!token) {
-            throw new Error("Auth token is not available");
+            throw new Error("Токен авторизации недоступен");
         }
         const response = await getWebAppGenerations(token, query);
         setMusicGenerations(response.data, response.meta);

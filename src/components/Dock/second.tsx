@@ -69,20 +69,30 @@ const NavBar = () => {
     const controlDistance = waveWidth * 0.3;
     const peakY = Math.max(waveHeight - 5, 2);
 
+    // Параметры для симметричных углов
+    const cornerRadius = 40;
+    const cornerStartX = cornerRadius;
+    const cornerEndX = svgWidth - cornerRadius;
+    const cornerTopY = topY;
+    const cornerBottomY = 60;
+    const cornerControlY1 = 36;
+    const cornerControlY2 = 65;
+    const cornerBottomControlY = 85;
+    const cornerBottomYFinal = 86;
+
     return `
-      M 9 ${topY}
+      M ${cornerStartX} ${cornerTopY}
       H ${waveStart}
       C ${waveStart + controlDistance * 0.4} ${topY}, ${centerX - controlDistance} ${peakY}, ${centerX} ${peakY}
       C ${centerX + controlDistance} ${peakY}, ${waveEnd - controlDistance * 0.4} ${topY}, ${waveEnd} ${topY}
-      H ${svgWidth - 40}
-      C ${svgWidth - 25} ${topY}, ${svgWidth - 20} 36, ${svgWidth - 20} 60
-      V 60
-      C ${svgWidth - 20} 65, ${svgWidth - 10} 85, ${svgWidth - 40} 86
-      H 50
-      C 15 90, 24 60, 23 50
-      V 50
-      C 25 40, 25 ${topY}, 42 ${topY}
-      H 10
+      H ${cornerEndX}
+      C ${cornerEndX + 17} ${cornerTopY}, ${cornerEndX + 17} ${cornerControlY1}, ${cornerEndX + 17.5} ${cornerBottomY}
+      V ${cornerBottomY}
+      C ${cornerEndX + 15} ${cornerControlY2}, ${cornerEndX + 25} ${cornerBottomControlY + 2}, ${cornerEndX} ${cornerBottomYFinal}
+      H ${cornerStartX}
+      C ${cornerStartX - 15} ${cornerBottomYFinal}, ${cornerStartX - 20} ${cornerBottomControlY}, ${cornerStartX - 20} ${cornerBottomY}
+      V ${cornerBottomY}
+      C ${cornerStartX - 20} ${cornerControlY1}, ${cornerStartX - 15} ${cornerTopY}, ${cornerStartX} ${cornerTopY}
       Z
     `;
   };

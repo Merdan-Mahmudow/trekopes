@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
 import { request } from '../libs/request'
-import { setActiveTarrif, setSubscriptionError, setSubscriptionSaving } from '../store/subscription'
+import { setActiveTarrif, setSubscriptionSaving } from '../store/subscription'
+import { toaster } from '../components/ui/toaster'
 
 export function useSaveSubscription() {
   const mutation = useMutation({
     mutationFn: async (id: 'track' | 'pro' | 'ultra') => {
       setSubscriptionSaving(true)
-      setSubscriptionError(undefined)
       const res = await request('post', '/subscription', { id })
       return res.data
     },
@@ -18,7 +18,12 @@ export function useSaveSubscription() {
     },
     onError: (error: any, id) => {
       setSubscriptionSaving(false)
-      setSubscriptionError(error?.message ?? 'Ошибка оформления')
+      const errorMessage = error?.message ?? 'Ошибка оформления'
+      toaster.create({
+        type: "error",
+        title: "Ошибка оформления",
+        description: errorMessage,
+      })
       console.log('subscription_save_error', { id, error: String(error) })
     }
   })
