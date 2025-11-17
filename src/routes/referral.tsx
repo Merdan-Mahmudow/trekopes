@@ -18,18 +18,23 @@ export const Route = createFileRoute('/referral')({
 })
 
 function RouteComponent() {
-
-    const tg: Telegram = window.Telegram;
+    const tg: Telegram | undefined = window.Telegram;
 
     const user = useStore(store, (state) => state.user);
-    const refLink = `https://t.me/TPEKOllEC_BOT?start=${tg.WebApp.initDataUnsafe.user?.id}`
+    const userId = tg?.WebApp?.initDataUnsafe?.user?.id;
+    const refLink = `https://t.me/TPEKOllEC_BOT?start=${userId || ''}`
+    
     useEffect(() => {
         setDockActive("left")
     }, [])
+    
     const handleSend = () => {
+        if (!tg?.WebApp) {
+            console.error("Telegram WebApp not available");
+            return;
+        }
         const sendLink = `https://t.me/share/url?url=${encodeURIComponent(refLink)}`
         tg.WebApp.openTelegramLink(sendLink)
-
     }
 
 

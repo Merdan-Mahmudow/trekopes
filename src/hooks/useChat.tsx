@@ -3,7 +3,10 @@ import type { Telegram } from "telegram-web-app";
 import { useQuery } from "@tanstack/react-query";
 
 const getTelegramUserId = (): string | undefined => {
-    const tg: Telegram = window.Telegram;
+    const tg: Telegram | undefined = window.Telegram;
+    if (!tg?.WebApp) {
+        return undefined;
+    }
     const id = tg.WebApp.initDataUnsafe.user?.id;
     return id ? String(id) : undefined;
 }

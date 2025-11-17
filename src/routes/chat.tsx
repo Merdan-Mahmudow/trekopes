@@ -12,7 +12,7 @@ export const Route = createFileRoute('/chat')({
 })
 
 function RouteComponent() {
-  const tg: Telegram = window.Telegram;
+  const tg: Telegram | undefined = window.Telegram;
   const [messages, addMessage] = useState<MessageProps[]>([])
   const navigate = useNavigate()
 
@@ -20,11 +20,19 @@ function RouteComponent() {
     setTimeout(() => addMessage(prev => [...prev, { role: "assistant", content: <MessageHelpBox />, isHelpBox: true }]), 725)
   }, [addMessage])
 
-
-  tg.WebApp.BackButton.show()
-  tg.WebApp.BackButton.onClick(() => {
-    navigate({ to: '/' })
-  })
+  useEffect(() => {
+    if (!tg?.WebApp) {
+      return;
+    }
+    tg.WebApp.BackButton.show()
+    tg.WebApp.BackButton.onClick(() => {
+      navigate({ to: '/' })
+    })
+    
+    return () => {
+      tg.WebApp.BackButton.hide()
+    }
+  }, [tg, navigate])
 
 
   const handleSend = (content: string) => {

@@ -8,18 +8,20 @@ export const Route = createFileRoute('/')({
 })
 
 function Index() {
-    const tg: Telegram = window.Telegram;
     const isWelcomeSeen = localStorage.getItem('isWelcomeSeen')
     const navigate = useNavigate();
     useEffect(() => {
-        tg.WebApp.BackButton.hide()
+        const tg: Telegram | undefined = window.Telegram;
+        if (tg?.WebApp) {
+            tg.WebApp.BackButton.hide();
+        }
         if (!isWelcomeSeen) {
             localStorage.setItem('isWelcomeSeen', 'true')
             navigate({ to: '/welcome' })
         } else {
             navigate({ to: '/generate' })
         }
-    }, [tg, isWelcomeSeen]);
+    }, [isWelcomeSeen, navigate]);
     return <>
         
     </>
