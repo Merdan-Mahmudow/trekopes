@@ -35,13 +35,13 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 	const { loadTracks } = useTracks()
 
 	useEffect(() => {
-		if (!scenarioState || scenarioState.mode !== "fast") {
+		if (!scenarioState || scenarioState.mode !== "text") {
 			setGenerationScenario(createFastGenerationDraft())
 		}
 	}, [scenarioState])
 
 	useEffect(() => {
-		if (scenarioState?.mode === "fast") {
+		if (scenarioState?.mode === "text") {
 			if (
 				typeof scenarioState.prompt === "string" &&
 				scenarioState.prompt !== prompt
@@ -55,7 +55,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 		(updater: (draft: FastGenerationDraft) => FastGenerationDraft) => {
 			updateGenerationScenario((scenario) => {
 				const base =
-					scenario && scenario.mode === "fast"
+					scenario && scenario.mode === "text"
 						? { ...scenario }
 						: createFastGenerationDraft()
 				return updater(base)
@@ -120,7 +120,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					setIsSubmitting(true)
 					try {
 						const draft = generationDraft
-						if (!draft?.scenario || draft.scenario.mode !== "fast") {
+						if (!draft?.scenario || draft.scenario.mode !== "text") {
 							throw new Error("Заполните описание для генерации")
 						}
 
