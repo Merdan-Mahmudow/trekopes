@@ -1,29 +1,24 @@
-import { Image, Grid, Box, GridItem } from "@chakra-ui/react";
+import { Image, Flex } from "@chakra-ui/react";
 import { Balance } from "../Balance";
 import { useNavigate } from "@tanstack/react-router";
 
 export default function Header() {
     const navigate = useNavigate()
     return <>
-        <Grid
-            templateColumns={"repeat(3, 1fr)"}
+        <Flex
+            justifyContent={"space-between"}
             alignItems={"center"}
-            justifyItems={"center"}
+            placeSelf={"center"}
+            w={"90vw"}
             pt={4}>
-            <Box>
                 <Image
                     src={"https://storage.yandexcloud.net/trekopes/logo-h.PNG"}
-                    w={"160px"}
-                    ml={5}
+                    w={"140px"}
+                    objectFit={"cover"}
                     onClick={() => navigate({ to: '/' })}
                 />
-            </Box>
-            <GridItem
-            justifyContent={"flex-end"}>
-                
-            </GridItem>
             <Balance />
-        </Grid>
+        </Flex>
 
     </>
 }

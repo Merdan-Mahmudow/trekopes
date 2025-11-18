@@ -8,8 +8,7 @@ import { PreLoader } from '../components/PreLoader';
 // import { MaintenanceScreen } from '../components/MaintenanceScreen';
 
 import { useAuth } from '../hooks/useUser';
-import { setAuthToken, setUserState, type UserState } from '../store';
-
+import { setAuthToken, setUserState } from '../store';
 export const Route = createRootRoute({
   component: RootComponent,
 })
@@ -19,7 +18,6 @@ export const Route = createRootRoute({
 function RootComponent() {
   const [tg, setTg] = useState<Telegram | null>(null);
   const [isPreload, setIsPreload] = useState<boolean>(true);
-  
   const {
     token,
     user,
@@ -80,15 +78,13 @@ function RootComponent() {
 
   useEffect(() => {
     if (isUserSuccess && user?.data) {
-      const userData = user.data as Partial<UserState>;
-      const availableLimit =
-        (userData.limit ?? 0) + (userData.bonus_limit ?? 0) - (userData.used_limit ?? 0);
+      const userData = user.data;
       setUserState({
         ...userData,
-        isPro: availableLimit > 0,
+        isPro: userData.limit > 0,
       });
       setIsPreload(false);
-      console.log(user.data);
+
     }
   }, [isUserSuccess, user]);
 
