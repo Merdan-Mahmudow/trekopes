@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { MusicIcon } from "../../assets/svg/music";
 import { COLOR } from "../ui/colors";
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import type { Telegram } from "telegram-web-app";
 
 const MotionPath = motion.path;
 
@@ -13,6 +14,7 @@ const NavBar = () => {
   const path = useLocation()
   const [active, setActive] = useState<"left" | "center" | "right" | "none">("none");
   const [convexParams, setConvexParams] = useState({ centerX: 200, width: 95, height: 15 });
+  const tg: Telegram | undefined = window.Telegram;
   const [svgWidth, setSvgWidth] = useState(400);
   const navigate = useNavigate()
 
@@ -99,6 +101,7 @@ const NavBar = () => {
   const handleClick = (position: "left" | "center" | "right", href: object) => {
     setActive(position);
     changeConvexParams();
+    tg.WebApp.HapticFeedback.impactOccurred("medium");
     navigate(href)
   }
   return (
