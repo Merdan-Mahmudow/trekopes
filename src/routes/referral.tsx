@@ -80,7 +80,7 @@ function RouteComponent() {
                 gap={5}
                 pb={"11vh"}
             >
-                {tg.WebApp.initDataUnsafe.user?.photo_url && (
+                {tg.WebApp.initDataUnsafe.user && (
                     <Flex alignItems={"center"} gap={3} w={"90vw"}>
                         <Avatar.Root variant="subtle" size={"lg"}>
                             <Avatar.Fallback name={`${user.first_name} ${user.last_name}`} />
