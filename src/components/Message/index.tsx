@@ -142,7 +142,7 @@ export function MessageHelpBox() {
           </Flex>
 
         </Flex>
-        <Button color={COLOR.kit.orange} onClick={() => window.location.href = "tg://resolve?domain=Help_llec_bot"} rounded={"xl"} bg={"whiteAlpha.300"} letterSpacing={1} size={"lg"}>
+        <Button color={COLOR.kit.orange} onClick={() => window.location.href = "https://t.me/Help_llec_bot"} rounded={"xl"} bg={"whiteAlpha.300"} letterSpacing={1} size={"lg"}>
           GAVHELP
           <Float offsetX={2.5} offsetY={2.5}>
             <Icon color={"white"} children={<TbExternalLink style={{width: "13px", height: "13px"}} />}/>

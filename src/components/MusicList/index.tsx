@@ -10,6 +10,7 @@ import {
     GridItem,
     Icon,
     Skeleton,
+    Portal,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { FaPlay } from "react-icons/fa";
@@ -24,7 +25,9 @@ import { LuCopyPlus } from "react-icons/lu";
 import { Link } from "@tanstack/react-router";
 import { HiOutlineDownload } from "react-icons/hi";
 import { TbTextRecognition } from "react-icons/tb";
-import { useState } from "react";
+import { MdPushPin, MdShare, MdReport, MdDelete } from "react-icons/md";
+import { useState, useRef, useEffect } from "react";
+import type { Telegram } from "telegram-web-app";
 import { Popup } from "../Popup";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "../ui/accessibility";
@@ -90,6 +93,18 @@ export function MusicList() {
         style?: string;
         status?: string;
     } | null>(null);
+    const [contextMenu, setContextMenu] = useState<{
+        open: boolean;
+        x: number;
+        y: number;
+        generation: GenerationDto | null;
+    }>({
+        open: false,
+        x: 0,
+        y: 0,
+        generation: null,
+    });
+    const [pinnedTracksState, setPinnedTracksState] = useState<string[]>([]);
 
     const { isLoading, data, error } = useQuery({
         queryKey: ["webapp-generations", token],
@@ -99,6 +114,11 @@ export function MusicList() {
     });
 
     const generations = (data?.data ?? musicState.generations) ?? [];
+
+    // Загружаем закрепленные треки при монтировании и обновляем при изменении
+    useEffect(() => {
+        setPinnedTracksState(getPinnedTracks());
+    }, []);
 
     const getTrackUrl = (generation: GenerationDto): string | null => {
         const song = generation.song;
@@ -172,6 +192,143 @@ export function MusicList() {
         )
     };
 
+    // Обработка долгого нажатия для контекстного меню
+    const longPressTimerRef = useRef<number | null>(null);
+    const LONG_PRESS_DURATION = 500; // 500ms
+
+    const handleLongPressStart = (generation: GenerationDto, event: React.TouchEvent | React.MouseEvent) => {
+        // Предотвращаем стандартное поведение браузера
+        event.preventDefault();
+        
+        const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+        const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+
+        longPressTimerRef.current = window.setTimeout(() => {
+            // Виброотдача при долгом нажатии
+            const tg: Telegram | undefined = window.Telegram;
+            if (tg?.WebApp?.HapticFeedback) {
+                tg.WebApp.HapticFeedback.impactOccurred("heavy");
+            }
+
+            // Позиционирование меню с учетом границ экрана
+            const menuWidth = 200;
+            const menuHeight = 120;
+            const x = Math.min(clientX, window.innerWidth - menuWidth - 10);
+            const y = Math.min(clientY, window.innerHeight - menuHeight - 10);
+            
+            setContextMenu({
+                open: true,
+                x: Math.max(10, x),
+                y: Math.max(10, y),
+                generation,
+            });
+        }, LONG_PRESS_DURATION);
+    };
+
+    const handleContextMenu = (e: React.MouseEvent) => {
+        // Предотвращаем стандартное контекстное меню браузера
+        e.preventDefault();
+    };
+
+    const handleLongPressEnd = () => {
+        if (longPressTimerRef.current) {
+            window.clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+    };
+
+    const handleContextMenuClose = () => {
+        setContextMenu({
+            open: false,
+            x: 0,
+            y: 0,
+            generation: null,
+        });
+    };
+
+    // Очистка таймера при размонтировании
+    useEffect(() => {
+        return () => {
+            if (longPressTimerRef.current) {
+                window.clearTimeout(longPressTimerRef.current);
+            }
+        };
+    }, []);
+
+    // Функции для новых кнопок
+    const PINNED_TRACKS_KEY = 'pinned_tracks';
+
+    const getPinnedTracks = (): string[] => {
+        try {
+            const pinned = localStorage.getItem(PINNED_TRACKS_KEY);
+            return pinned ? JSON.parse(pinned) : [];
+        } catch {
+            return [];
+        }
+    };
+
+    const isTrackPinned = (trackId: string): boolean => {
+        return pinnedTracksState.includes(trackId);
+    };
+
+    const handlePinTrack = (generation: GenerationDto) => {
+        const trackId = generation.song?.id ?? generation.id;
+        const pinned = [...pinnedTracksState];
+        
+        if (isTrackPinned(trackId)) {
+            // Открепляем
+            const updated = pinned.filter(id => id !== trackId);
+            localStorage.setItem(PINNED_TRACKS_KEY, JSON.stringify(updated));
+            setPinnedTracksState(updated);
+        } else {
+            // Закрепляем
+            pinned.push(trackId);
+            localStorage.setItem(PINNED_TRACKS_KEY, JSON.stringify(pinned));
+            setPinnedTracksState(pinned);
+        }
+        
+        handleContextMenuClose();
+    };
+
+    const handleShareTrack = (generation: GenerationDto) => {
+        const tg: Telegram | undefined = window.Telegram;
+        const url = getTrackUrl(generation);
+        
+        if (!tg?.WebApp || !url) {
+            console.error("Telegram WebApp not available or track URL missing");
+            return;
+        }
+
+        // Для отправки аудио через Telegram используем прямую ссылку на файл
+        // Это откроет диалог отправки аудио в Telegram
+        // Формат: https://t.me/share/url?url=<audio_url>
+        const shareLink = `https://t.me/share/url?url=${encodeURIComponent(url)}`;
+        tg.WebApp.openTelegramLink(shareLink);
+        
+        handleContextMenuClose();
+    };
+
+    const handleReportTrack = (generation: GenerationDto) => {
+        const trackId = generation.song?.id ?? generation.id;
+        const reportText = `Жалоба на трек ID: ${trackId}`;
+        const reportUrl = `https://t.me/Help_llec_bot?text=${encodeURIComponent(reportText)}`;
+        
+        const tg: Telegram | undefined = window.Telegram;
+        if (tg?.WebApp) {
+            tg.WebApp.openTelegramLink(reportUrl);
+        } else {
+            window.open(reportUrl, '_blank', 'noopener,noreferrer');
+        }
+        
+        handleContextMenuClose();
+    };
+
+    const handleDeleteTrack = (generation: GenerationDto) => {
+        // TODO: Реализовать удаление трека
+        console.log('Delete track:', generation.id);
+        handleContextMenuClose();
+    };
+
     return (
         <>
             <Box p={4} w="100%" pb={"10dvh"}>
@@ -184,12 +341,24 @@ export function MusicList() {
                         </Box>
                     )}
 
-                    {!isLoading && !error && (
-                        <>
-                            {generations && generations.length > 0 ? (
-                                generations
-                                    .filter((generation: GenerationDto) => generation.song?.status !== 'failed' && generation.status !== 'failed')
-                                    .map((generation: GenerationDto) => {
+                    {!isLoading && !error && (() => {
+                        // Разделяем треки на закрепленные и незакрепленные
+                        const filteredGenerations = generations.filter(
+                            (generation: GenerationDto) => generation.song?.status !== 'failed' && generation.status !== 'failed'
+                        );
+                        
+                        const pinned = filteredGenerations.filter((gen: GenerationDto) => 
+                            pinnedTracksState.includes(gen.song?.id ?? gen.id)
+                        );
+                        const unpinned = filteredGenerations.filter((gen: GenerationDto) => 
+                            !pinnedTracksState.includes(gen.song?.id ?? gen.id)
+                        );
+
+                        return (
+                            <>
+                                {pinned.length > 0 && (
+                                    <>
+                                        {pinned.map((generation: GenerationDto) => {
                                         const url = getTrackUrl(generation);
                                         const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
                                         const author = generation.song?.author ?? "Трекопёс";
@@ -199,8 +368,24 @@ export function MusicList() {
                                                 <Skeleton key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" />
                                             )
                                         }
+                                        const trackId = generation.song?.id ?? generation.id;
+                                        const isPinned = isTrackPinned(trackId);
+                                        
                                         return (
-                                            <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl">
+                                            <Box
+                                                key={generation.id}
+                                                p={3}
+                                                bg={isPinned ? "gray.800": COLOR.kit.darkGray}
+                                                borderRadius="2xl"
+                                                onTouchStart={(e) => handleLongPressStart(generation, e)}
+                                                onTouchEnd={handleLongPressEnd}
+                                                onTouchCancel={handleLongPressEnd}
+                                                onMouseDown={(e) => handleLongPressStart(generation, e)}
+                                                onMouseUp={handleLongPressEnd}
+                                                onMouseLeave={handleLongPressEnd}
+                                                onContextMenu={handleContextMenu}
+                                                position="relative"
+                                            >
                                                 <HStack justify="space-between">
                                                     <HStack gap={3} align="center">
                                                         <Button
@@ -216,11 +401,15 @@ export function MusicList() {
                                                                 <><FaPlay /></>
                                                             )}
                                                         </Button>
-                                                        <Box>
-                                                            <Text fontWeight={600} lineClamp={1}>{title}</Text>
-                                                            <Text fontSize="sm" color="gray.300">
-                                                                {author}
-                                                            </Text>
+                                                        <Box flex={1}>
+                                                            <HStack gap={2} align="center">
+                                                                <Box flex={1}>
+                                                                    <Text fontWeight={600} lineClamp={1}>{title}</Text>
+                                                                    <Text fontSize="sm" color="gray.300">
+                                                                        {author}
+                                                                    </Text>
+                                                                </Box>
+                                                            </HStack>
                                                         </Box>
                                                     </HStack>
 
@@ -263,8 +452,120 @@ export function MusicList() {
                                                 </HStack>
                                             </Box>
                                         );
-                                    })
-                            ) : (
+                                        })}
+                                        {unpinned.length > 0 && (
+                                            <>
+                                                <Box h="2px" bg="rgba(255,255,255,0.12)" my={2} />
+                                            </>
+                                        )}
+                                    </>
+                                )}
+                                {unpinned.length > 0 && (
+                                    <>
+                                        {unpinned.map((generation: GenerationDto) => {
+                                        const url = getTrackUrl(generation);
+                                        const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
+                                        const author = generation.song?.author ?? "Трекопёс";
+                                        const status = generation.status;
+                                        if (status === 'processing') {
+                                            return (
+                                                <Skeleton key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" >Генерирую...</Skeleton>
+                                            )
+                                        }
+                                        const trackId = generation.song?.id ?? generation.id;
+                                        const isPinned = isTrackPinned(trackId);
+                                        
+                                        return (
+                                            <Box
+                                                key={generation.id}
+                                                p={3}
+                                                bg={COLOR.kit.darkGray}
+                                                borderRadius="2xl"
+                                                border={isPinned ? `1px solid ${COLOR.kit.orange}` : undefined}
+                                                onTouchStart={(e) => handleLongPressStart(generation, e)}
+                                                onTouchEnd={handleLongPressEnd}
+                                                onTouchCancel={handleLongPressEnd}
+                                                onMouseDown={(e) => handleLongPressStart(generation, e)}
+                                                onMouseUp={handleLongPressEnd}
+                                                onMouseLeave={handleLongPressEnd}
+                                                onContextMenu={handleContextMenu}
+                                                position="relative"
+                                            >
+                                                <HStack justify="space-between">
+                                                    <HStack gap={3} align="center">
+                                                        <Button
+                                                            onClick={() => handlePlay(generation, generations)}
+                                                            aria-label={`Play ${title}`}
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            colorScheme="orange"
+                                                        >
+                                                            {playerState.currentTrackId === (generation.song?.id ?? generation.id) && playerState.isPlaying ? (
+                                                                <><BsPauseFill /></>
+                                                            ) : (
+                                                                <><FaPlay /></>
+                                                            )}
+                                                        </Button>
+                                                        <Box flex={1}>
+                                                            <HStack gap={2} align="center">
+                                                                {isPinned && (
+                                                                    <Icon fontSize="sm" color={COLOR.kit.orange}>
+                                                                        <MdPushPin />
+                                                                    </Icon>
+                                                                )}
+                                                                <Box flex={1}>
+                                                                    <Text fontWeight={600} lineClamp={1}>{title}</Text>
+                                                                    <Text fontSize="sm" color="gray.300">
+                                                                        {author}
+                                                                    </Text>
+                                                                </Box>
+                                                            </HStack>
+                                                        </Box>
+                                                    </HStack>
+
+                                                    <HStack>
+                                                        <Text color="gray.300">{formatDuration(generation.song?.duration)}</Text>
+                                                        {(
+                                                            generation.generated_lyrics ||
+                                                            generation.song?.lyrics
+                                                        ) && (
+                                                                <IconButton
+                                                                    aria-label="show-lyrics"
+                                                                    size="md"
+                                                                    variant={"ghost"}
+                                                                    onClick={() =>
+                                                                        setLyricsModal({
+                                                                            title,
+                                                                            lyrics:
+                                                                                generation.generated_lyrics ||
+                                                                                generation.song?.lyrics ||
+                                                                                "",
+                                                                            style:
+                                                                                generation.generated_style ||
+                                                                                generation.song?.style ||
+                                                                                undefined,
+                                                                            status: generation.status,
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    <TbTextRecognition />
+                                                                </IconButton>
+                                                            )}
+                                                        {url && (
+                                                            <a href={url} target="_blank" rel="noopener noreferrer">
+                                                                <IconButton aria-label="download" size="md" variant={"ghost"}>
+                                                                    <HiOutlineDownload />
+                                                                </IconButton>
+                                                            </a>
+                                                        )}
+                                                    </HStack>
+                                                </HStack>
+                                            </Box>
+                                        );
+                                        })}
+                                    </>
+                                )}
+                                {pinned.length === 0 && unpinned.length === 0 && (
                                 <Grid gridTemplateRows={"repeat(3, 1fr)"} justifyContent={"center"} h={"80dvh"}>
                                     <GridItem></GridItem>
                                     <GridItem display={"flex"} color={COLOR.kit.orange}>
@@ -276,9 +577,10 @@ export function MusicList() {
                                     <GridItem></GridItem>
 
                                 </Grid>
-                            )}
-                        </>
-                    )}
+                                )}
+                            </>
+                        );
+                    })()}
                 </VStack>
             </Box>
             <Popup
@@ -344,6 +646,120 @@ export function MusicList() {
                 </ReactLenis>
             </Popup>
 
+            {/* Контекстное меню */}
+            {contextMenu.open && contextMenu.generation && (
+                <Portal>
+                    <Box
+                        position="fixed"
+                        left={contextMenu.x}
+                        top={contextMenu.y}
+                        zIndex={1000}
+                        bg={COLOR.kit.darkGray}
+                        border="1px solid"
+                        borderColor="rgba(255,255,255,0.12)"
+                        borderRadius="xl"
+                        p={2}
+                        minW="200px"
+                        boxShadow="0 8px 32px rgba(0,0,0,0.4)"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <VStack align="stretch">
+                            {contextMenu.generation && (
+                                <>
+                                    {/* Закрепить */}
+                                    <Button
+                                        variant="ghost"
+                                        justifyContent="flex-start"
+                                        onClick={() => handlePinTrack(contextMenu.generation!)}
+                                        color={COLOR.kit.white}
+                                        _hover={{ bg: "rgba(255,255,255,0.1)" }}
+                                    >
+                                        <HStack gap={2}>
+                                            <Icon fontSize="md">
+                                                <MdPushPin />
+                                            </Icon>
+                                            <Text>
+                                                {isTrackPinned(contextMenu.generation.song?.id ?? contextMenu.generation.id) 
+                                                    ? 'Открепить' 
+                                                    : 'Закрепить'}
+                                            </Text>
+                                        </HStack>
+                                    </Button>
+
+                                    <Box h="1px" bg="rgba(255,255,255,0.12)" />
+
+                                    {/* Поделиться */}
+                                    {getTrackUrl(contextMenu.generation) && (
+                                        <Button
+                                            variant="ghost"
+                                            justifyContent="flex-start"
+                                            onClick={() => handleShareTrack(contextMenu.generation!)}
+                                            color={COLOR.kit.white}
+                                            _hover={{ bg: "rgba(255,255,255,0.1)" }}
+                                        >
+                                            <HStack gap={2}>
+                                                <Icon fontSize="md">
+                                                    <MdShare />
+                                                </Icon>
+                                                <Text>Поделиться</Text>
+                                            </HStack>
+                                        </Button>
+                                    )}
+
+                                    <Box h="1px" bg="rgba(255,255,255,0.12)"/>
+
+                                    {/* Пожаловаться */}
+                                    <Button
+                                        variant="ghost"
+                                        justifyContent="flex-start"
+                                        onClick={() => handleReportTrack(contextMenu.generation!)}
+                                        color={COLOR.kit.white}
+                                        _hover={{ bg: "rgba(255,255,255,0.1)" }}
+                                    >
+                                        <HStack gap={2}>
+                                            <Icon fontSize="md">
+                                                <MdReport />
+                                            </Icon>
+                                            <Text>Пожаловаться</Text>
+                                        </HStack>
+                                    </Button>
+
+                                    <Box h="1px" bg="rgba(255,255,255,0.12)" />
+
+                                    {/* Удалить */}
+                                    <Button
+                                        variant="ghost"
+                                        justifyContent="flex-start"
+                                        onClick={() => handleDeleteTrack(contextMenu.generation!)}
+                                        color={"red.500"}
+                                        _hover={{ bg: "rgba(255,255,255,0.1)" }}
+                                    >
+                                        <HStack gap={2}>
+                                            <Icon fontSize="md">
+                                                <MdDelete />
+                                            </Icon>
+                                            <Text>Удалить</Text>
+                                        </HStack>
+                                    </Button>
+                                </>
+                            )}
+                        </VStack>
+                    </Box>
+                </Portal>
+            )}
+
+            {/* Оверлей для закрытия меню */}
+            {contextMenu.open && (
+                <Box
+                    position="fixed"
+                    top={0}
+                    left={0}
+                    right={0}
+                    bottom={0}
+                    zIndex={999}
+                    onClick={handleContextMenuClose}
+                />
+            )}
 
         </>
     );
