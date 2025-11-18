@@ -8,12 +8,11 @@ body{
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior: auto;
+  scroll-behavior: smooth;
+  height: 100dvh;
 }
 
-/* Базовые стили для плавного рендеринга */
-* {
-  box-sizing: border-box;
-}
 
 html {
   /* Предотвращение скачков макета */

@@ -34,7 +34,7 @@ export type GenerationScenarioBase = {
 };
 
 export type TextGenerationDraft = GenerationScenarioBase & {
-  mode: "text";
+  mode: "scenario";
   category?: string | null;
   audience?: string | null;
   answers: GenerationDraftAnswer[];
@@ -58,7 +58,7 @@ export type StyleGenerationDraft = GenerationScenarioBase & {
 };
 
 export type FastGenerationDraft = GenerationScenarioBase & {
-  mode: "fast";
+  mode: "text";
   prompt: string | null;
 };
 
@@ -96,7 +96,7 @@ export const createInitialGenerationDraft = (): GenerationDraft => ({
 });
 
 export const createTextGenerationDraft = (): TextGenerationDraft => ({
-  mode: "text",
+  mode: "scenario",
   category: null,
   audience: null,
   answers: [],
@@ -128,7 +128,7 @@ export const createStyleGenerationDraft = (): StyleGenerationDraft => ({
 });
 
 export const createFastGenerationDraft = (): FastGenerationDraft => ({
-  mode: "fast",
+  mode: "text",
   prompt: null,
   artist: null,
   params: null,

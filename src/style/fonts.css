@@ -1,21 +1,21 @@
 @font-face {
     font-family: "Bicubic";
-    src: url(/public/Bicubik.OTF) format("opentype");
+    src: url(/Bicubik.OTF) format("opentype");
     font-weight: normal;
 }
 @font-face {
     font-family: "ALC";
-    src: url(/public/alk-life-webfont.ttf) format("truetype");
+    src: url(/alk-life-webfont.ttf) format("truetype");
     font-weight: normal;
 }
 @font-face {
     font-family: "Doloman";
-    src: url(/public/DolomanPavljenko.otf) format("opentype");
+    src: url(/DolomanPavljenko.otf) format("opentype");
     font-weight: normal;
 }
 @font-face {
     font-family: "YellowPeas";
-    src: url(/public/YellowPeas-Regular.woff) format("woff");
+    src: url(/YellowPeas-Regular.woff) format("woff");
     font-weight: normal;
 }
 

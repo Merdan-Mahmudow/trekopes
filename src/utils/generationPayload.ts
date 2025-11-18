@@ -19,8 +19,8 @@ const buildTextMetadata = (scenario: TextGenerationDraft): MetadataEntry => ({
   answers: scenario.answers,
   summary: scenario.summary,
   // NOTE: временно не передаём artist/params до готовности генерации по сценариям на бэкенде
-  // artist: scenario.artist,
-  // params: scenario.params,
+  artist: scenario.artist,
+  params: scenario.params,
 });
 
 const buildPhotoMetadata = (scenario: PhotoGenerationDraft): MetadataEntry => ({
@@ -76,7 +76,7 @@ const derivePrompt = (
   if (!scenario) return null;
 
   switch (scenario.mode) {
-    case "text": {
+    case "scenario": {
       if (scenario.summary && scenario.summary.trim().length > 0) {
         return scenario.summary.trim();
       }
@@ -95,7 +95,7 @@ const derivePrompt = (
         ? `Create a personalised song based on the profile ${scenario.link}`
         : null;
     case "style":
-    case "fast":
+    case "text":
       return scenario.prompt?.trim() ?? null;
     default:
       return null;
@@ -120,7 +120,7 @@ export const buildCreateGenerationRequest = (
 
   if (scenario) {
     switch (scenario.mode) {
-      case "text":
+      case "scenario":
         metadata.push(buildTextMetadata(scenario));
         break;
       case "photo":
@@ -132,7 +132,7 @@ export const buildCreateGenerationRequest = (
       case "style":
         metadata.push(buildStyleMetadata(scenario));
         break;
-      case "fast":
+      case "text":
         metadata.push(buildFastMetadata(scenario));
         break;
       default:
@@ -146,7 +146,7 @@ export const buildCreateGenerationRequest = (
 
   if (draft.type) {
     // NOTE: временно форсим тип text для сценариев, пока сервер не готов
-    request.type = draft.type === "scenario" ? "text" : draft.type;
+    request.type = draft.type;
   }
   if (draft.templateId) {
     request.template_id = draft.templateId;

@@ -105,7 +105,7 @@ export function TextGenerateScreen() {
     const hasEmptyBalance = user.limit === 0;
 
     useEffect(() => {
-        if (!scenarioState || scenarioState.mode !== "text") {
+        if (!scenarioState || scenarioState.mode !== "scenario") {
             setGenerationScenario(createTextGenerationDraft());
         }
     }, [scenarioState]);
@@ -169,7 +169,7 @@ export function TextGenerateScreen() {
         (updater: (draft: TextGenerationDraft) => TextGenerationDraft) => {
             updateGenerationScenario((scenario) => {
                 const base =
-                    scenario && scenario.mode === "text"
+                    scenario && scenario.mode === "scenario"
                         ? { ...scenario }
                         : createTextGenerationDraft();
                 return updater(base);

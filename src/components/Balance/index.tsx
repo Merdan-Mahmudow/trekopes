@@ -26,7 +26,7 @@ export function Balance() {
                 borderRadius={"full"}
                 p={"4px 12px"}
                 alignItems={"center"}
-                bg={'rgb(228, 37, 72)'}
+                bg={user.limit > 0 ? COLOR.kit.darkGray : 'rgb(228, 37, 72)'}
                 gap={"3"}
                 onClick={() => navigate({ to: "/tarrifs" })}
             >

@@ -183,7 +183,7 @@ const cloneScenario = (
   if (!scenario) return null;
 
   switch (scenario.mode) {
-    case "text":
+    case "scenario":
       return {
         ...scenario,
         artist: cloneArtist(scenario.artist),
@@ -209,7 +209,7 @@ const cloneScenario = (
         artist: cloneArtist(scenario.artist),
         params: cloneParams(scenario.params),
       };
-    case "fast":
+    case "text":
       return {
         ...scenario,
         artist: cloneArtist(scenario.artist),

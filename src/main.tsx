@@ -4,8 +4,6 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { Provider } from "./components/ui/provider"
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import Scrollbar from "smooth-scrollbar"
-import OverscrollPlugin from 'smooth-scrollbar/plugins/overscroll';
 
 // Импорт стилей
 import "./style/root.css"
@@ -15,17 +13,7 @@ import "./style/keyframes.css"
 import LogRocket from 'logrocket';
 LogRocket.init('avzlx1/trekopes');
 
-Scrollbar.use(OverscrollPlugin);
 
-
-Scrollbar.initAll({
-  damping: 1,
-  plugins: {
-    overscroll: {
-      effect: "bounce"
-    }
-  }
-});
 
 import { routeTree } from "./routeTree.gen";
 

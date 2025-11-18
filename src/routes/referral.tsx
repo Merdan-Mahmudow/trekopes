@@ -1,5 +1,5 @@
 import { COLOR } from '../components/ui/colors'
-import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem} from '@chakra-ui/react'
+import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem, Avatar} from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { BrandButton } from '../components/ui/button'
 import type { Telegram } from 'telegram-web-app'
@@ -79,6 +79,14 @@ function RouteComponent() {
                 py={10}
                 pb={"11vh"}
             >
+                {tg.WebApp.initDataUnsafe.user?.photo_url && (
+                    <Flex>
+                        <Avatar.Root variant="subtle" size={"lg"}>
+                            <Avatar.Fallback name="ТРЕКОПЁС" />
+                            <Avatar.Image src={tg.WebApp.initDataUnsafe.user?.photo_url} />
+                        </Avatar.Root>
+                    </Flex>
+                )}
                 <Flex
                     flexDir={"column"}
                     bg={COLOR.kit.darkGray}
