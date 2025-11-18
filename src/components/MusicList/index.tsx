@@ -28,6 +28,7 @@ import { useState } from "react";
 import { Popup } from "../Popup";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "../ui/accessibility";
+import { ReactLenis } from "lenis/react";
 const MotionBox = motion(Box);
 
 export default function LoadingWave({
@@ -285,49 +286,64 @@ export function MusicList() {
                 title={lyricsModal?.title ?? ""}
                 onOpenChange={() => setLyricsModal(null)}
             >
-                <VStack
-                    align="stretch"
-                    gap={4}
-                    color={COLOR.kit.orangeWhite}
-                    maxH="70dvh"
-                    overflowY="auto"
+                <ReactLenis
+                    options={{
+                        smoothWheel: true,
+                        syncTouch: true,
+                        lerp: 0.1,
+                        duration: 0.23,
+                        wheelMultiplier: 1,
+                        touchMultiplier: 0.45,
+                        infinite: false,
+                    }}
+                    style={{
+                        height: "100%",
+                        width: "100%",
+                        overflow: "auto",
+                    }}
                 >
+                    <VStack color={COLOR.kit.orangeWhite}>
+                        <VStack alignItems="stretch" gap={2} fontSize="md">
 
-                    <VStack align="stretch" gap={2} fontSize="md">
-                        {lyricsModal?.lyrics.split("\n").map((line, index) => {
-                            const trimmed = line.trim();
-                            if (!trimmed) {
-                                return <Box key={`empty-${index}`} h="4" />;
-                            }
-                            const isSection =
-                                trimmed.startsWith("[") && trimmed.endsWith("]");
-                            const sectionLabel = isSection
-                                ? trimmed
-                                    .replace(/^\[|\]$/g, "")
-                                    .replace(/intro/i, "Интро")
-                                    .replace(/outro/i, "Аутро")
-                                    .replace(/verse/i, "Куплет")
-                                    .replace(/chorus/i, "Припев")
-                                    .replace(/bridge/i, "Бридж")
-                                    .replace(/hook/i, "Хук")
-                                    .replace(/pre[-\s]?chorus/i, "Препев")
-                                : trimmed;
-                            return (
-                                <Text
-                                    key={`${sectionLabel}-${index}`}
-                                    fontWeight={isSection ? "semibold" : "normal"}
-                                    fontSize={"md"}
-                                    color={isSection ? COLOR.kit.orange : COLOR.kit.orangeWhite}
-                                    textTransform={isSection ? "uppercase" : "none"}
-                                    letterSpacing={isSection ? "0.08em" : "normal"}
-                                >
-                                    {sectionLabel}
-                                </Text>
-                            );
-                        })}
+                            {lyricsModal?.lyrics.split("\n").map((line, index) => {
+                                const trimmed = line.trim();
+                                if (!trimmed) {
+                                    return <Box key={`empty-${index}`} h="4" />;
+                                }
+
+                                const isSection =
+                                    trimmed.startsWith("[") && trimmed.endsWith("]");
+                                const sectionLabel = isSection
+                                    ? trimmed
+                                        .replace(/^\[|\]$/g, "")
+                                        .replace(/intro/i, "Интро")
+                                        .replace(/outro/i, "Аутро")
+                                        .replace(/verse/i, "Куплет")
+                                        .replace(/chorus/i, "Припев")
+                                        .replace(/bridge/i, "Бридж")
+                                        .replace(/hook/i, "Хук")
+                                        .replace(/pre[-\s]?chorus/i, "Препев")
+                                    : trimmed;
+
+                                return (
+                                    <Text
+                                        key={`${sectionLabel}-${index}`}
+                                        fontWeight={isSection ? "semibold" : "normal"}
+                                        fontSize="md"
+                                        color={isSection ? COLOR.kit.orange : COLOR.kit.orangeWhite}
+                                        textTransform={isSection ? "uppercase" : "none"}
+                                        letterSpacing={isSection ? "0.08em" : "normal"}
+                                    >
+                                        {sectionLabel}
+                                    </Text>
+                                );
+                            })}
+                        </VStack>
                     </VStack>
-                </VStack>
+                </ReactLenis>
             </Popup>
+
+
         </>
     );
 }

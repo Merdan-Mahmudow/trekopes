@@ -79,11 +79,10 @@ export function Layout() {
           syncTouch: true,
 
           lerp: 0.1,
-          duration: 0.4,
-          wheelMultiplier: 1,
-          touchMultiplier: 1,
-          infinite: false,
-          overscroll: true
+          duration: 0.23,
+          wheelMultiplier:  1,
+          touchMultiplier: 0.45,
+          infinite: false
         }}
         style={{
           height: "100%",

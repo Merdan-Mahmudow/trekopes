@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Box, Flex, Input as ChakraInput, Button, Icon } from "@chakra-ui/react";
 import { BsSendFill } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
+import { useLenis } from "lenis/react";
 
 export interface ChatInputProps {
   onSend: (content: string) => void;
@@ -15,8 +16,19 @@ export function ChatInput({
   isDisabled = false,
 }: ChatInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const lenis = useLenis();
   const [value, setValue] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!lenis) return;
+    
+    if (isFocused) {
+      lenis.stop();
+    } else {
+      lenis.start();
+    }
+  }, [isFocused, lenis]);
 
   const send = () => {
     inputRef.current?.focus()
@@ -33,6 +45,8 @@ export function ChatInput({
           value={value}
           ref={inputRef}
           onChange={(e) => setValue(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();

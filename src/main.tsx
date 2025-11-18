@@ -4,6 +4,7 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { Provider } from "./components/ui/provider"
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import {YMInitializer} from 'react-yandex-metrika';
 
 // Импорт стилей
 import "./style/root.css"
@@ -34,6 +35,7 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
+      <YMInitializer accounts={[105300741]} options={{ webvisor: true, clickmap: true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true }} />
       <QueryClientProvider client={queryClient}>
         <Provider>
           <RouterProvider router={router} />
