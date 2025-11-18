@@ -22,7 +22,6 @@ export function Balance() {
                 <BsChatDots size={"22px"} color={COLOR.brand.orange} />
             </Link>
             <Flex
-                w={"fit"}
                 borderRadius={"full"}
                 p={"4px 12px"}
                 alignItems={"center"}
@@ -39,7 +38,7 @@ export function Balance() {
                 />
                 
                 <Text>{user.limit}</Text>
-                <LuPlus size={13} color={COLOR.kit.orange} />
+                <LuPlus size={"30px"} color={COLOR.kit.orange} />
                     </>
                 ) : (
                     <Text color={"white.400"} fontSize={"14px"} fontWeight={600}>Пополнить</Text>
