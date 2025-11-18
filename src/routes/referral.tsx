@@ -1,5 +1,5 @@
 import { COLOR } from '../components/ui/colors'
-import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem, Avatar} from '@chakra-ui/react'
+import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem, Avatar } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { BrandButton } from '../components/ui/button'
 import type { Telegram } from 'telegram-web-app'
@@ -23,11 +23,11 @@ function RouteComponent() {
     const user = useStore(store, (state) => state.user);
     const userId = tg?.WebApp?.initDataUnsafe?.user?.id;
     const refLink = `https://t.me/TPEKOllEC_BOT?start=${userId || ''}`
-    
+
     useEffect(() => {
         setDockActive("left")
     }, [])
-    
+
     const handleSend = () => {
         if (!tg?.WebApp) {
             console.error("Telegram WebApp not available");
@@ -77,16 +77,22 @@ function RouteComponent() {
                 w={"full"}
                 alignItems={"center"}
                 py={10}
+                gap={5}
                 pb={"11vh"}
             >
                 {tg.WebApp.initDataUnsafe.user?.photo_url && (
-                    <Flex>
+                    <Flex alignItems={"center"} gap={3} w={"90vw"}>
                         <Avatar.Root variant="subtle" size={"lg"}>
-                            <Avatar.Fallback name="ТРЕКОПЁС" />
+                            <Avatar.Fallback name={`${user.first_name} ${user.last_name}`} />
                             <Avatar.Image src={tg.WebApp.initDataUnsafe.user?.photo_url} />
                         </Avatar.Root>
+                        <Box>
+                            <Text lineHeight={"15px"}>{user.first_name} {user.last_name}</Text>
+                            <Text color={"gray.400"} fontSize={"sm"}>Приглашено: {user.referrals_signup_count}</Text>
+                        </Box>
                     </Flex>
                 )}
+
                 <Flex
                     flexDir={"column"}
                     bg={COLOR.kit.darkGray}
@@ -127,8 +133,7 @@ function RouteComponent() {
                 <Grid
                     templateColumns="1fr"
                     gap={2}
-                    w="11/12"
-                    mt={6}>
+                    w="11/12">
                     {REWARDS.map((item) => (
                         <GridItem
                             key={item.id}
