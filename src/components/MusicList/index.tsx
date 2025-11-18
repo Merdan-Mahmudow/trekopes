@@ -105,6 +105,7 @@ export function MusicList() {
         generation: null,
     });
     const [pinnedTracksState, setPinnedTracksState] = useState<string[]>([]);
+    const [longPressingId, setLongPressingId] = useState<string | null>(null);
 
     const { isLoading, data, error } = useQuery({
         queryKey: ["webapp-generations", token],
@@ -197,19 +198,25 @@ export function MusicList() {
     const LONG_PRESS_DURATION = 500; // 500ms
 
     const handleLongPressStart = (generation: GenerationDto, event: React.TouchEvent | React.MouseEvent) => {
-        // Предотвращаем стандартное поведение браузера
-        event.preventDefault();
+        // Предотвращаем стандартное поведение браузера только для mouse-событий
+        // Для touch-событий preventDefault не работает в passive listeners
+        if (!('touches' in event)) {
+            event.preventDefault();
+        }
+        
+        const trackId = generation.song?.id ?? generation.id;
+        setLongPressingId(trackId);
         
         const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
         const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
-
+    
         longPressTimerRef.current = window.setTimeout(() => {
             // Виброотдача при долгом нажатии
             const tg: Telegram | undefined = window.Telegram;
             if (tg?.WebApp?.HapticFeedback) {
                 tg.WebApp.HapticFeedback.impactOccurred("heavy");
             }
-
+    
             // Позиционирование меню с учетом границ экрана
             const menuWidth = 200;
             const menuHeight = 120;
@@ -231,6 +238,7 @@ export function MusicList() {
     };
 
     const handleLongPressEnd = () => {
+        setLongPressingId(null);
         if (longPressTimerRef.current) {
             window.clearTimeout(longPressTimerRef.current);
             longPressTimerRef.current = null;
@@ -370,9 +378,10 @@ export function MusicList() {
                                         }
                                         const trackId = generation.song?.id ?? generation.id;
                                         const isPinned = isTrackPinned(trackId);
+                                        const isLongPressing = longPressingId === trackId;
                                         
                                         return (
-                                            <Box
+                                            <MotionBox
                                                 key={generation.id}
                                                 p={3}
                                                 bg={isPinned ? "gray.800": COLOR.kit.darkGray}
@@ -385,6 +394,14 @@ export function MusicList() {
                                                 onMouseLeave={handleLongPressEnd}
                                                 onContextMenu={handleContextMenu}
                                                 position="relative"
+                                                userSelect="none"
+                                                animate={{
+                                                    scale: isLongPressing ? 0.95 : 1,
+                                                }}
+                                                transition={{
+                                                    duration: LONG_PRESS_DURATION / 1000,
+                                                    ease: "easeOut",
+                                                }}
                                             >
                                                 <HStack justify="space-between">
                                                     <HStack gap={3} align="center">
@@ -450,7 +467,7 @@ export function MusicList() {
                                                         )}
                                                     </HStack>
                                                 </HStack>
-                                            </Box>
+                                            </MotionBox>
                                         );
                                         })}
                                         {unpinned.length > 0 && (
@@ -474,14 +491,14 @@ export function MusicList() {
                                         }
                                         const trackId = generation.song?.id ?? generation.id;
                                         const isPinned = isTrackPinned(trackId);
+                                        const isLongPressing = longPressingId === trackId;
                                         
                                         return (
-                                            <Box
+                                            <MotionBox
                                                 key={generation.id}
                                                 p={3}
                                                 bg={COLOR.kit.darkGray}
                                                 borderRadius="2xl"
-                                                border={isPinned ? `1px solid ${COLOR.kit.orange}` : undefined}
                                                 onTouchStart={(e) => handleLongPressStart(generation, e)}
                                                 onTouchEnd={handleLongPressEnd}
                                                 onTouchCancel={handleLongPressEnd}
@@ -490,6 +507,18 @@ export function MusicList() {
                                                 onMouseLeave={handleLongPressEnd}
                                                 onContextMenu={handleContextMenu}
                                                 position="relative"
+                                                userSelect="none"
+                                                WebkitUserSelect={"none"}
+                                                WebkitTouchCallout={"none"}
+                                                touchAction={"manipulation"}
+                                                animate={{
+                                                    scale: isLongPressing ? 0.95 : 1,
+                                                }}
+                                                transition={{
+                                                    duration: LONG_PRESS_DURATION / 1000,
+                                                    ease: "easeOut",
+                                                    delay: isLongPressing ? 0.3 : LONG_PRESS_DURATION / 1200,
+                                                }}
                                             >
                                                 <HStack justify="space-between">
                                                     <HStack gap={3} align="center">
@@ -560,7 +589,7 @@ export function MusicList() {
                                                         )}
                                                     </HStack>
                                                 </HStack>
-                                            </Box>
+                                            </MotionBox>
                                         );
                                         })}
                                     </>
