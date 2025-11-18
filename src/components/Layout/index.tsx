@@ -81,7 +81,7 @@ export function Layout() {
           lerp: 0.1,
           duration: 0.23,
           wheelMultiplier:  1,
-          touchMultiplier: 0.45,
+          touchMultiplier: 0,
           infinite: false
         }}
         style={{

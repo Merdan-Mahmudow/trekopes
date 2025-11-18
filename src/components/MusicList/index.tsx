@@ -290,11 +290,12 @@ export function MusicList() {
                     options={{
                         smoothWheel: true,
                         syncTouch: true,
-                        lerp: 0.1,
-                        duration: 0.23,
+                        lerp: 0.5,
+                        duration: 0.4,
                         wheelMultiplier: 1,
-                        touchMultiplier: 0.45,
+                        touchMultiplier: 0,
                         infinite: false,
+                        overscroll: true
                     }}
                     style={{
                         height: "100%",
