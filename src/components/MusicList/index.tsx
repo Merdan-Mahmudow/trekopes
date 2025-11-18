@@ -291,9 +291,9 @@ export function MusicList() {
                         smoothWheel: true,
                         syncTouch: true,
                         lerp: 0.1,
-                        duration: 1 ,
+                        duration: 0.23,
                         wheelMultiplier: 2,
-                        touchMultiplier: 1,
+                        touchMultiplier: 0,
                         infinite: false,
                         overscroll: true
                     }}
