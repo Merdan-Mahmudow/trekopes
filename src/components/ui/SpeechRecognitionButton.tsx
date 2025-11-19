@@ -1,8 +1,8 @@
 import { IconButton } from '@chakra-ui/react';
-import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
-import IconMicrophone from '../../assets/svg/microphone';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { COLOR } from './colors';
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { TiMicrophoneOutline } from "react-icons/ti";
 
 interface SpeechRecognitionButtonProps {
     onTranscript: (text: string) => void;
@@ -13,58 +13,76 @@ export function SpeechRecognitionButton({
     onTranscript,
     disabled = false,
 }: SpeechRecognitionButtonProps) {
-    const transcriptRef = useRef('');
+    const previousListeningRef = useRef(false);
 
-    const { isListening, isSupported, startListening, stopListening, error } =
-        useSpeechRecognition({
-            onResult: (text) => {
-                transcriptRef.current = text;
-            },
-            onError: (err) => {
-                console.error('Speech recognition error:', err);
-            },
-            language: 'ru-RU',
-            continuous: true,
-            interimResults: true,
-        });
+    const {
+        finalTranscript,
+        listening,
+        browserSupportsSpeechRecognition,
+        resetTranscript,
+    } = useSpeechRecognition({
+        language: 'ru-RU',
+        continuous: true,
+    });
 
-    // Отправляем финальный результат при остановке
+    // Отправляем текст при остановке записи
     useEffect(() => {
-        if (!isListening && transcriptRef.current) {
-            const finalText = transcriptRef.current.trim();
+        // Если запись только что остановилась и есть финальный текст
+        if (previousListeningRef.current && !listening && finalTranscript) {
+            const finalText = finalTranscript.trim();
             if (finalText) {
                 onTranscript(finalText);
-                transcriptRef.current = '';
+                resetTranscript();
             }
         }
-    }, [isListening, onTranscript]);
+        previousListeningRef.current = listening;
+    }, [listening, finalTranscript, onTranscript, resetTranscript]);
 
-    const handleToggle = () => {
-        if (isListening) {
-            stopListening();
+    const handleToggle = async () => {
+        if (listening) {
+            SpeechRecognition.stopListening();
+            console.log('stopListening');
         } else {
-            startListening();
+            try {
+                // Запрашиваем доступ к микрофону перед началом записи
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true,
+                        }
+                    });
+                }
+                SpeechRecognition.startListening({ 
+                    continuous: true, 
+                    language: 'ru-RU' 
+                });
+                console.log('startListening');
+            } catch (err: any) {
+                console.error('Failed to get microphone access:', err);
+            }
         }
     };
 
-    if (!isSupported) {
+    if (!browserSupportsSpeechRecognition) {
         return null;
     }
 
     return (
         <IconButton
-            aria-label={error || (isListening ? 'Остановить запись' : 'Начать запись')}
+            aria-label={listening ? 'Остановить запись' : 'Начать запись'}
             onClick={handleToggle}
             disabled={disabled}
             size="sm"
             borderRadius="full"
-            bg={isListening ? COLOR.kit.orange : 'rgba(255, 255, 255, 0.1)'}
+            bg={listening ? COLOR.kit.orange : 'rgba(255, 255, 255, 0.1)'}
             color={COLOR.kit.white}
             _hover={{
-                bg: isListening ? COLOR.brand.orange700 : 'rgba(255, 255, 255, 0.2)',
+                bg: listening ? COLOR.brand.orange700 : 'rgba(255, 255, 255, 0.2)',
             }}
             _active={{
-                bg: isListening ? COLOR.brand.orange700 : 'rgba(255, 255, 255, 0.3)',
+                bg: listening ? COLOR.brand.orange700 : 'rgba(255, 255, 255, 0.3)',
             }}
             position="absolute"
             bottom="8px"
@@ -74,7 +92,7 @@ export function SpeechRecognitionButton({
             h="32px"
             transition="all 0.2s"
         >
-            <IconMicrophone width={20} height={20} fillColor={COLOR.kit.white} />
+            <TiMicrophoneOutline width={20} height={20} />
         </IconButton>
     );
 }

@@ -3,6 +3,40 @@ declare module '*.png' {
     export default src;
 }
 
+declare module 'react-speech-recognition' {
+    export interface SpeechRecognitionOptions {
+        language?: string;
+        continuous?: boolean;
+        interimResults?: boolean;
+    }
+
+    export interface UseSpeechRecognitionReturn {
+        transcript: string;
+        finalTranscript: string;
+        interimTranscript: string;
+        listening: boolean;
+        resetTranscript: () => void;
+        browserSupportsSpeechRecognition: boolean;
+        isMicrophoneAvailable: boolean;
+    }
+
+    export function useSpeechRecognition(
+        options?: SpeechRecognitionOptions
+    ): UseSpeechRecognitionReturn;
+
+    interface SpeechRecognitionStatic {
+        startListening: (options?: SpeechRecognitionOptions) => void;
+        stopListening: () => void;
+        abortListening: () => void;
+        getRecognition: () => any;
+        applyPolyfill: (SpeechRecognition: any) => void;
+        browserSupportsSpeechRecognition: () => boolean;
+    }
+
+    declare const SpeechRecognition: SpeechRecognitionStatic;
+    export default SpeechRecognition;
+}
+
 // Web Speech API types
 interface SpeechRecognition extends EventTarget {
     continuous: boolean;
