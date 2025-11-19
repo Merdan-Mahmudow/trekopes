@@ -1,4 +1,5 @@
 import type { Telegram } from "telegram-web-app";
+import { debugLog } from "./logger";
 
 /**
  * Проверяет, разрешено ли устройство для использования приложения
@@ -17,18 +18,18 @@ export function isDeviceAllowed(tg: Telegram | null | undefined): {
   }
 
   const platform = tg.WebApp.platform?.toLowerCase() || "";
-  console.log("[DeviceCheck] Платформа:", platform);
+  debugLog("[DeviceCheck] Платформа:", platform);
   
   // Разрешены только iOS и Android
   if (platform !== "ios" && platform !== "android") {
-    console.log("[DeviceCheck] Платформа не разрешена:", platform);
+    debugLog("[DeviceCheck] Платформа не разрешена:", platform);
     return {
       allowed: false,
       reason: "Приложение доступно только на iOS и Android",
     };
   }
 
-  console.log("[DeviceCheck] Устройство разрешено");
+  debugLog("[DeviceCheck] Устройство разрешено");
   return {
     allowed: true,
   };

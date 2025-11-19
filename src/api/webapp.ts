@@ -5,6 +5,10 @@ import type {
   CreatePaymentRequest,
   CreatePaymentResponse,
   GetGenerationByIdResponse,
+  GetGenerationTemplateArtistsQuery,
+  GetGenerationTemplateArtistsResponse,
+  GetGenerationTemplatesQuery,
+  GetGenerationTemplatesResponse,
   GetGenerationsQuery,
   GetGenerationsResponse,
   GetMeResponse,
@@ -130,6 +134,38 @@ export async function getWebAppPaymentByUUID(
     `${WEBAPP_PREFIX}/payments/${uuid}`,
     undefined,
     {
+      headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function getWebAppGenerationTemplateArtists(
+  token: string,
+  params?: GetGenerationTemplateArtistsQuery
+): Promise<GetGenerationTemplateArtistsResponse> {
+  const response = await request<GetGenerationTemplateArtistsResponse>(
+    "get",
+    `${WEBAPP_PREFIX}/generation-template-artists`,
+    undefined,
+    {
+      params,
+      headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function getWebAppGenerationTemplates(
+  token: string,
+  params?: GetGenerationTemplatesQuery
+): Promise<GetGenerationTemplatesResponse> {
+  const response = await request<GetGenerationTemplatesResponse>(
+    "get",
+    `${WEBAPP_PREFIX}/generation-templates`,
+    undefined,
+    {
+      params,
       headers: authHeaders(token)
     }
   );

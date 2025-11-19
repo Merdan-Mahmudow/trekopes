@@ -5,6 +5,7 @@ import { PawIcon } from '../../assets/svg/paw';
 import MusicIcon from '../../assets/img/music.svg';
 import React, { useEffect, useState } from 'react';
 import { MdGroup } from 'react-icons/md';
+import { debugLog } from '../../utils/logger';
 
 const MotionBox = motion(Box as any);
 
@@ -44,7 +45,7 @@ const Dock: React.FC = () => {
     // initial
     update();
 
-    console.log("Dock mounted, current path:", window.location.pathname);
+    debugLog("Dock mounted, current path:", window.location.pathname);
   }, []);
 
   // храним id кнопки, на которую кликнули — анимация будет только у неё

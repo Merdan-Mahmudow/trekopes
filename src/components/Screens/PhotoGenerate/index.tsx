@@ -20,6 +20,7 @@ import {
     type GenerationDraftPhoto,
     type PhotoGenerationDraft,
 } from "../../../types/generation";
+import { logError } from "../../../utils/logger";
 
 const readFileAsDataUrl = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -106,7 +107,7 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
                     fileName: file.name,
                 });
             } catch (error) {
-                console.error("Failed to read file", error);
+                logError("Failed to read file", error, { fileName: file.name, fileType: file.type });
             }
         },
         [updatePhotoDraft]

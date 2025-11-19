@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 // import type { PointerEvent as ReactPointerEvent } from 'react'
-import { Box, Flex, Button, Text, HStack, IconButton, Image, CloseButton } from '@chakra-ui/react'
+import { Box, Flex, Button, Text, HStack, IconButton, Image } from '@chakra-ui/react'
 import { BsPlayFill, BsPauseFill, BsSkipBackwardFill, BsSkipForwardFill } from 'react-icons/bs'
 import store from '../../store'
 import { useStore } from '@tanstack/react-store'
 import { setPlayerPlaying, playNext, playPrev, updatePlayerState, hidePlayer } from '../../store/player'
 import { COLOR } from '../ui/colors'
+import { debugWarn, logTelemetry } from '../../utils/logger'
+import { MdClose } from 'react-icons/md'
 
 const STORAGE_KEY = 'global_player_state_v2'
 
@@ -248,7 +250,7 @@ function resolveDuration(a: HTMLAudioElement, fallback?: number): number | null 
 const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
   const a = audioRef.current
   if (!a) {
-    console.warn('[Player] seekToPercent: audioRef.current is null')
+    debugWarn('[Player] seekToPercent: audioRef.current is null')
     return
   }
 
@@ -265,7 +267,7 @@ const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
 
   const dur = resolveDuration(a, duration)
   if (!Number.isFinite(dur) || (dur as number) <= 0) {
-    console.warn('[Player] seekToPercent: invalid duration', { aDuration: a.duration, fallback: duration })
+    debugWarn('[Player] seekToPercent: invalid duration', { aDuration: a.duration, fallback: duration })
     return
   }
 
@@ -273,7 +275,7 @@ const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
   const newTime = clampedPercent * (dur as number)
 
   if (!Number.isFinite(newTime) || newTime < 0) {
-    console.warn('[Player] seekToPercent: computed newTime non-finite', { percent, dur, newTime })
+    debugWarn('[Player] seekToPercent: computed newTime non-finite', { percent, dur, newTime })
     return
   }
 
@@ -281,7 +283,7 @@ const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
     a.currentTime = newTime
     setCurrent(newTime)
   } catch (err) {
-    console.warn('[Player] seekToPercent: failed to set currentTime', err, { newTime })
+    debugWarn('[Player] seekToPercent: failed to set currentTime', err, { newTime })
     return
   }
 
@@ -632,7 +634,7 @@ const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
           minW="32px"
           minH="32px"
         >
-          <CloseButton />
+          <MdClose />
         </IconButton>
       </Flex>
 
@@ -698,9 +700,7 @@ function dispatchEvent(eventName: string, detail: any) {
 
 function trackTelemetry(action: string, data: any) {
   // Телеметрия: отправка событий
-  console.log('[Telemetry]', action, data)
-  // Здесь можно добавить отправку на сервер аналитики
-  // Например: analytics.track(action, data)
+  logTelemetry(action, data)
 }
 
 export default Player

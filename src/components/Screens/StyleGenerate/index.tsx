@@ -22,9 +22,10 @@ import {
 import store, { setGenerationPrompt } from "../../../store";
 import { buildCreateGenerationRequest } from "../../../utils/generationPayload";
 import { createWebAppGeneration } from "../../../api/webapp";
+import { logError } from "../../../utils/logger";
 import { useTracks } from "../../../hooks/useTracks";
 import { toaster } from "../../ui/toaster";
-import { SpeechRecognitionButton } from "../../ui/SpeechRecognitionButton";
+import { Dictaphone } from "../../ui/SpeechRecognitionButton";
 type StyleGenerateScreenProps = {
     onClose: () => void;
 };
@@ -124,7 +125,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             try {
                 await loadTracks();
             } catch (loadError) {
-                console.error(loadError);
+                logError("Failed to load tracks after style generation", loadError);
             }
 
             resetGenerationDraft();
@@ -134,7 +135,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                 description: "Следи за списком — трек появится после обработки.",
             });
         } catch (err) {
-            console.error(err);
+            logError("Failed to start style generation", err);
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
@@ -208,12 +209,8 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                                     pr="48px"
                                     pb="48px"
                                 />
-                                <SpeechRecognitionButton
-                                    onTranscript={(text) => {
-                                        const currentValue = prompt || '';
-                                        const newValue = currentValue ? `${currentValue} ${text}` : text;
-                                        handlePromptChange(newValue);
-                                    }}
+                                <Dictaphone
+                                onTranscript={(transcript) => handlePromptChange(transcript)}
                                 />
                             </Box>
                         </VStack>

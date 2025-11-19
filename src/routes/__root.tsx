@@ -9,6 +9,7 @@ import { PreLoader } from '../components/PreLoader';
 
 import { useAuth } from '../hooks/useUser';
 import { setAuthToken, setUserState } from '../store';
+import { debugLog, logError } from '../utils/logger';
 export const Route = createRootRoute({
   component: RootComponent,
 })
@@ -56,7 +57,7 @@ function RootComponent() {
   // Инициализация Telegram WebApp
   useEffect(() => {
     if (!tg) {
-      console.log("Telegram WebApp not loaded yet");
+      debugLog("Telegram WebApp not loaded yet");
       return;
     }
     try {
@@ -65,8 +66,9 @@ function RootComponent() {
       tg.WebApp.enableClosingConfirmation();
       tg.WebApp.expand();
       tg.WebApp.disableVerticalSwipes();
+      debugLog("Telegram WebApp initialized successfully");
     } catch (error) {
-      console.error("Error initializing Telegram WebApp: ", error);
+      logError("Error initializing Telegram WebApp", error, { tg: !!tg });
     }
   }, [tg]);
 

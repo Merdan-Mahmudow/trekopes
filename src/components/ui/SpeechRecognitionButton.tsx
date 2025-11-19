@@ -1,99 +1,103 @@
-import { IconButton } from '@chakra-ui/react';
+import { IconButton, Float, Box } from '@chakra-ui/react';
+import { useEffect, useRef } from 'react';
+import { MdMic } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { COLOR } from './colors';
-import { useEffect, useRef } from 'react';
-import { TiMicrophoneOutline } from "react-icons/ti";
 
-interface SpeechRecognitionButtonProps {
-    onTranscript: (text: string) => void;
-    disabled?: boolean;
-}
+const MotionIconButton = motion(IconButton);
+const MotionBox = motion(Box);
 
-export function SpeechRecognitionButton({
-    onTranscript,
-    disabled = false,
-}: SpeechRecognitionButtonProps) {
-    const previousListeningRef = useRef(false);
-
+const Dictaphone = ({ onTranscript }: { onTranscript: (transcript: string) => void }) => {
     const {
-        finalTranscript,
+        transcript,
         listening,
         browserSupportsSpeechRecognition,
-        resetTranscript,
-    } = useSpeechRecognition({
-        language: 'ru-RU',
-        continuous: true,
-    });
+        resetTranscript
+    } = useSpeechRecognition();
 
-    // Отправляем текст при остановке записи
+    const previousTranscriptRef = useRef('');
+    const isInitialMountRef = useRef(true);
+    const onTranscriptRef = useRef(onTranscript);
+
+    // Обновляем ref при изменении колбэка
     useEffect(() => {
-        // Если запись только что остановилась и есть финальный текст
-        if (previousListeningRef.current && !listening && finalTranscript) {
-            const finalText = finalTranscript.trim();
-            if (finalText) {
-                onTranscript(finalText);
-                resetTranscript();
-            }
-        }
-        previousListeningRef.current = listening;
-    }, [listening, finalTranscript, onTranscript, resetTranscript]);
+        onTranscriptRef.current = onTranscript;
+    }, [onTranscript]);
 
-    const handleToggle = async () => {
-        if (listening) {
-            SpeechRecognition.stopListening();
-            console.log('stopListening');
-        } else {
-            try {
-                // Запрашиваем доступ к микрофону перед началом записи
-                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    await navigator.mediaDevices.getUserMedia({ 
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true,
-                        }
-                    });
-                }
-                SpeechRecognition.startListening({ 
-                    continuous: true, 
-                    language: 'ru-RU' 
-                });
-                console.log('startListening');
-            } catch (err: any) {
-                console.error('Failed to get microphone access:', err);
-            }
+    // Передаём текст в реальном времени при изменении transcript
+    useEffect(() => {
+        if (listening && transcript !== previousTranscriptRef.current) {
+            previousTranscriptRef.current = transcript;
+            onTranscriptRef.current(transcript);
         }
-    };
+    }, [transcript, listening]);
+
+    // Сбрасываем предыдущий текст при остановке записи
+    useEffect(() => {
+        if (!listening && !isInitialMountRef.current) {
+            previousTranscriptRef.current = '';
+            resetTranscript();
+        }
+        if (isInitialMountRef.current) {
+            isInitialMountRef.current = false;
+        }
+    }, [listening, resetTranscript]);
 
     if (!browserSupportsSpeechRecognition) {
-        return null;
+        return <span>Browser doesn't support speech recognition.</span>;
+    }
+
+    const toggleListening = () => {
+        if (listening) {
+            SpeechRecognition.stopListening();
+        } else {
+            resetTranscript();
+            previousTranscriptRef.current = '';
+            SpeechRecognition.startListening({ continuous: true, language: 'ru-RU' });
+        }
     }
 
     return (
-        <IconButton
-            aria-label={listening ? 'Остановить запись' : 'Начать запись'}
-            onClick={handleToggle}
-            disabled={disabled}
-            size="sm"
-            borderRadius="full"
-            bg={listening ? COLOR.kit.orange : 'rgba(255, 255, 255, 0.1)'}
-            color={COLOR.kit.white}
-            _hover={{
-                bg: listening ? COLOR.brand.orange700 : 'rgba(255, 255, 255, 0.2)',
-            }}
-            _active={{
-                bg: listening ? COLOR.brand.orange700 : 'rgba(255, 255, 255, 0.3)',
-            }}
-            position="absolute"
-            bottom="8px"
-            right="8px"
-            zIndex={10}
-            minW="32px"
-            h="32px"
-            transition="all 0.2s"
-        >
-            <TiMicrophoneOutline width={20} height={20} />
-        </IconButton>
-    );
-}
+        <Float placement={"bottom-end"} offsetX={10} offsetY={10}>
+            <Box position="relative" display="inline-block">
 
+                    <>
+                        <MotionBox
+                            rounded={"full"}
+                            bg={listening ? COLOR.kit.orange : COLOR.kit.darkGray}
+                            w={"40px"}
+                            h={"40px"}
+                            display={"flex"}
+                            alignItems={"center"}
+                            justifyContent={"center"}
+                            animate={{
+                                scale: listening ? [1, 1.15, 1] : 1
+                            }}
+                            transition={{
+                                duration: 1,
+                                repeat: listening ? Infinity : 0,
+                                ease: "easeInOut"
+                            }}
+                        >
+                            <MotionIconButton
+                                onClick={toggleListening}
+                                aria-label="Toggle listening"
+                                variant="ghost"
+                                size="sm"
+                                rounded={"full"}
+                                w={"40px"}
+                                h={"40px"}
+                            >
+                                {<MdMic size={20} />}
+                            </MotionIconButton>
+                        </MotionBox>
+                    </>
+
+
+
+            </Box>
+        </Float>
+    );
+};
+export { Dictaphone };

@@ -170,3 +170,61 @@ export type GetPaymentsQuery = {
 export type GetPaymentsResponse = ApiSuccessResponse<PaymentDto[]>;
 
 export type GetPaymentByUUIDResponse = ApiSuccessResponse<PaymentDto>;
+
+// Generation Template types
+export type GenerationTemplateArtistList = {
+  id: string;
+  name: string;
+};
+
+export type GenerationTemplateArtist = {
+  id: string;
+  name: string;
+  description?: string | null;
+  is_active: boolean;
+  templates_count: number;
+};
+
+export type GenerationTemplateList = {
+  id: string;
+  name: string;
+};
+
+export type GenerationTemplate = {
+  id: string;
+  generation_type: string;
+  title: string;
+  description?: string | null;
+  artist_id?: string | null;
+  artist_name?: string | null;
+  prompt_id?: string | null;
+  gpt_prompt?: string | null;
+  upload_url?: string | null;
+  prompt?: string | null;
+  style?: string | null;
+  custom_mode: boolean;
+  instrumental: boolean;
+  model?: string | null;
+  persona_id?: string | null;
+  negative_tags?: string | null;
+  vocal_gender?: string | null;
+  style_weight?: number | null;
+  weirdness_constraint?: number | null;
+  audio_weight?: number | null;
+  is_active: boolean;
+  is_cover: boolean;
+};
+
+export type GetGenerationTemplateArtistsQuery = {
+  limit?: number;
+  offset?: number;
+};
+
+export type GetGenerationTemplateArtistsResponse = ApiSuccessResponse<GenerationTemplateArtistList[]>;
+
+export type GetGenerationTemplatesQuery = {
+  limit?: number;
+  offset?: number;
+};
+
+export type GetGenerationTemplatesResponse = ApiSuccessResponse<GenerationTemplateList[]>;

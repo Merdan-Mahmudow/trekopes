@@ -10,6 +10,7 @@ import { BsPeople } from 'react-icons/bs'
 import { FaRegCircle } from "react-icons/fa";
 import { FaRegCheckCircle } from "react-icons/fa";
 import { useStore } from '@tanstack/react-store'
+import { logError } from '../utils/logger'
 
 
 
@@ -30,7 +31,7 @@ function RouteComponent() {
 
     const handleSend = () => {
         if (!tg?.WebApp) {
-            console.error("Telegram WebApp not available");
+            logError("Telegram WebApp not available", undefined, { hasTg: !!tg });
             return;
         }
         const sendLink = `https://t.me/share/url?url=${encodeURIComponent(refLink)}`

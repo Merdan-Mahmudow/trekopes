@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { request } from '../libs/request'
 import { setActiveTarrif, setSubscriptionSaving } from '../store/subscription'
 import { toaster } from '../components/ui/toaster'
+import { logAnalytics, logError } from '../utils/logger'
 
 export function useSaveSubscription() {
   const mutation = useMutation({
@@ -14,7 +15,7 @@ export function useSaveSubscription() {
       setActiveTarrif(id)
       setSubscriptionSaving(false)
       // analytics
-      console.log('subscription_save_success', { id })
+      logAnalytics('subscription_save_success', { id })
     },
     onError: (error: any, id) => {
       setSubscriptionSaving(false)
@@ -24,7 +25,7 @@ export function useSaveSubscription() {
         title: "Ошибка оформления",
         description: errorMessage,
       })
-      console.log('subscription_save_error', { id, error: String(error) })
+      logError('subscription_save_error', error, { id })
     }
   })
 

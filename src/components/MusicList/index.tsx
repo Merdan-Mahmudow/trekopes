@@ -24,6 +24,7 @@ import { COLOR } from "../ui/colors";
 import { LuCopyPlus } from "react-icons/lu";
 import { Link } from "@tanstack/react-router";
 import { HiOutlineDownload } from "react-icons/hi";
+import { debugLog, logError } from "../../utils/logger";
 import { TbTextRecognition } from "react-icons/tb";
 import { MdPushPin, MdShare, MdReport, MdDelete } from "react-icons/md";
 import { useState, useRef, useEffect } from "react";
@@ -303,7 +304,7 @@ export function MusicList() {
         const url = getTrackUrl(generation);
         
         if (!tg?.WebApp || !url) {
-            console.error("Telegram WebApp not available or track URL missing");
+            logError("Telegram WebApp not available or track URL missing", undefined, { hasTg: !!tg, hasUrl: !!url });
             return;
         }
 
@@ -333,7 +334,7 @@ export function MusicList() {
 
     const handleDeleteTrack = (generation: GenerationDto) => {
         // TODO: Реализовать удаление трека
-        console.log('Delete track:', generation.id);
+        debugLog('Delete track:', generation.id);
         handleContextMenuClose();
     };
 
@@ -371,7 +372,7 @@ export function MusicList() {
                                         const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
                                         const author = generation.song?.author ?? "Трекопёс";
                                         const status = generation.status;
-                                        if (status === 'processing') {
+                                        if (status === 'processing' || status === 'pending') {
                                             return (
                                                 <Skeleton key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" />
                                             )
@@ -484,7 +485,7 @@ export function MusicList() {
                                         const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
                                         const author = generation.song?.author ?? "Трекопёс";
                                         const status = generation.status;
-                                        if (status === 'processing') {
+                                        if (status === 'processing' || status === 'pending') {
                                             return (
                                                 <Skeleton key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" >Генерирую...</Skeleton>
                                             )

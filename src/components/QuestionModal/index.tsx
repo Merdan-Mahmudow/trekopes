@@ -5,7 +5,7 @@ import { COLOR } from "../ui/colors";
 import { BrandButton, GrayButton } from "../ui/button";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { questions, type QuestionCategory, type QuestionSet } from "../ui/questions";
-import { SpeechRecognitionButton } from "../ui/SpeechRecognitionButton";
+import { Dictaphone } from "../ui/SpeechRecognitionButton";
 
 type QuestionModalProps = {
     category: string;
@@ -216,12 +216,8 @@ export function QuestionModal({
                         pr="48px"
                         pb="48px"
                     />
-                    <SpeechRecognitionButton
-                        onTranscript={(text) => {
-                            const currentValue = value || '';
-                            const newValue = currentValue ? `${currentValue} ${text}` : text;
-                            handleChange(newValue);
-                        }}
+                    <Dictaphone 
+                    onTranscript={(transcript) => handleChange(transcript)}
                     />
                 </Box>
 

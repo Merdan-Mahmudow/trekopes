@@ -16,7 +16,9 @@ import { useGenerationDraft } from "../../../store/generation";
 import { buildCreateGenerationRequest } from "../../../utils/generationPayload";
 import { createWebAppGeneration } from "../../../api/webapp";
 import { useTracks } from "../../../hooks/useTracks";
+import { useGenerationTemplateArtists } from "../../../hooks/useGenerationTemplateArtists";
 import { toaster } from "../../ui/toaster";
+import { logError } from "../../../utils/logger";
 
 type ArtistParamsDisplayMode = "full" | "artist";
 
@@ -32,21 +34,22 @@ type ArtistParamsProps = {
 
 export function ArtistParams({ mode = "submit", displayMode = "full", onBack, onCancel, onGenerate }: ArtistParamsProps) {
     const isArtistOnly = displayMode === "artist";
-    const artists: Artist[] = useMemo(() => ([
-        { id: "none", name: "Не выбрано", avatar: "❔" },
-        { id: "1", name: "Мияги", avatar: "👨‍🎤" },
-        { id: "2", name: "Скриптонит", avatar: "🎵" },
-        { id: "3", name: "Zivert", avatar: "🎶" },
-        { id: "4", name: "Клава Кока", avatar: "🎤" },
-        { id: "5", name: "ICEGERGERT", avatar: "🎸" },
-        { id: "6", name: "Макс Корж", avatar: "🎹" },
-        { id: "7", name: "Баста", avatar: "🎺" },
-        { id: "8", name: "KSON", avatar: "🎻" },
-    ]), []);
+    const { artists: apiArtists, isLoading: isLoadingArtists, error: artistsError } = useGenerationTemplateArtists();
+    
+    // Преобразуем артистов из API в формат Artist и добавляем "Не выбрано"
+    const artists: Artist[] = useMemo(() => {
+        const defaultOption: Artist = { id: "none", name: "Не выбрано", avatar: "❔" };
+        const mappedArtists: Artist[] = apiArtists.map((apiArtist) => ({
+            id: apiArtist.id,
+            name: apiArtist.name,
+            avatar: "👨‍🎤", // Дефолтный аватар, можно заменить на логику с первыми буквами
+        }));
+        return [defaultOption, ...mappedArtists];
+    }, [apiArtists]);
     const [tempo, setTempo] = useState(105);
     const [activeTab, setActiveTab] = useState<"mode" | "params">("mode");
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedArtistId, setSelectedArtistId] = useState<string>(() => artists[0]?.id ?? "none");
+    const [selectedArtistId, setSelectedArtistId] = useState<string>("none");
     const [isGenerating, setIsGenerating] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [generationParams, setGenerationParams] = useState<GenerationParams>({
@@ -69,11 +72,24 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
         () => artists.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())),
         [artists, searchQuery]
     );
+    
     useEffect(() => {
         if (isArtistOnly) {
             setActiveTab("mode");
         }
     }, [isArtistOnly]);
+    
+    // Обработка ошибок загрузки артистов
+    useEffect(() => {
+        if (artistsError) {
+            logError("Failed to load generation template artists", artistsError);
+            toaster.create({
+                type: "error",
+                title: "Ошибка загрузки артистов",
+                description: "Не удалось загрузить список артистов. Попробуйте позже.",
+            });
+        }
+    }, [artistsError]);
 
     const normalizeArtist = useCallback(
         (artistId: string | null): Artist | null => {
@@ -90,9 +106,25 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
         if (!scenario) return;
 
         if ("artist" in scenario && scenario.artist) {
-            setSelectedArtistId(scenario.artist.id ?? "none");
+            const scenarioArtistId = scenario.artist.id ?? "none";
+            // Если артисты загружены, проверяем существование, иначе просто устанавливаем ID из scenario
+            if (!isLoadingArtists && artists.length > 0) {
+                const artistExists = artists.some(a => a.id === scenarioArtistId);
+                if (artistExists && selectedArtistId !== scenarioArtistId) {
+                    setSelectedArtistId(scenarioArtistId);
+                } else if (!artistExists && selectedArtistId !== "none") {
+                    // Если артиста нет в списке, выбираем "Не выбрано"
+                    setSelectedArtistId("none");
+                }
+            } else if (isLoadingArtists && selectedArtistId !== scenarioArtistId) {
+                // Пока загружаются артисты, устанавливаем ID из scenario
+                setSelectedArtistId(scenarioArtistId);
+            }
         } else {
-            setSelectedArtistId("none");
+            // Если артист не выбран в scenario, выбираем "Не выбрано" (первый элемент списка)
+            if (!isLoadingArtists && artists.length > 0 && selectedArtistId !== "none") {
+                setSelectedArtistId("none");
+            }
         }
         if ("params" in scenario && scenario.params) {
             setGenerationParams({
@@ -103,7 +135,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
             });
             setTempo(scenario.params.tempo ?? 105);
         }
-    }, [generationDraft]);
+    }, [generationDraft, artists, isLoadingArtists, selectedArtistId]);
 
     const handleParamsChange = useCallback((key: keyof GenerationParams, value: number | string) => {
         setGenerationParams(prev => {
@@ -184,7 +216,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
             try {
                 await loadTracks();
             } catch (loadError) {
-                console.error(loadError);
+                logError("Failed to load tracks after artist generation", loadError);
             }
 
             resetGenerationDraft();
@@ -194,7 +226,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                 description: "Мы уведомим, когда трек будет готов.",
             });
         } catch (err) {
-            console.error(err);
+            logError("Failed to start artist generation", err);
             setIsLoading(false);
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
@@ -250,31 +282,44 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                             color="white"
                             _placeholder={{ color: "#8A8A8A" }}
                             _focus={{ borderColor: COLOR.kit.orange, boxShadow: "0 0 0 1px #F59A0E" }}
+                            disabled={isLoadingArtists}
                         />
 
-                        <Grid templateColumns="repeat(3, minmax(100px, 1fr))" gap={4} w="80vw">
-                            {filteredArtists.map((artist) => (
-                                <GridItem key={artist.id} w="full">
-                                    <VStack
-                                        w={"full"}
-                                        py={4}
-                                        cursor="pointer"
-                                        onClick={() => handleSelectArtist(artist)}
-                                        borderRadius="16px"
-                                        bg={selectedArtistId === artist.id ? COLOR.kit.orange : "#1E1E20"}
-                                        _hover={{ bg: selectedArtistId === artist.id ? COLOR.kit.orange : "#2A2A2D" }}
-                                        transition="all 0.2s"
-                                    >
-                                        <Box w="60px" h="60px" borderRadius="50%" bg={selectedArtistId === artist.id ? "white" : COLOR.kit.iconBg} display="flex" alignItems="center" justifyContent="center" fontSize="24px">
-                                            {artist.avatar}
-                                        </Box>
-                                        <Text fontSize="xs" textAlign="center" color={selectedArtistId === artist.id ? "white" : "#8A8A8A"} fontWeight={selectedArtistId === artist.id ? "bold" : "normal"}>
-                                            {artist.name}
-                                        </Text>
-                                    </VStack>
-                                </GridItem>
-                            ))}
-                        </Grid>
+                        {isLoadingArtists ? (
+                            <VStack gap={2} py={8}>
+                                <Text color="#8A8A8A" fontSize="sm">Загрузка артистов...</Text>
+                            </VStack>
+                        ) : filteredArtists.length === 0 ? (
+                            <VStack gap={2} py={8}>
+                                <Text color="#8A8A8A" fontSize="sm">
+                                    {searchQuery ? "Артисты не найдены" : "Артисты не доступны"}
+                                </Text>
+                            </VStack>
+                        ) : (
+                            <Grid templateColumns="repeat(3, minmax(100px, 1fr))" gap={4} w="80vw">
+                                {filteredArtists.map((artist) => (
+                                    <GridItem key={artist.id} w="full">
+                                        <VStack
+                                            w={"full"}
+                                            py={4}
+                                            cursor="pointer"
+                                            onClick={() => handleSelectArtist(artist)}
+                                            borderRadius="16px"
+                                            bg={selectedArtistId === artist.id ? COLOR.kit.orange : "#1E1E20"}
+                                            _hover={{ bg: selectedArtistId === artist.id ? COLOR.kit.orange : "#2A2A2D" }}
+                                            transition="all 0.2s"
+                                        >
+                                            <Box w="60px" h="60px" borderRadius="50%" bg={selectedArtistId === artist.id ? "white" : COLOR.kit.iconBg} display="flex" alignItems="center" justifyContent="center" fontSize="24px">
+                                                {artist.avatar}
+                                            </Box>
+                                            <Text fontSize="xs" textAlign="center" color={selectedArtistId === artist.id ? "white" : "#8A8A8A"} fontWeight={selectedArtistId === artist.id ? "bold" : "normal"}>
+                                                {artist.name}
+                                            </Text>
+                                        </VStack>
+                                    </GridItem>
+                                ))}
+                            </Grid>
+                        )}
                     </VStack>
                 ) : (
                     <VStack gap={6} w="full">

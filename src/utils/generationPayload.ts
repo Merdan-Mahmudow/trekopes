@@ -148,10 +148,18 @@ export const buildCreateGenerationRequest = (
     // NOTE: временно форсим тип text для сценариев, пока сервер не готов
     request.type = draft.type;
   }
-  if (draft.templateId) {
+  
+  // Подставляем template_id для генерации по сценарию
+  if (scenario?.mode === "scenario") {
+    request.template_id = draft.templateId || "019a9cca-1d73-70d7-8a27-3a973d3f26c5";
+  } else if (draft.templateId) {
     request.template_id = draft.templateId;
   }
-  if (draft.templateArtistId) {
+  
+  // Подставляем template_artist_id для генерации по стилю из выбранного артиста
+  if (scenario?.mode === "style" && "artist" in scenario && scenario.artist?.id) {
+    request.template_artist_id = scenario.artist.id;
+  } else if (draft.templateArtistId) {
     request.template_artist_id = draft.templateArtistId;
   }
   if (metadata.length > 0) {

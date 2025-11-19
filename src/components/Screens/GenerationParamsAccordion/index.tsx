@@ -27,6 +27,7 @@ import { buildCreateGenerationRequest } from "../../../utils/generationPayload";
 import { createWebAppGeneration } from "../../../api/webapp";
 import { useTracks } from "../../../hooks/useTracks";
 import { toaster } from "../../ui/toaster";
+import { logError } from "../../../utils/logger";
 
 type GenerationParamsAccordionProps = {
     mode?: "collect" | "submit";
@@ -180,7 +181,7 @@ export function GenerationParamsAccordion({
             try {
                 await loadTracks();
             } catch (loadError) {
-                console.error(loadError);
+                logError("Failed to load tracks after generation", loadError);
             }
 
             resetGenerationDraft();
@@ -190,7 +191,7 @@ export function GenerationParamsAccordion({
                 description: "Мы уведомим, когда трек будет готов.",
             });
         } catch (err) {
-            console.error(err);
+            logError("Failed to start generation", err);
             setIsLoading(false);
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({

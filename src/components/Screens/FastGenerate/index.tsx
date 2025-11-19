@@ -23,7 +23,8 @@ import { buildCreateGenerationRequest } from "../../../utils/generationPayload"
 import { createWebAppGeneration } from "../../../api/webapp"
 import { useTracks } from "../../../hooks/useTracks"
 import { toaster } from "../../ui/toaster"
-import { SpeechRecognitionButton } from "../../ui/SpeechRecognitionButton"
+import { logError } from "../../../utils/logger"
+import { Dictaphone } from "../../ui/SpeechRecognitionButton"
 
 export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void }) => {
 	const [prompt, setPrompt] = useState("")
@@ -106,13 +107,9 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					pr="48px"
 					pb="48px"
 				/>
-				<SpeechRecognitionButton
-					onTranscript={(text) => {
-						const currentValue = prompt || '';
-						const newValue = currentValue ? `${currentValue} ${text}` : text;
-						handlePromptChange(newValue);
-					}}
-				/>
+				<Dictaphone
+					onTranscript={(transcript) => handlePromptChange(transcript)}
+					/>
 			</Box>
 			<Button
 				w="full"
@@ -159,20 +156,20 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 						setGenerationPrompt(payload.prompt)
 						setScreen("loading")
 
-						try {
-							await loadTracks()
-						} catch (loadError) {
-							console.error(loadError)
-						}
+					try {
+						await loadTracks()
+					} catch (loadError) {
+						logError("Failed to load tracks after fast generation", loadError)
+					}
 
-						resetGenerationDraft()
-						toaster.create({
-							type: "success",
-							title: "Генерация запущена",
-							description: "Новый трек появится в списке после обработки.",
-						})
-					} catch (err) {
-						console.error(err)
+					resetGenerationDraft()
+					toaster.create({
+						type: "success",
+						title: "Генерация запущена",
+						description: "Новый трек появится в списке после обработки.",
+					})
+				} catch (err) {
+					logError("Failed to start fast generation", err)
 						const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
 						toaster.create({
 							type: "error",

@@ -8,6 +8,7 @@ import { useStore } from '@tanstack/react-store'
 import store from '../../store'
 import { hidePlayer, playNext, playPrev, setPlayerPlaying, updatePlayerState } from '../../store/player'
 import type { Track } from '../../types/player'
+import { debugWarn } from '../../utils/logger'
 
 type PlayerProps = {
   song?: Track | null
@@ -67,7 +68,7 @@ export function Player({ song }: PlayerProps) {
       try {
         detachListenersRef.current()
       } catch (err) {
-        console.warn('[Player] failed to detach listeners', err)
+        debugWarn('[Player] failed to detach listeners', err)
       }
       detachListenersRef.current = null
     }
@@ -77,7 +78,7 @@ export function Player({ song }: PlayerProps) {
       try {
         instance.destroy()
       } catch (err) {
-        console.warn('[Player] failed to destroy Plyr instance', err)
+        debugWarn('[Player] failed to destroy Plyr instance', err)
       }
     }
 
