@@ -24,6 +24,7 @@ import { buildCreateGenerationRequest } from "../../../utils/generationPayload";
 import { createWebAppGeneration } from "../../../api/webapp";
 import { useTracks } from "../../../hooks/useTracks";
 import { toaster } from "../../ui/toaster";
+import { SpeechRecognitionButton } from "../../ui/SpeechRecognitionButton";
 type StyleGenerateScreenProps = {
     onClose: () => void;
 };
@@ -188,22 +189,33 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                             >
                                 Что должно быть в песне?
                             </Text>
-                            <Textarea
-                                value={prompt}
-                                ref={promptRef}
-                                onChange={(e) => handlePromptChange(e.target.value)}
-                                placeholder="Например: лирический трек о ночном городе и надежде"
-                                fontSize="16px"
-                                lineHeight="130%"
-                                minH="160px"
-                                bg="#1E1E20"
-                                color={COLOR.kit.white}
-                                borderRadius="3xl"
-                                border="1px solid transparent"
-                                resize="vertical"
-                                _focus={{ borderColor: COLOR.kit.orange, boxShadow: "none" }}
-                                _placeholder={{ color: COLOR.kit.smoke }}
-                            />
+                            <Box position="relative">
+                                <Textarea
+                                    value={prompt}
+                                    ref={promptRef}
+                                    onChange={(e) => handlePromptChange(e.target.value)}
+                                    placeholder="Например: лирический трек о ночном городе и надежде"
+                                    fontSize="16px"
+                                    lineHeight="130%"
+                                    minH="160px"
+                                    bg="#1E1E20"
+                                    color={COLOR.kit.white}
+                                    borderRadius="3xl"
+                                    border="1px solid transparent"
+                                    resize="vertical"
+                                    _focus={{ borderColor: COLOR.kit.orange, boxShadow: "none" }}
+                                    _placeholder={{ color: COLOR.kit.smoke }}
+                                    pr="48px"
+                                    pb="48px"
+                                />
+                                <SpeechRecognitionButton
+                                    onTranscript={(text) => {
+                                        const currentValue = prompt || '';
+                                        const newValue = currentValue ? `${currentValue} ${text}` : text;
+                                        handlePromptChange(newValue);
+                                    }}
+                                />
+                            </Box>
                         </VStack>
                     </Box>
                     <Grid templateColumns="1fr 1fr" gap={3} w="full">

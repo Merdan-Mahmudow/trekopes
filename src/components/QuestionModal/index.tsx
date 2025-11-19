@@ -5,6 +5,7 @@ import { COLOR } from "../ui/colors";
 import { BrandButton, GrayButton } from "../ui/button";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { questions, type QuestionCategory, type QuestionSet } from "../ui/questions";
+import { SpeechRecognitionButton } from "../ui/SpeechRecognitionButton";
 
 type QuestionModalProps = {
     category: string;
@@ -199,19 +200,30 @@ export function QuestionModal({
                     <Text fontSize={"18px"} lineHeight={"130%"} color={COLOR.kit.orangeWhite}>{currentQuestion.text}</Text>
                     <Text color={COLOR.kit.smoke}>Вопрос {currentIndex + 1}</Text>
                 </Box>
-                <Textarea
-                    placeholder={currentQuestion.placeholder}
-                    maxW="90vw"
-                    p={"12px 24px"}
-                    rounded={"3xl"}
-                    height={"150px"}
-                    value={value}
-                    onChange={(e) => handleChange(e.target.value)}
-                    fontSize={"16px"}
-                    border={{ _focus: `${COLOR.kit.orange} 2px solid` }}
-                    outline={"none"}
-                    lineHeight={"130%"}
-                />
+                <Box position="relative" maxW="90vw">
+                    <Textarea
+                        placeholder={currentQuestion.placeholder}
+                        maxW="90vw"
+                        p={"12px 24px"}
+                        rounded={"3xl"}
+                        height={"150px"}
+                        value={value}
+                        onChange={(e) => handleChange(e.target.value)}
+                        fontSize={"16px"}
+                        border={{ _focus: `${COLOR.kit.orange} 2px solid` }}
+                        outline={"none"}
+                        lineHeight={"130%"}
+                        pr="48px"
+                        pb="48px"
+                    />
+                    <SpeechRecognitionButton
+                        onTranscript={(text) => {
+                            const currentValue = value || '';
+                            const newValue = currentValue ? `${currentValue} ${text}` : text;
+                            handleChange(newValue);
+                        }}
+                    />
+                </Box>
 
                 <Grid pt={3} gap={4} templateColumns={"1fr 1fr"} w="100%" maxW="90vw">
                     <GrayButton onClick={handlePrev}>

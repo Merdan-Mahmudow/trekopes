@@ -1,4 +1,4 @@
-import { Button, Heading, Text, Textarea, VStack } from "@chakra-ui/react"
+import { Button, Heading, Text, Textarea, VStack, Box } from "@chakra-ui/react"
 import { useCallback, useEffect, useState } from "react"
 import { useStore } from "@tanstack/react-store"
 import { COLOR } from "../../../components/ui/colors"
@@ -23,6 +23,7 @@ import { buildCreateGenerationRequest } from "../../../utils/generationPayload"
 import { createWebAppGeneration } from "../../../api/webapp"
 import { useTracks } from "../../../hooks/useTracks"
 import { toaster } from "../../ui/toaster"
+import { SpeechRecognitionButton } from "../../ui/SpeechRecognitionButton"
 
 export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void }) => {
 	const [prompt, setPrompt] = useState("")
@@ -88,20 +89,31 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 		<VStack gap={4} w="full" alignItems="stretch">
 			<Heading size="lg" color={COLOR.kit.white}>Песня по тексту</Heading>
 			<Text color={COLOR.kit.smoke}>Опишите идею песни или вставьте готовый текст</Text>
-			<Textarea
-				value={prompt}
-				onChange={(e) => handlePromptChange(e.target.value)}
-				placeholder="Например: лирический трек о ночном городе и надежде"
-				minH="160px"
-				bg={COLOR.kit.darkGray}
-				color={COLOR.kit.white}
-				borderRadius="2xl"
-				resize="vertical"
-				border="1px solid transparent"
-				outline={"none"}
-				_focus={{ borderColor: COLOR.kit.orange, boxShadow: "none" }}
-				_placeholder={{ color: COLOR.kit.smoke }}
-			/>
+			<Box position="relative">
+				<Textarea
+					value={prompt}
+					onChange={(e) => handlePromptChange(e.target.value)}
+					placeholder="Например: лирический трек о ночном городе и надежде"
+					minH="160px"
+					bg={COLOR.kit.darkGray}
+					color={COLOR.kit.white}
+					borderRadius="2xl"
+					resize="vertical"
+					border="1px solid transparent"
+					outline={"none"}
+					_focus={{ borderColor: COLOR.kit.orange, boxShadow: "none" }}
+					_placeholder={{ color: COLOR.kit.smoke }}
+					pr="48px"
+					pb="48px"
+				/>
+				<SpeechRecognitionButton
+					onTranscript={(text) => {
+						const currentValue = prompt || '';
+						const newValue = currentValue ? `${currentValue} ${text}` : text;
+						handlePromptChange(newValue);
+					}}
+				/>
+			</Box>
 			<Button
 				w="full"
 				h={12}
