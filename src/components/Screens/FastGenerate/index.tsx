@@ -1,4 +1,5 @@
-import { Button, Heading, Text, Textarea, VStack, Box } from "@chakra-ui/react"
+import { Button, Heading, Text, Textarea, VStack, Box} from "@chakra-ui/react"
+import { Toaster } from "../../ui/toaster"
 import { useCallback, useEffect, useState } from "react"
 import { useStore } from "@tanstack/react-store"
 import { COLOR } from "../../../components/ui/colors"
@@ -168,21 +169,33 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 						title: "Генерация запущена",
 						description: "Новый трек появится в списке после обработки.",
 					})
-				} catch (err) {
+				} catch (err: any) {
 					logError("Failed to start fast generation", err)
-						const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
+					
+					// Обработка ошибки 409 (Conflict)
+					if (err?.response?.status === 409) {
 						toaster.create({
 							type: "error",
-							title: "Ошибка запуска генерации",
-							description: errorMessage,
+							title: "Ошибка генерации",
+							description: "У вас есть активная генерация. Пожалуйста, дождитесь её завершения.",
 						})
-					} finally {
-						setIsSubmitting(false)
+						return
 					}
+					
+					const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
+					toaster.create({
+						type: "error",
+						title: "Ошибка запуска генерации",
+						description: errorMessage,
+					})
+				} finally {
+					setIsSubmitting(false)
+				}
 				}}
 			>
 				Сгенерировать
 			</Button>
+			<Toaster />
 		</VStack>
 	);
 };

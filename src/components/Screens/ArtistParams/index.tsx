@@ -1,4 +1,5 @@
-import { Box, Text, VStack, Input, Icon, Flex, Grid, GridItem, Button, Slider } from "@chakra-ui/react";
+import { Box, Text, VStack, Input, Icon, Flex, Grid, GridItem, Button, Slider, Skeleton } from "@chakra-ui/react";
+import { Toaster } from "../../ui/toaster";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaPaw } from 'react-icons/fa';
 import { COLOR } from "../../ui/colors";
@@ -225,9 +226,20 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                 title: "Генерация запущена",
                 description: "Мы уведомим, когда трек будет готов.",
             });
-        } catch (err) {
+        } catch (err: any) {
             logError("Failed to start artist generation", err);
             setIsLoading(false);
+            
+            // Обработка ошибки 409 (Conflict)
+            if (err?.response?.status === 409) {
+                toaster.create({
+                    type: "error",
+                    title: "Ошибка генерации",
+                    description: "У вас есть активная генерация. Пожалуйста, дождитесь её завершения.",
+                });
+                return;
+            }
+            
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
@@ -286,9 +298,13 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                         />
 
                         {isLoadingArtists ? (
-                            <VStack gap={2} py={8}>
-                                <Text color="#8A8A8A" fontSize="sm">Загрузка артистов...</Text>
-                            </VStack>
+                            <Grid templateColumns="repeat(auto-fill, minmax(100px, 1fr))" gap={4} w="80vw">
+                                {Array.from({ length: 6 }).map((_, index) => (
+                                    <GridItem key={index} w="full">
+                                        <Skeleton w="full" h="160px" borderRadius="16px" />
+                                    </GridItem>
+                                ))}
+                            </Grid>
                         ) : filteredArtists.length === 0 ? (
                             <VStack gap={2} py={8}>
                                 <Text color="#8A8A8A" fontSize="sm">
@@ -296,7 +312,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                                 </Text>
                             </VStack>
                         ) : (
-                            <Grid templateColumns="repeat(3, minmax(100px, 1fr))" gap={4} w="80vw">
+                            <Grid templateColumns="repeat(auto-fill, minmax(100px, 1fr))" gap={4} w="80vw">
                                 {filteredArtists.map((artist) => (
                                     <GridItem key={artist.id} w="full">
                                         <VStack
@@ -427,6 +443,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                 <GrayButton onClick={onBack} disabled={isGenerating} w="full">Назад</GrayButton>
                 <GrayButton onClick={onCancel} disabled={isGenerating} w="full">Отмена</GrayButton>
             </Grid>
+			<Toaster />
         </VStack >
     );
 }

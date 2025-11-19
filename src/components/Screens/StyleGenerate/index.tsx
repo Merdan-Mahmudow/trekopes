@@ -24,7 +24,7 @@ import { buildCreateGenerationRequest } from "../../../utils/generationPayload";
 import { createWebAppGeneration } from "../../../api/webapp";
 import { logError } from "../../../utils/logger";
 import { useTracks } from "../../../hooks/useTracks";
-import { toaster } from "../../ui/toaster";
+import { toaster, Toaster } from "../../ui/toaster";
 import { Dictaphone } from "../../ui/SpeechRecognitionButton";
 type StyleGenerateScreenProps = {
     onClose: () => void;
@@ -134,8 +134,19 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                 title: "Генерация запущена",
                 description: "Следи за списком — трек появится после обработки.",
             });
-        } catch (err) {
+        } catch (err: any) {
             logError("Failed to start style generation", err);
+            
+            // Обработка ошибки 409 (Conflict)
+            if (err?.response?.status === 409) {
+                toaster.create({
+                    type: "error",
+                    title: "Ошибка генерации",
+                    description: "У вас есть активная генерация. Пожалуйста, дождитесь её завершения.",
+                });
+                return;
+            }
+            
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
@@ -233,6 +244,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                     </Grid>
                 </>
             )}
+			<Toaster />
         </VStack>
     );
 }

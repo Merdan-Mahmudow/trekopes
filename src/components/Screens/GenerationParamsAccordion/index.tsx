@@ -10,6 +10,7 @@ import {
     VStack,
     Slider,
 } from "@chakra-ui/react";
+import { Toaster } from "../../ui/toaster";
 import { FaPaw } from "react-icons/fa";
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
@@ -190,9 +191,20 @@ export function GenerationParamsAccordion({
                 title: "Генерация запущена",
                 description: "Мы уведомим, когда трек будет готов.",
             });
-        } catch (err) {
+        } catch (err: any) {
             logError("Failed to start generation", err);
             setIsLoading(false);
+            
+            // Обработка ошибки 409 (Conflict)
+            if (err?.response?.status === 409) {
+                toaster.create({
+                    type: "error",
+                    title: "Ошибка генерации",
+                    description: "У вас есть активная генерация. Пожалуйста, дождитесь её завершения.",
+                });
+                return;
+            }
+            
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
@@ -394,6 +406,7 @@ export function GenerationParamsAccordion({
                     </VStack>
                 </VStack>
             </Box>
+			<Toaster />
         </VStack>
     );
 }

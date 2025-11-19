@@ -30,3 +30,5 @@ dist-ssr
 /playwright/.auth/
 
 .env.development
+.env.production
+.env
