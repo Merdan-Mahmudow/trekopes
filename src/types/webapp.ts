@@ -132,12 +132,11 @@ export type ChatDto = {
 export type GetMeResponse = ApiSuccessResponse<ChatDto>;
 
 // Payment types
-export type PaymentStatus = 
+export type PaymentStatus =
   | "pending"
-  | "processing"
-  | "completed"
-  | "failed"
-  | "cancelled";
+  | "paid"
+  | "cancelled"
+  | "error";
 
 export type PaymentDto = {
   uuid: string;
@@ -228,3 +227,33 @@ export type GetGenerationTemplatesQuery = {
 };
 
 export type GetGenerationTemplatesResponse = ApiSuccessResponse<GenerationTemplateList[]>;
+
+// Chat types
+export type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+  updated_at?: string;
+};
+
+export type SendChatMessageRequest = {
+  message: string;
+};
+
+export type SendChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+  updated_at?: string;
+};
+
+export type GetChatMessagesQuery = {
+  limit?: number;
+  offset?: number;
+};
+
+export type GetChatMessagesResponse = ApiSuccessResponse<ChatMessage[]>;
+
+export type SendChatMessageResponse = ApiSuccessResponse<SendChatMessage>;

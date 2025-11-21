@@ -31,8 +31,26 @@ type AuthState = {
   token?: string;
 };
 
+type TemplatesState = {
+  scenarioTemplateId: string | null;
+};
+
+type PaymentsState = {
+  hasPayments: boolean;
+  isPro: boolean;
+};
+
 const initialAuthState: AuthState = {
   token: undefined,
+};
+
+const initialTemplatesState: TemplatesState = {
+  scenarioTemplateId: null,
+};
+
+const initialPaymentsState: PaymentsState = {
+  hasPayments: false,
+  isPro: false,
 };
 
 const initialUserState: UserState = {
@@ -65,6 +83,8 @@ const initialStoreState = {
   },
   user: initialUserState,
   auth: initialAuthState,
+  templates: initialTemplatesState,
+  payments: initialPaymentsState,
   subscription: {
     plans: [
       // { id: "track", name: "TRACK", price: 250, period: "мес", perks: ["1 генерация в боте", "Выбор стиля/настроения", "Текст от пса"] },
@@ -108,6 +128,27 @@ export const setUserState = (user: Partial<UserState>) => {
   store.setState((state) => ({
     ...state,
     user: { ...state.user, ...user },
+  }));
+};
+
+export const setHasPayments = (hasPayments: boolean) => {
+  store.setState((state) => ({
+    ...state,
+    payments: { ...state.payments, hasPayments },
+  }));
+};
+
+export const setIsProFromPayments = (isPro: boolean) => {
+  store.setState((state) => ({
+    ...state,
+    payments: { ...state.payments, isPro },
+  }));
+};
+
+export const setScenarioTemplateId = (templateId: string | null) => {
+  store.setState((state) => ({
+    ...state,
+    templates: { ...state.templates, scenarioTemplateId: templateId },
   }));
 };
 

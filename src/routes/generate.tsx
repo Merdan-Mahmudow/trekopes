@@ -2,15 +2,14 @@ import { Popup } from '../components/Popup'
 import { COLOR } from '../components/ui/colors'
 import { Box, Flex, Heading, Text, Grid, GridItem, Icon, } from '@chakra-ui/react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { setDockActive } from '../store'
 import { TextGenerateScreen } from '../components/Screens/TextGenerate'
 import { LinkGenerate } from '../components/Screens/LinkGenerate'
 // import { IoCameraOutline } from 'react-icons/io5'
-// import { FaLink } from 'react-icons/fa'
+import { GiMusicalNotes } from "react-icons/gi";
 import { BsFileText } from "react-icons/bs";
 import { TbTextSize } from "react-icons/tb";
-import { GiMusicalNotes } from "react-icons/gi";
 import { PhotoGenerateScreen } from '../components/Screens/PhotoGenerate'
 import FMCarousel from '../components/Slider'
 import { StyleGenerateScreen } from '../components/Screens/StyleGenerate'
@@ -28,6 +27,8 @@ import {
     createTextGenerationDraft,
 } from '../types/generation'
 import type { SongGenerationType } from '../types/webapp'
+import { useIsPro } from '../store/user'
+import { toaster } from '../components/ui/toaster'
 
 
 
@@ -37,9 +38,12 @@ export const Route = createFileRoute('/generate')({
 })
 
 // --- Конец компонента Итоги ответов ---
+type GenerationCardType = "scenario" | "photo" | "link" | "style" | "text"
+
 function RouteComponent() {
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false)
-    const [ genType, setGenType ] = useState<"text" | "photo"| "link" | "style" | "fast" | null>("text")
+    const [ genType, setGenType ] = useState<GenerationCardType | null>("text")
+    const isPro = useIsPro()
 
 
     useEffect(() => {
@@ -51,25 +55,34 @@ function RouteComponent() {
         setIsPopupOpen(false);
     }
 
-    const handleChangeType = (type: "text" | "photo"| "link" | "style" | "fast" | null) => {
+    const handleChangeType = (type: GenerationCardType | null) => {
         if (!type) {
             return;
         }
 
+        if (!isPro && type !== "text") {
+            toaster.create({
+                type: "info",
+                title: "Только для PRO",
+                description: "Эта генерация доступна в подписке PRO",
+            })
+            return;
+        }
+
         const typeToGenerationMap: Record<Exclude<typeof type, null>, SongGenerationType> = {
-            text: "scenario",
+            scenario: "scenario",
             photo: "photo",
             link: "link",
             style: "style",
-            fast: "text",
+            text: "text",
         };
 
         const scenarioFactory = {
-            text: createTextGenerationDraft,
+            scenario: createTextGenerationDraft,
             photo: createPhotoGenerationDraft,
             link: createLinkGenerationDraft,
             style: createStyleGenerationDraft,
-            fast: createFastGenerationDraft,
+            text: createFastGenerationDraft,
         } as const;
 
         resetGenerationDraft();
@@ -87,27 +100,45 @@ function RouteComponent() {
 //     {id: 1, content: <Box w={"full"} h={"full"} bg={'whiteAlpha.300'} rounded={"2xl"} >Slider 5</Box>},
 // ]
 
-    const cards = [
+    const cards: Array<{
+        type: GenerationCardType;
+        title: string;
+        description: string;
+        icon: ReactNode;
+        iconSize: '4xl' | '5xl';
+        requiresPro: boolean;
+    }> = [
         {
             type: 'text' as const,
+            title: 'Песня по тексту',
+            description: 'Опиши идею или вставь готовый текст — трек готов!',
+            icon: <TbTextSize />,
+            iconSize: '5xl' as const,
+            requiresPro: false,
+        },
+        {
+            type: 'scenario' as const,
             title: 'Песня по сценарию',
             description: 'Выбери сценарий и заполни анкету - получишь персональную песню',
             icon: <BsFileText />,
             iconSize: '5xl' as const,
+            requiresPro: true,
         },
         // {
         //     type: 'photo' as const,
         //     title: 'Песня по фото',
-        //     description: 'Сфотографируйте человека, место или предмет - Трекопес напишет трек',
+        //     description: 'Сфотографируй человека, место или предмет — получишь уникальный трек',
         //     icon: <IoCameraOutline />,
         //     iconSize: '5xl' as const,
+        //     requiresPro: true,
         // },
         // {
         //     type: 'link' as const,
         //     title: 'Песня по ссылке',
-        //     description: 'Кидай ссылку на свой профиль в ВК или профиль друга - я все изучу и сделаю песню',
+        //     description: 'Вставь ссылку на VK-профиль — я изучу и напишу песню',
         //     icon: <FaLink />,
         //     iconSize: '4xl' as const,
+        //     requiresPro: true,
         // },
         {
             type: 'style' as const,
@@ -115,15 +146,9 @@ function RouteComponent() {
             description: 'Выбери артиста',
             icon: <GiMusicalNotes />,
             iconSize: '5xl' as const,
+            requiresPro: true,
         },
-        {
-            type: 'fast' as const,
-            title: 'Песня по тексту',
-            description: 'Выбери сценарий и заполни анкету - получишь персональную песню',
-            icon: <TbTextSize />,
-            iconSize: '5xl' as const,
-        },
-    ] as const
+    ]
 
     return (
         <>
@@ -141,12 +166,17 @@ function RouteComponent() {
                     gap={2}
                     w="11/12"
                     overflow={"auto"}>
-                    {cards.map((card, idx) => (
+                    {cards.map((card, idx) => {
+                        const isLocked = !isPro && card.requiresPro
+                        return (
                         <GridItem
                             key={idx}
                             bg={COLOR.kit.darkGray}
                             p={"24px"}
                             borderRadius="2xl"
+                            opacity={isLocked ? 0.6 : 1}
+                            position="relative"
+                            cursor={isLocked ? "not-allowed" : "pointer"}
                             onClick={() => handleChangeType(card.type)}>
                             <Flex gap={4}>
                                 <Flex alignItems={"center"} justifyContent={"center"} flexShrink={0} w="110px" h="110px" bg={COLOR.kit.iconBg} borderRadius="2xl">
@@ -155,10 +185,16 @@ function RouteComponent() {
                                 <Box>
                                     <Heading>{card.title}</Heading>
                                     <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">{card.description}</Text>
+                                    {isLocked && (
+                                        <Text color={COLOR.kit.orange} fontSize="sm" mt={2}>
+                                            Доступно только в PRO
+                                        </Text>
+                                    )}
                                 </Box>
                             </Flex>
                         </GridItem>
-                    ))}
+                        )
+                    })}
                 </Grid>
             </Flex>
 
@@ -167,11 +203,11 @@ function RouteComponent() {
                 title=""
                 onOpenChange={handleClosePopup}
             >
-                { genType == 'text' && <TextGenerateScreen /> }
+                { genType == 'scenario' && <TextGenerateScreen /> }
                 { genType == 'link' && <LinkGenerate onClose={handleClosePopup} /> }
                 { genType == 'photo' && <PhotoGenerateScreen onClose={handleClosePopup} /> }
                 { genType == 'style' && <StyleGenerateScreen onClose={handleClosePopup} /> }
-                { genType == 'fast' && <FastGenerateScreen onClose={handleClosePopup} /> }
+                { genType == 'text' && <FastGenerateScreen onClose={handleClosePopup} /> }
             </Popup>
         </>
     )

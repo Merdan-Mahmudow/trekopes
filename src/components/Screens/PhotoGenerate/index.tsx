@@ -32,7 +32,7 @@ const readFileAsDataUrl = (file: File): Promise<string> =>
 
 export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
     const [screen, setScreen] = useState<
-        "select" | "camera" | "preview" | "params" | "pro"
+        "select" | "camera" | "preview" | "params"
     >("select");
 
     const [imgSrc, setImgSrc] = useState<string | null>(null);
@@ -132,21 +132,19 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
         setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
     };
 
+    if (!isPro) {
+        return <ProPayScreen onBack={onClose} onPay={onClose} />
+    }
+
     // ✅ Параметры генерации
     if (screen === "params") {
         return (
             <VStack gap={4} w="full" p={4}>
-                <GenerationParamsAccordion
-                    onBack={() => setScreen("preview")}
-                    onCancel={onClose}
-                    onGenerate={() => {
-                        if (!isPro) {
-                            setScreen("pro");
-                            return false;
-                        }
-                        return true;
-                    }}
-                />
+            <GenerationParamsAccordion
+                onBack={() => setScreen("preview")}
+                onCancel={onClose}
+                onGenerate={() => true}
+            />
             </VStack>
         );
     }
@@ -227,10 +225,6 @@ export const PhotoGenerateScreen = ({ onClose }: { onClose: () => void }) => {
                 </Flex>
             </VStack>
         );
-    }
-
-    if (screen === "pro" && !isPro) {
-        return <ProPayScreen onBack={() => setScreen("params")} onPay={onClose} />
     }
 
     // ✅ Главный экран

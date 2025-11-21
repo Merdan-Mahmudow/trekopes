@@ -24,7 +24,7 @@ interface LinkGenerateProps {
 export function LinkGenerate({ onClose }: LinkGenerateProps) {
     const [link, setLink] = useState("");
     const [isValidating, setIsValidating] = useState(false);
-    const [currentScreen, setCurrentScreen] = useState<"link" | "params" | "pro">("link");
+    const [currentScreen, setCurrentScreen] = useState<"link" | "params">("link");
     const isPro = useIsPro();
     const scenarioState = useGenerationScenario();
 
@@ -131,16 +131,16 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
     };
 
     const handleGenerate = async () => {
-        if (!isPro) {
-            setCurrentScreen("pro");
-            return false;
-        }
         return true;
     };
 
     const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setLink(e.target.value);
     };
+
+    if (!isPro) {
+        return <ProPayScreen onBack={onClose} onPay={() => onClose && onClose()} />
+    }
 
     // Экран ввода ссылки
     if (currentScreen === "link") {
@@ -207,10 +207,6 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
 
             </VStack>
         );
-    }
-
-    if (currentScreen === "pro" && !isPro) {
-        return <ProPayScreen onBack={() => setCurrentScreen("params")} onPay={() => onClose && onClose()} />
     }
 
     // Экран после ссылки: используем аккордеон параметров

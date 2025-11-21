@@ -1,7 +1,7 @@
 import { Button, Flex, Float, Grid, Icon, Text } from "@chakra-ui/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Transition } from "framer-motion";
-import { useRef, useEffect } from "react";
+import {  memo } from "react";
 import { BsChatDots, BsQuestionLg } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
 import { TbExternalLink } from "react-icons/tb";
@@ -11,10 +11,10 @@ export interface MessageProps {
   content: any
   isHelpBox?: boolean
 }
-export function MessageBox({ role, content }: MessageProps) {
+export const MessageBox = memo(function MessageBox({ role, content }: MessageProps) {
   return (
     <>
-      {role == "assistant" ? (
+      {role === "assistant" ? (
         <Text
           ml={"3"}
           marginBlock={"3"}
@@ -57,21 +57,10 @@ export function MessageBox({ role, content }: MessageProps) {
       )}
     </>
   );
-}
+})
 
-export function ChatList({ messages }: { messages: MessageProps[] }) {
+export const ChatList = memo(function ChatList({ messages }: { messages: MessageProps[] }) {
   const prefersReduced = useReducedMotion();
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  // Автоматически держим скролл внизу при приходе новых сообщений
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    // скроллим в следующем фрейме после рендера — теперь ВСЕГДА прокручиваем в конец
-    requestAnimationFrame(() => {
-      el.scrollTop = el.scrollHeight;
-    });
-  }, [messages]);
 
   const enter = prefersReduced
     ? { opacity: 1 }
@@ -84,11 +73,9 @@ export function ChatList({ messages }: { messages: MessageProps[] }) {
 
   return (
     <div
-      ref={wrapRef}
       className="chat-scroll"
       style={{
         height: "100%",
-        overflow: "auto",
         display: "flex",
         flexDirection: "column",
       }}
@@ -96,7 +83,7 @@ export function ChatList({ messages }: { messages: MessageProps[] }) {
       <AnimatePresence initial={false}>
         {messages.map((msg, idx) => (
           <motion.div
-            key={idx}
+            key={msg.isHelpBox ? 'helpbox' : `${msg.role}-${idx}-${typeof msg.content === 'string' ? msg.content.slice(0, 20) : idx}`}
             layout
             initial={enter}
             animate={show}
@@ -111,7 +98,7 @@ export function ChatList({ messages }: { messages: MessageProps[] }) {
       </AnimatePresence>
     </div>
   );
-}
+})
 
 export function MessageHelpBox() {
   return (

@@ -16,7 +16,11 @@ import type {
   GetPaymentsQuery,
   GetPaymentsResponse,
   LoginRequest,
-  LoginResponse
+  LoginResponse,
+  GetChatMessagesQuery,
+  GetChatMessagesResponse,
+  SendChatMessageRequest,
+  SendChatMessageResponse
 } from "../types/webapp";
 
 const WEBAPP_PREFIX = "/webapp";
@@ -166,6 +170,37 @@ export async function getWebAppGenerationTemplates(
     undefined,
     {
       params,
+      headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function getWebAppChatMessages(
+  token: string,
+  params?: GetChatMessagesQuery
+): Promise<GetChatMessagesResponse> {
+  const response = await request<GetChatMessagesResponse>(
+    "get",
+    `${WEBAPP_PREFIX}/chat/messages`,
+    undefined,
+    {
+      params,
+      headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function sendWebAppChatMessage(
+  token: string,
+  payload: SendChatMessageRequest
+): Promise<SendChatMessageResponse> {
+  const response = await request<SendChatMessageResponse>(
+    "post",
+    `${WEBAPP_PREFIX}/chat/messages`,
+    payload,
+    {
       headers: authHeaders(token)
     }
   );

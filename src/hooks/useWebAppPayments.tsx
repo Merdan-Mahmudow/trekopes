@@ -19,8 +19,8 @@ export const TARIFF_TO_PACK_ID: Record<"track" | "pro" | "ultra", number> = {
 
 // Маппинг подписок на pack_id
 export const SUBSCRIPTION_TO_PACK_ID: Record<"pro" | "ultra", number> = {
-  pro: 10, // ❤️ PRO - 990 ₽/мес, 20 треков, Подписка (с благотворительностью 30%)
-  ultra: 50, // 💎 PREMIUM - 4 990 ₽/мес, 50 треков, Подписка (с благотворительностью 30%)
+  pro: 50, // ❤️ PRO - 990 ₽/мес, 20 треков, Подписка (с благотворительностью 30%)
+  ultra: 10, // 💎 PREMIUM - 4 990 ₽/мес, 50 треков, Подписка (с благотворительностью 30%)
 };
 
 /**

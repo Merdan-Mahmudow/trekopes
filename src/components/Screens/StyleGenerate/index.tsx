@@ -34,7 +34,6 @@ type StyleGenerateScreenProps = {
 
 export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
     const [currentStep, setCurrentStep] = useState<"select" | "prompt" | "loading">("select");
-    const [proStep, setProStep] = useState(false);
     const isPro = useIsPro();
     const [prompt, setPrompt] = useState("");
     const promptRef = useRef<HTMLTextAreaElement>(null);
@@ -87,11 +86,6 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
     );
 
     const handleGenerate = async () => {
-        if (!isPro) {
-            setProStep(true);
-            return;
-        }
-
         setIsSubmitting(true);
         try {
             const draft = generationDraft;
@@ -167,8 +161,8 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
         }
     }, [currentStep]);
 
-    if (proStep && !isPro) {
-        return <ProPayScreen onBack={() => setProStep(false)} onPay={onClose} />
+    if (!isPro) {
+        return <ProPayScreen onBack={onClose} onPay={onClose} />
     }
 
     return (

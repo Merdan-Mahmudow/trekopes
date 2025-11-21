@@ -8,6 +8,7 @@ import { setPlayerPlaying, playNext, playPrev, updatePlayerState, hidePlayer } f
 import { COLOR } from '../ui/colors'
 import { debugWarn, logTelemetry } from '../../utils/logger'
 import { MdClose } from 'react-icons/md'
+import { extractEmbeddedCoverFromAudio } from '../../utils/audioMetadata'
 
 const STORAGE_KEY = 'global_player_state_v2'
 
@@ -28,6 +29,7 @@ export function Player() {
   const [current, setCurrent] = useState(0)
   const [status, setStatus] = useState<PlayerStatus>('idle')
   const seekingRef = useRef(false)
+  const coverCacheRef = useRef<Map<string, string | null>>(new Map())
   // const progressRef = useRef<HTMLDivElement | null>(null)
   // const [isScrubbing, setIsScrubbing] = useState(false)
 
@@ -157,6 +159,50 @@ export function Player() {
       setIsPlaying(!!playerState.isPlaying)
     }
   }, [playerState.isPlaying])
+
+  // Извлекаем встроенную обложку, если она не пришла в стор
+  useEffect(() => {
+    const trackId = playerState.currentTrackId
+    const src = playerState.src
+
+    if (!trackId || !src) return
+
+    if (playerState.cover) {
+      coverCacheRef.current.set(trackId, playerState.cover)
+      return
+    }
+
+    const cached = coverCacheRef.current.get(trackId)
+    if (cached === null) {
+      return
+    }
+    if (typeof cached === 'string' && cached.length > 0) {
+      updatePlayerState({ cover: cached })
+      return
+    }
+
+    let isActive = true
+    const controller = new AbortController()
+
+    const loadCover = async () => {
+      const dataUrl = await extractEmbeddedCoverFromAudio(src, { signal: controller.signal })
+      if (!isActive) return
+
+      if (dataUrl) {
+        coverCacheRef.current.set(trackId, dataUrl)
+        updatePlayerState({ cover: dataUrl })
+      } else {
+        coverCacheRef.current.set(trackId, null)
+      }
+    }
+
+    loadCover()
+
+    return () => {
+      isActive = false
+      controller.abort()
+    }
+  }, [playerState.cover, playerState.currentTrackId, playerState.src])
 
   // Restore state from sessionStorage when src changes
   useEffect(() => {

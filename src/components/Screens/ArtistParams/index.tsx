@@ -1,7 +1,7 @@
-import { Box, Text, VStack, Input, Icon, Flex, Grid, GridItem, Button, Slider, Skeleton } from "@chakra-ui/react";
+import { Box, Text, VStack, Input, Icon, Flex, Grid, GridItem, Button, Slider, Skeleton, Image } from "@chakra-ui/react";
 import { Toaster } from "../../ui/toaster";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FaPaw } from 'react-icons/fa';
+import { FaPaw, FaQuestion } from 'react-icons/fa';
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
 import { TrackLoadingScreen } from "../TrackLoading";
@@ -39,7 +39,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
     
     // Преобразуем артистов из API в формат Artist и добавляем "Не выбрано"
     const artists: Artist[] = useMemo(() => {
-        const defaultOption: Artist = { id: "none", name: "Не выбрано", avatar: "❔" };
+        const defaultOption: Artist = { id: "none", name: "Случайный артист", avatar: "❔" };
         const mappedArtists: Artist[] = apiArtists.map((apiArtist) => ({
             id: apiArtist.id,
             name: apiArtist.name,
@@ -326,7 +326,11 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                                             transition="all 0.2s"
                                         >
                                             <Box w="60px" h="60px" borderRadius="50%" bg={selectedArtistId === artist.id ? "white" : COLOR.kit.iconBg} display="flex" alignItems="center" justifyContent="center" fontSize="24px">
-                                                {artist.avatar}
+                                                {artist.id === "none" ? (
+                                                    <Icon as={FaQuestion} w="24px" h="24px" color={selectedArtistId === artist.id ? "black" : COLOR.kit.white} />
+                                                ) : (
+                                                    <Image src={`https://storage.yandexcloud.net/trekopes-ai/avatars/${artist.id}.jpg`} alt={artist.name} w="100%" h="100%" borderRadius="50%" />
+                                                )}
                                             </Box>
                                             <Text fontSize="xs" textAlign="center" color={selectedArtistId === artist.id ? "white" : "#8A8A8A"} fontWeight={selectedArtistId === artist.id ? "bold" : "normal"}>
                                                 {artist.name}

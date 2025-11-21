@@ -1,4 +1,5 @@
 import type { CreateGenerationRequest } from "../types/webapp";
+import store from "../store";
 import type {
   GenerationDraft,
   GenerationDraftScenario,
@@ -11,6 +12,8 @@ import type {
 } from "../types/generation";
 
 type MetadataEntry = Record<string, unknown>;
+
+const DEFAULT_SCENARIO_TEMPLATE_ID = "019a9cca-1d73-70d7-8a27-3a973d3f26c5";
 
 const buildTextMetadata = (scenario: TextGenerationDraft): MetadataEntry => ({
   mode: scenario.mode,
@@ -146,12 +149,16 @@ export const buildCreateGenerationRequest = (
 
   if (draft.type) {
     // NOTE: временно форсим тип text для сценариев, пока сервер не готов
-    request.type = draft.type;
+    request.type = draft.type === "scenario" ? "text" : draft.type;
   }
   
   // Подставляем template_id для генерации по сценарию
   if (scenario?.mode === "scenario") {
-    request.template_id = draft.templateId || "019a9cca-1d73-70d7-8a27-3a973d3f26c5";
+    const scenarioTemplateId =
+      draft.templateId ||
+      store.state.templates.scenarioTemplateId ||
+      DEFAULT_SCENARIO_TEMPLATE_ID;
+    request.template_id = scenarioTemplateId;
   } else if (draft.templateId) {
     request.template_id = draft.templateId;
   }

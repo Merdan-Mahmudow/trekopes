@@ -3,9 +3,7 @@ import { Toaster } from "../../ui/toaster"
 import { useCallback, useEffect, useState } from "react"
 import { useStore } from "@tanstack/react-store"
 import { COLOR } from "../../../components/ui/colors"
-import { ProPayScreen } from "../ProPay"
 import { TrackLoadingScreen } from "../TrackLoading"
-import { useIsPro } from "../../../store/user"
 import {
 	setGenerationScenario,
 	setGenerationPrompt,
@@ -29,8 +27,7 @@ import { Dictaphone } from "../../ui/SpeechRecognitionButton"
 
 export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void }) => {
 	const [prompt, setPrompt] = useState("")
-	const [screen, setScreen] = useState<"form" | "pro" | "loading">("form")
-	const isPro = useIsPro()
+	const [screen, setScreen] = useState<"form" | "loading">("form")
 	const scenarioState = useGenerationScenario()
 	const generationDraft = useGenerationDraft()
 	const token = useStore(store, (state) => state.auth.token)
@@ -79,10 +76,6 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 		[patchFastScenario]
 	)
 
-	if (screen === "pro" && !isPro) {
-		return <ProPayScreen onBack={() => setScreen("form")} onPay={_onClose} />
-	}
-
 	if (screen === "loading") {
 		return <TrackLoadingScreen />
 	}
@@ -122,11 +115,6 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 				_hover={{ bg: COLOR.brand.orange700 }}
 				disabled={!prompt.trim() || isSubmitting}
 				onClick={async () => {
-					if (!isPro) {
-						setScreen("pro")
-						return
-					}
-
 					setIsSubmitting(true)
 					try {
 						const draft = generationDraft
