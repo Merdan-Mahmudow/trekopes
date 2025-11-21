@@ -1,0 +1,76 @@
+/* Стили для KaTeX формул в сообщениях чата */
+
+/* Инлайн формулы */
+.katex {
+  font-size: 1em;
+  line-height: 1.2;
+}
+
+/* Блочные формулы */
+.katex-display {
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Улучшенная читаемость формул в тёмной теме */
+.katex {
+  color: inherit;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .katex {
+    font-size: 0.9em;
+  }
+  
+  .katex-display {
+    font-size: 0.85em;
+  }
+}
+
+/* Предотвращение переноса длинных формул */
+.katex-display > .katex {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Стили для Markdown элементов в сообщениях */
+.markdown-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Улучшенная читаемость списков */
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5em 0;
+}
+
+/* Стили для кода внутри Markdown */
+.markdown-content code {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.markdown-content pre {
+  margin: 0.5em 0;
+}
+
+/* Стили для таблиц */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5em;
+}
+
+.markdown-content th {
+  background-color: rgba(255, 255, 255, 0.05);
+  font-weight: bold;
+}
+

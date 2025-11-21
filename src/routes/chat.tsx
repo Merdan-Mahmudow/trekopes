@@ -1,8 +1,7 @@
 import { ChatInput } from '../components/Input'
-import { ChatList, type MessageProps } from '../components/Message'
+import { ChatList, type MessageProps, MessageHelpBox } from '../components/Message'
 import {
   Avatar,
-  AvatarImage,
   Box,
   Circle,
   Flex,
@@ -13,160 +12,185 @@ import {
   Spinner
 } from '@chakra-ui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useMemo, useRef, useCallback, useLayoutEffect, useReducer } from 'react'
+import { useEffect, useMemo, useRef, useCallback, useLayoutEffect, useState } from 'react'
+import type React from 'react'
 import type { Telegram } from "telegram-web-app"
 import { IoChevronBack } from "react-icons/io5"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getWebAppChatMessages, sendWebAppChatMessage } from "../api/webapp"
+import { MdDelete } from "react-icons/md"
 import { useAuth } from "../hooks/useUser"
-import type { ChatMessage } from "../types/webapp"
+import { getWebSocketChatClient } from "../api/websocket-chat"
+import type { WebSocketResponse } from "../types/webapp"
 
 export const Route = createFileRoute('/chat')({
   component: RouteComponent,
 })
 
-// Тип для локальных pending-сообщений
-interface PendingMessage {
-  id: string
+// Тип для сообщений в чате
+interface ChatMessageState {
   role: "user" | "assistant"
-  content: string
+  content: string | React.ReactElement
+  sent: string
   isPending?: boolean
+  isHelpBox?: boolean
 }
 
 function RouteComponent() {
   const tg: Telegram | undefined = window.Telegram
   const navigate = useNavigate()
-  const { token } = useAuth()
-  const queryClient = useQueryClient()
+  const { user } = useAuth()
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const wsClientRef = useRef(getWebSocketChatClient())
   
-  // Локальные pending-сообщения (оптимистичные обновления)
-  const pendingMessagesRef = useRef<PendingMessage[]>([])
-  const [pendingCount, setPendingCount] = useReducer(x => x + 1, 0)
+  // Состояние сообщений
+  const [messages, setMessages] = useState<ChatMessageState[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const [connectionError, setConnectionError] = useState<Error | null>(null)
+  const [isSending, setIsSending] = useState(false)
 
-  /* ----------------- Загрузка истории ----------------- */
-  const {
-    data: chatHistory,
-    isLoading: isLoadingHistory,
-    error: historyError,
-  } = useQuery({
-    queryKey: ["webapp-chat-messages", token],
-    queryFn: async () => {
-      if (!token) throw new Error("Токен недоступен")
-      return getWebAppChatMessages(token, { limit: 50, offset: 0 })
-    },
-    enabled: !!token,
-    staleTime: 30000,
-    gcTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  })
+  // Получаем telegram_chat_id из данных пользователя
+  const telegramChatId = user?.data?.telegram_chat_id 
+    ? String(user.data.telegram_chat_id) 
+    : undefined
 
-  // Убрали автоматическое очищение pending - сообщения добавляются напрямую в кэш
+  /* ----------------- WebSocket подключение и обработка сообщений ----------------- */
+  useEffect(() => {
+    if (!telegramChatId) {
+      setIsLoadingHistory(false)
+      return
+    }
 
-  /* ----------------- Отправка сообщения ----------------- */
-  const sendMessageMutation = useMutation({
-    mutationFn: async (message: string) => {
-      if (!token) throw new Error("Токен недоступен")
-      return sendWebAppChatMessage(token, { message })
-    },
-    onMutate: async (message) => {
-      // Отменяем текущие запросы чтобы не было race condition
-      await queryClient.cancelQueries({ queryKey: ["webapp-chat-messages", token] })
-      
-      // Добавляем pending сообщение
-      const pendingId = `pending-${Date.now()}`
-      pendingMessagesRef.current = [
-        ...pendingMessagesRef.current,
-        { id: pendingId, role: "user", content: message, isPending: true }
-      ]
-      setPendingCount()
-      
-      return { pendingId }
-    },
-    onSuccess: (response: any, message: string, context: any) => {
-      // Убираем pending сообщение пользователя
-      pendingMessagesRef.current = pendingMessagesRef.current.filter(
-        m => m.id !== context?.pendingId
-      )
-      
-      // Добавляем ответ ассистента в pending для немедленного рендера
-      if (response?.data) {
-        const assistantId = `assistant-${Date.now()}`
-        pendingMessagesRef.current = [
-          ...pendingMessagesRef.current,
-          { 
-            id: assistantId, 
-            role: response.data.role || "assistant", 
-            content: response.data.content || "",
-            isPending: false 
-          }
-        ]
+    const client = wsClientRef.current
+    let isMounted = true
+
+    // Обработчик сообщений от сервера
+    const handleMessage = (response: WebSocketResponse) => {
+      if (!isMounted) return
+
+      switch (response.command) {
+        case "history":
+          // Загружена история чата
+          setMessages(response.data.map(item => {
+            // Проверяем, является ли элемент helpbox
+            if ('command' in item && item.command === 'helpbox') {
+              return {
+                role: 'assistant' as const,
+                content: <MessageHelpBox />,
+                sent: response.sent,
+                isPending: false,
+                isHelpBox: true,
+              }
+            }
+            // Обычное сообщение (type guard для TypeScript)
+            if ('role' in item && 'content' in item && 'sent' in item) {
+              return {
+                role: item.role,
+                content: item.content,
+                sent: item.sent,
+                isPending: false,
+              }
+            }
+            // Fallback (не должно произойти, но для безопасности)
+            return {
+              role: 'assistant' as const,
+              content: '',
+              sent: response.sent,
+              isPending: false,
+            }
+          }))
+          setIsLoadingHistory(false)
+          setConnectionError(null)
+          break
+
+        case "answer":
+          // Получен ответ от ассистента
+          setMessages(prev => {
+            // Убираем pending статус с последнего сообщения пользователя
+            const updated = prev.map((msg, idx) => {
+              if (idx === prev.length - 1 && msg.role === "user" && msg.isPending) {
+                return { ...msg, isPending: false }
+              }
+              return msg
+            })
+            
+            // Добавляем ответ ассистента
+            return [
+              ...updated,
+              ...response.data.map(msg => ({
+                role: msg.role,
+                content: msg.content,
+                sent: msg.sent,
+                isPending: false,
+              }))
+            ]
+          })
+          setIsSending(false)
+          break
+
+        case "error":
+          // Ошибка от сервера
+          setConnectionError(new Error(response.error || "Неизвестная ошибка"))
+          setIsSending(false)
+          setIsLoadingHistory(false)
+          break
+
+        case "clear":
+          // История очищена
+          setMessages([])
+          break
       }
-      
-      setPendingCount()
-      
-      // Обновляем кэш в фоне для синхронизации
-      queryClient.setQueryData(
-        ["webapp-chat-messages", token],
-        (old: any) => {
-          const base = old ?? {
-            success: true,
-            data: [] as ChatMessage[],
-          }
-          
-          // Создаем сообщения пользователя и ассистента
-          const userMsg: ChatMessage = {
-            id: `temp-user-${Date.now()}`,
-            role: "user",
-            content: message,
-            created_at: new Date().toISOString(),
-          }
-          
-          const assistantMsg: ChatMessage = response?.data || {
-            id: `temp-assistant-${Date.now()}`,
-            role: "assistant",
-            content: response?.data?.content || "",
-            created_at: new Date().toISOString(),
-          }
-          
-          return {
-            ...base,
-            data: [...base.data, userMsg, assistantMsg]
-          }
-        }
-      )
-    },
-    onError: (_err, _message, context) => {
-      // Убираем pending сообщение при ошибке
-      pendingMessagesRef.current = pendingMessagesRef.current.filter(
-        m => m.id !== context?.pendingId
-      )
-      setPendingCount()
-    },
-  })
+    }
 
-  /* ----------------- Формирование списка сообщений ----------------- */
-  const messages: MessageProps[] = useMemo(() => {
-    // Фильтруем undefined/null значения из истории
-    const historyMessages: MessageProps[] = (chatHistory?.data || [])
-      .filter((msg): msg is ChatMessage => msg != null && msg.role != null && msg.content != null)
-      .map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }))
-    
-    // Фильтруем pending сообщения
-    const pending: MessageProps[] = pendingMessagesRef.current
+    // Обработчик ошибок
+    const handleError = (error: Error) => {
+      if (!isMounted) return
+      setConnectionError(error)
+      setIsLoadingHistory(false)
+      setIsSending(false)
+    }
+
+    // Обработчик изменения статуса
+    const handleStatusChange = (status: string) => {
+      if (!isMounted) return
+      if (status === "error") {
+        setConnectionError(new Error("Ошибка соединения"))
+      }
+    }
+
+    // Подписываемся на события
+    const unsubscribeMessage = client.onMessage(handleMessage)
+    const unsubscribeError = client.onError(handleError)
+    const unsubscribeStatus = client.onStatusChange(handleStatusChange)
+
+    // Подключаемся к WebSocket
+    setIsLoadingHistory(true)
+    client.connect(telegramChatId).catch((error) => {
+      if (isMounted) {
+        handleError(error)
+      }
+    })
+
+    // Очистка при размонтировании
+    return () => {
+      isMounted = false
+      unsubscribeMessage()
+      unsubscribeError()
+      unsubscribeStatus()
+      // Не отключаемся полностью, так как клиент может использоваться в других местах
+      // client.disconnect()
+    }
+  }, [telegramChatId])
+
+  /* ----------------- Формирование списка сообщений для компонента ----------------- */
+  const messageProps: MessageProps[] = useMemo(() => {
+    return messages
       .filter(msg => msg != null && msg.role != null && msg.content != null)
       .map(msg => ({
         role: msg.role,
         content: msg.content,
         isPending: msg.isPending,
+        isHelpBox: msg.isHelpBox,
       }))
-    
-    // Возвращаем историю + pending сообщения
-    return [...historyMessages, ...pending]
-  }, [chatHistory?.data, pendingCount])
+  }, [messages])
 
   /* ----------------- Telegram Back Button ----------------- */
   const handleBackClick = useCallback(() => {
@@ -200,19 +224,74 @@ function RouteComponent() {
   // Скролл при изменении сообщений
   const prevLengthRef = useRef(0)
   useLayoutEffect(() => {
-    const currentLength = messages.length
+    const currentLength = messageProps.length
     if (currentLength > prevLengthRef.current) {
       scrollToBottom(prevLengthRef.current > 0)
     }
     prevLengthRef.current = currentLength
-  }, [messages.length, scrollToBottom])
+  }, [messageProps.length, scrollToBottom])
+
+  /* ----------------- Очистка истории чата ----------------- */
+  const handleClear = useCallback(() => {
+    if (!telegramChatId) return
+
+    const client = wsClientRef.current
+    
+    // Проверяем, что соединение установлено
+    if (!client.isConnected()) {
+      setConnectionError(new Error("Соединение не установлено. Попробуйте перезагрузить страницу."))
+      return
+    }
+
+    try {
+      client.clearHistory()
+      // Сообщения будут очищены при получении ответа от сервера (команда "clear")
+    } catch (error) {
+      const err = error instanceof Error 
+        ? error 
+        : new Error("Ошибка очистки истории")
+      setConnectionError(err)
+    }
+  }, [telegramChatId])
 
   /* ----------------- Отправка сообщения ----------------- */
   const handleSend = useCallback((content: string) => {
     const trimmed = content.trim()
-    if (!trimmed || sendMessageMutation.isPending) return
-    sendMessageMutation.mutate(trimmed)
-  }, [sendMessageMutation])
+    if (!trimmed || isSending || !telegramChatId) return
+
+    const client = wsClientRef.current
+    
+    // Проверяем, что соединение установлено
+    if (!client.isConnected()) {
+      setConnectionError(new Error("Соединение не установлено. Попробуйте перезагрузить страницу."))
+      return
+    }
+
+    // Добавляем сообщение пользователя с pending статусом
+    const userMessage: ChatMessageState = {
+      role: "user",
+      content: trimmed,
+      sent: new Date().toISOString(),
+      isPending: true,
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setIsSending(true)
+    setConnectionError(null)
+
+    try {
+      client.sendMessage(trimmed)
+    } catch (error) {
+      const err = error instanceof Error 
+        ? error 
+        : new Error("Ошибка отправки сообщения")
+      
+      // Убираем pending сообщение при ошибке
+      setMessages(prev => prev.filter(msg => msg !== userMessage))
+      setConnectionError(err)
+      setIsSending(false)
+    }
+  }, [isSending, telegramChatId])
 
   return (
     <>
@@ -222,7 +301,9 @@ function RouteComponent() {
           bg="gray.800"
           alignItems="center"
           pl={2}
+          pr={2}
           gapX={4}
+          justifyContent="space-between"
           pos="fixed"
           top={0}
           left={0}
@@ -230,7 +311,7 @@ function RouteComponent() {
           zIndex={10}
           h="70px"
         >
-          <Flex gapX={2}>
+          <Flex gapX={2} alignItems="center" flex={1}>
             <IconButton 
               variant="ghost" 
               onClick={handleBackClick}
@@ -241,20 +322,30 @@ function RouteComponent() {
 
             <Avatar.Root variant="subtle" size="lg">
               <Avatar.Fallback name="ТРЕКОПЁС" />
-              <AvatarImage 
+              <Avatar.Image 
                 src="https://storage.yandexcloud.net/trekopes/trekopes_ava.jpg"
-                loading="lazy"
               />
               <Float placement="bottom-end" offsetX="2" offsetY="1.5">
                 <Circle bg="green.500" size="8px" />
               </Float>
             </Avatar.Root>
+
+            <Box>
+              <Text textTransform="uppercase" lineHeight="15px">трекопёс</Text>
+              <Text fontSize="9pt" color="green">online</Text>
+            </Box>
           </Flex>
 
-          <Box>
-            <Text textTransform="uppercase" lineHeight="15px">трекопёс</Text>
-            <Text fontSize="9pt" color="green">online</Text>
-          </Box>
+          <IconButton
+            variant="ghost"
+            onClick={handleClear}
+            aria-label="Очистить чат"
+            colorScheme="red"
+            disabled={messages.length === 0 || isLoadingHistory}
+            title="Очистить историю чата"
+          >
+            <MdDelete size="20px" />
+          </IconButton>
         </Flex>
 
         {/* Messages */}
@@ -274,19 +365,19 @@ function RouteComponent() {
             '&::-webkit-scrollbar-thumb': { bg: 'gray.600', borderRadius: '2px' },
           }}
         >
-          {isLoadingHistory && messages.length === 0 ? (
+          {isLoadingHistory && messageProps.length === 0 ? (
             <Flex justify="center" align="center" h="100%">
               <Spinner size="lg" color="orange.500" />
             </Flex>
-          ) : historyError && messages.length === 0 ? (
+          ) : connectionError && messageProps.length === 0 ? (
             <Flex justify="center" align="center" h="100%" direction="column" gap={2}>
-              <Text color="red.500">Ошибка загрузки истории чата</Text>
+              <Text color="red.500">Ошибка подключения к чату</Text>
               <Text fontSize="sm" color="gray.400">
-                Попробуйте обновить страницу
+                {connectionError.message || "Попробуйте обновить страницу"}
               </Text>
             </Flex>
           ) : (
-            <ChatList messages={messages} />
+            <ChatList messages={messageProps} />
           )}
         </Box>
       </Grid>
@@ -302,7 +393,7 @@ function RouteComponent() {
       >
         <ChatInput
           onSend={handleSend}
-          isDisabled={sendMessageMutation.isPending || !token}
+          isDisabled={isSending || !telegramChatId || isLoadingHistory}
         />
       </Box>
     </>

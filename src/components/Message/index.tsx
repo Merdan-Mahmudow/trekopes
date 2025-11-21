@@ -1,10 +1,12 @@
-import { Button, Flex, Float, Grid, Icon, Text } from "@chakra-ui/react"
+import { Button, Flex, Float, Grid, Icon, Text, Box } from "@chakra-ui/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Transition } from "framer-motion";
 import {  memo } from "react";
 import { BsChatDots, BsQuestionLg } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
 import { TbExternalLink } from "react-icons/tb";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import "./katex-styles.css";
 
 export interface MessageProps {
   role: "user" | "assistant"
@@ -12,10 +14,15 @@ export interface MessageProps {
   isHelpBox?: boolean
 }
 export const MessageBox = memo(function MessageBox({ role, content }: MessageProps) {
+  // Для сообщений ассистента используем Markdown рендерер (с поддержкой KaTeX)
+  // Для сообщений пользователя - обычный текст
+  const isAssistant = role === "assistant";
+  const isStringContent = typeof content === 'string';
+
   return (
     <>
-      {role === "assistant" ? (
-        <Text
+      {isAssistant ? (
+        <Box
           ml={"3"}
           marginBlock={"3"}
           borderTopRadius={"2xl"}
@@ -31,8 +38,12 @@ export const MessageBox = memo(function MessageBox({ role, content }: MessagePro
           bg={"#242625"}
           display={"block"}
         >
-          {content}
-        </Text>
+          {isStringContent ? (
+            <MarkdownRenderer content={content} role="assistant" />
+          ) : (
+            content
+          )}
+        </Box>
       ) : (
         <Text
           mr={"3"}

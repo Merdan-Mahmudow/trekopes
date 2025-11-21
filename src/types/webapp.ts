@@ -257,3 +257,61 @@ export type GetChatMessagesQuery = {
 export type GetChatMessagesResponse = ApiSuccessResponse<ChatMessage[]>;
 
 export type SendChatMessageResponse = ApiSuccessResponse<SendChatMessage>;
+
+// WebSocket Chat types
+export type WebSocketChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  sent: string; // ISO 8601 формат: "2024-01-01T12:00:00"
+};
+
+export type WebSocketHelpBoxItem = {
+  command: "helpbox";
+};
+
+export type WebSocketHistoryDataItem = WebSocketChatMessage | WebSocketHelpBoxItem;
+
+export type WebSocketCommand = 
+  | "new_connection" 
+  | "new_message" 
+  | "answer" 
+  | "clear";
+
+export type WebSocketRequest = {
+  command: WebSocketCommand;
+  data: WebSocketChatMessage[];
+  telegram_chat_id: string;
+};
+
+// WebSocket Response types
+export type WebSocketHistoryResponse = {
+  command: "history";
+  data: WebSocketHistoryDataItem[];
+  sent: string;
+};
+
+export type WebSocketAnswerResponse = {
+  command: "answer";
+  data: WebSocketChatMessage[];
+  sent: string;
+};
+
+export type WebSocketErrorResponse = {
+  command: "error";
+  error: string;
+  message?: string;
+  details?: string;
+  sent: string;
+};
+
+export type WebSocketClearResponse = {
+  command: "clear";
+  success: boolean;
+  sent: string;
+};
+
+export type WebSocketResponse = 
+  | WebSocketHistoryResponse 
+  | WebSocketAnswerResponse 
+  | WebSocketErrorResponse 
+  | WebSocketClearResponse;
