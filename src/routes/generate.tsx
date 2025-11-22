@@ -28,7 +28,7 @@ import {
 } from '../types/generation'
 import type { SongGenerationType } from '../types/webapp'
 import { useIsPro } from '../store/user'
-import { toaster } from '../components/ui/toaster'
+// import { toaster } from '../components/ui/toaster'
 
 
 
@@ -60,14 +60,14 @@ function RouteComponent() {
             return;
         }
 
-        if (!isPro && type !== "text") {
-            toaster.create({
-                type: "info",
-                title: "Только для PRO",
-                description: "Эта генерация доступна в подписке PRO",
-            })
-            return;
-        }
+        // if (!isPro && type !== "text") {
+        //     toaster.create({
+        //         type: "info",
+        //         title: "Только для PRO",
+        //         description: "Эта генерация доступна в подписке PRO",
+        //     })
+        //     return;
+        // }
 
         const typeToGenerationMap: Record<Exclude<typeof type, null>, SongGenerationType> = {
             scenario: "scenario",
