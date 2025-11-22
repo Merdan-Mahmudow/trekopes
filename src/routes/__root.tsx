@@ -16,7 +16,7 @@ export const Route = createRootRoute({
   component: RootComponent,
 })
 
-const TRACK_PRICE = 250;
+// const TRACK_PRICE = 250;
 
 
 function RootComponent() {
@@ -89,7 +89,8 @@ function RootComponent() {
       const userData = user.data;
       setUserState({
         ...userData,
-        isPro: Boolean(userData.isPro),
+        isPro: true,
+        // isPro: Boolean(userData.isPro),
       });
       setIsPreload(false);
 
@@ -105,10 +106,11 @@ function RootComponent() {
     const hasPayments = payments.some((payment) => payment.status === "paid");
     setHasPayments(hasPayments);
 
-    const isProFromPayments = payments.some(
-      (payment) => payment.status === "paid" && payment.amount > TRACK_PRICE
-    );
-    setIsProFromPayments(isProFromPayments);
+    // const isProFromPayments = payments.some(
+    //   (payment) => payment.status === "paid" && payment.amount > TRACK_PRICE
+    // );
+    setIsProFromPayments(true);
+    // setIsProFromPayments(isProFromPayments);
   }, [paymentsQuery.data]);
 
   useEffect(() => {
