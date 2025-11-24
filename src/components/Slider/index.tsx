@@ -180,13 +180,13 @@ function FMCarouselComponent() {
                                                 justifyContent="center"
                                                 padding="8px 16px"
                                                 borderRadius="full"
-                                                bg={COLOR.kit.iconBg}
+                                                bg="rgba(17, 14, 14, 0.5)"
                                                 fontSize={{ base: "10px", md: "12px" }}
                                                 fontWeight={700}
                                                 letterSpacing="0.15em"
                                                 textTransform="uppercase"
                                                 color={COLOR.text.primary}
-                                                boxShadow="0 0 20px rgba(255, 106, 0, 0.3)"
+                                                boxShadow="inset 0 0 20px rgba(255, 106, 0, 0.5), 0 0 20px rgba(255, 106, 0, 0.5)"
                                             >
                                                 {slide.badge}
                                             </Badge>
