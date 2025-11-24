@@ -1,18 +1,16 @@
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        VITE_DEBUG: ${VITE_DEBUG:-false}
-    container_name: frontend
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    #   args:
+    #     VITE_DEBUG: ${VITE_DEBUG:-false}
+    image: frontend
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.production
     environment:
       TZ: ${TZ:-Europe/Moscow}
-    ports:
-      - "80:80"  # снаружи:80 → внутрь контейнера:80
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.tpekollec.ru`)"

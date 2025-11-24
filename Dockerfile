@@ -1,13 +1,11 @@
 # 1. Сборка Vite-проекта
-FROM node:22-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-ENV NODE_ENV=production
-
 # лучше сначала тянуть только package*, чтобы кэшировать deps
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 # теперь уже код
 COPY . .
@@ -20,7 +18,7 @@ ENV VITE_DEBUG=${VITE_DEBUG}
 RUN npm run build
 
 # 2. Лёгкий nginx для статики
-FROM nginx:1.27-alpine
+FROM nginx:alpine
 
 ENV NODE_ENV=production
 

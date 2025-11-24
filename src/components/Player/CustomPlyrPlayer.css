@@ -89,8 +89,7 @@
 
 .audio-wrapper :global(.plyr__control.plyr__tab-focus),
 .audio-wrapper :global(.plyr__control:focus) {
-  outline: 2px solid rgba(243, 146, 4, 0.5);
-  outline-offset: 2px;
+  outline: none;
 }
 
 .audio-wrapper :global(.plyr__progress__played) {

@@ -78,8 +78,7 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
             transition="transform 0.1s ease, box-shadow 0.1s ease"
             _hover={{ transform: 'translateY(-6px)', boxShadow: '0 24px 48px rgba(0,0,0,0.35)' }}
             _focusVisible={{
-                outline: `2px solid ${accentColor}`,
-                outlineOffset: '4px',
+                outline: 'none',
             }}
             onClick={() => {
                 const id = tariff.id === 'track' ? 'track' : tariff.id
@@ -197,8 +196,7 @@ function SubscriptionCard({ subscription }: { subscription: Subscription }) {
             transition="transform 0.1s ease, box-shadow 0.1s ease"
             _hover={{ transform: 'translateY(-6px)', boxShadow: '0 24px 48px rgba(0,0,0,0.35)' }}
             _focusVisible={{
-                outline: `2px solid ${accentColor}`,
-                outlineOffset: '4px',
+                outline: 'none',
             }}
             onClick={() => {
                 const tariffId = getTariffId(subscription.id)
@@ -540,7 +538,7 @@ function RouteComponent() {
                                 aria-selected={isActive}
                                 aria-controls={views[index]?.id}
                                 id={`${tab.id}-tab`}
-                                _focusVisible={{ outline: `2px solid ${tab.accent}`, outlineOffset: '4px' }}
+                                _focusVisible={{ outline: 'none' }}
                             >
                                 {isActive && (
                                     <motion.span

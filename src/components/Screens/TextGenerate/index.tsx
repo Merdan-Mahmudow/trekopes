@@ -79,14 +79,12 @@ const OptionButton = ({ option, onClick, isSelected = false }: OptionButtonProps
         justifyContent="center"
         w="full"
         h="70px"
-        className="font-doloman"
-        fontSize="13pt"
+        fontSize="11pt"
         bg={isSelected ? COLOR.kit.orange : COLOR.kit.darkGray}
         boxShadow="0 4px 12px rgba(0, 0, 0, 0.2)"
-        color={isSelected ? COLOR.kit.darkGray : "white"}
-        border={isSelected ? `1px solid ${COLOR.kit.orange}` : undefined}
         rounded="2xl"
         onClick={onClick}
+        color="white"
         outline="none"
     >
         {option.label}

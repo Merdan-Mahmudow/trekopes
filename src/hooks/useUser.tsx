@@ -19,10 +19,20 @@ export function useAuth() {
     async function getToken(): Promise<LoginResponse> {
         const telegram = window.Telegram;
         const rawInitData = telegram?.WebApp?.initData || DEV_INIT_DATA;
+        debugLog("[Auth] getToken called", { 
+            hasTelegram: !!telegram, 
+            hasWebApp: !!telegram?.WebApp,
+            hasInitData: !!rawInitData,
+            hasDevInitData: !!DEV_INIT_DATA 
+        });
+        
         if (!rawInitData) {
-            throw new Error("Данные Telegram недоступны");
+            const error = new Error("Данные Telegram недоступны");
+            debugLog("[Auth] No init data available", error);
+            throw error;
         }
         try {
+            debugLog("[Auth] Attempting login", { initDataLength: rawInitData.toString().length });
             return await loginWebApp({
                 initData: rawInitData.toString()
             });
@@ -59,6 +69,18 @@ export function useAuth() {
     } = useQuery({
         queryKey: ['webapp-token'],
         queryFn: getToken,
+        retry: (failureCount: number, error: any) => {
+            // Не повторяем запрос, если нет данных Telegram
+            if (error?.message === "Данные Telegram недоступны") {
+                debugLog("[Auth] Not retrying - no Telegram data", { failureCount });
+                return false;
+            }
+            // Повторяем до 3 раз для сетевых ошибок
+            const shouldRetry = failureCount < 3;
+            debugLog("[Auth] Retry decision", { failureCount, shouldRetry, error: error?.message });
+            return shouldRetry;
+        },
+        retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
     });
 
     const bearerToken = tokenResponse?.data.token;
