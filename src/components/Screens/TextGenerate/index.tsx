@@ -1,5 +1,5 @@
 import { COLOR } from '../../../components/ui/colors'
-import { Box, Button, Flex, Grid, GridItem, Heading, Icon, Text } from '@chakra-ui/react'
+import { Box, Button, Grid, GridItem, Heading, Icon, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
