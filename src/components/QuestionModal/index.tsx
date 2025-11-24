@@ -6,6 +6,7 @@ import { BrandButton, GrayButton } from "../ui/button";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { questions, type QuestionCategory, type QuestionSet } from "../ui/questions";
 import { Dictaphone } from "../ui/SpeechRecognitionButton";
+import { qaStorage } from "../../utils/qaStorage";
 
 type QuestionModalProps = {
     category: string;
@@ -60,14 +61,9 @@ export function QuestionModal({
     
 
     const [value, setValue] = useState("");
-    const [answers, setAnswers] = useState<Record<number, string>>(() => {
-        try {
-            const raw = localStorage.getItem("qa_answers");
-            return raw ? JSON.parse(raw) : {};
-        } catch {
-            return {};
-        }
-    });
+    const [answers, setAnswers] = useState<Record<number, string>>(() =>
+        qaStorage.getAnswers(category, parent)
+    );
 
     // 1 = вперед (влево), -1 = назад (вправо)
     const [direction, setDirection] = useState<1 | -1>(1);
@@ -77,11 +73,7 @@ export function QuestionModal({
     }, [currentIndex, answers]);
 
     const persistAnswers = (next: Record<number, string>) => {
-        try {
-            localStorage.setItem("qa_answers", JSON.stringify(next));
-        } catch {
-            // ignore
-        }
+        qaStorage.saveAnswers(category, parent ?? null, next);
     };
 
     const handleChange = (v: string) => {

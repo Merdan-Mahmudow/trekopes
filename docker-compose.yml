@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"  # снаружи:80 → внутрь контейнера:80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.tpekollec.ru`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=cloudflare"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - traefik_traefik
+
+# если хочешь в ту же сеть, что и твой traefik:
+networks:
+  traefik_traefik:
+    external: true

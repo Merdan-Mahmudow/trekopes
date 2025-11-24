@@ -1,6 +1,6 @@
 import { COLOR } from '../../../components/ui/colors'
 import { Box, Button, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
 import { RiHomeHeartLine, RiShieldStarLine } from 'react-icons/ri'
@@ -26,6 +26,7 @@ import {
     type GenerationDraftAnswer,
     type TextGenerationDraft,
 } from '../../../types/generation'
+import { qaStorage } from '../../../utils/qaStorage'
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -70,18 +71,20 @@ const ChangeButton = ({ icon, title, onClick, isSelected }: ChangeButtonProps) =
 type OptionButtonProps = {
     option: { label: string; value: string };
     onClick: () => void;
+    isSelected?: boolean;
 }
 
-const OptionButton = ({ option, onClick }: OptionButtonProps) => (
+const OptionButton = ({ option, onClick, isSelected = false }: OptionButtonProps) => (
     <Button
         justifyContent="center"
         w="full"
         h="70px"
         className="font-doloman"
         fontSize="13pt"
-        bg={COLOR.kit.darkGray}
+        bg={isSelected ? COLOR.kit.orange : COLOR.kit.darkGray}
         boxShadow="0 4px 12px rgba(0, 0, 0, 0.2)"
-        color="white"
+        color={isSelected ? COLOR.kit.darkGray : "white"}
+        border={isSelected ? `1px solid ${COLOR.kit.orange}` : undefined}
         rounded="2xl"
         onClick={onClick}
         outline="none"
@@ -164,6 +167,42 @@ export function TextGenerateScreen() {
     // Получаем финальный выбранный parent (последний элемент в questSelections)
     // Это значение должно соответствовать parent в QuestionSet
     const finalParent = questSelections.length > 0 ? questSelections[questSelections.length - 1] : null;
+    const getParentKey = (parent: string | null | undefined) => parent ?? "__root__";
+
+    const questSelectionMap = useMemo(() => {
+        if (questSelections.length === 0) {
+            return {};
+        }
+        return questSelections.reduce<Record<string, string>>((acc, value, index) => {
+            const parentKey = index === 0 ? "__root__" : questSelections[index - 1];
+            acc[parentKey] = value;
+            return acc;
+        }, {});
+    }, [questSelections]);
+
+    const findQuestIndexByParent = useCallback(
+        (parentValue: string | null | undefined) => {
+            if (!found?.form.quest) return -1;
+            return found.form.quest.findIndex((quest) => {
+                if (parentValue === null || parentValue === undefined) {
+                    return quest.parent === null || quest.parent === undefined;
+                }
+                return quest.parent === parentValue;
+            });
+        },
+        [found]
+    );
+
+    const getNextQuestForValue = useCallback(
+        (value: string | null) => {
+            const index = findQuestIndexByParent(value);
+            if (index < 0 || !found?.form.quest) {
+                return undefined;
+            }
+            return { quest: found.form.quest[index], index };
+        },
+        [findQuestIndexByParent, found]
+    );
 
     const patchTextScenario = useCallback(
         (updater: (draft: TextGenerationDraft) => TextGenerationDraft) => {
@@ -179,50 +218,47 @@ export function TextGenerateScreen() {
     );
 
     const syncAnswersFromStorage = useCallback(() => {
-        try {
-            const raw = localStorage.getItem("qa_answers");
-            const parsed: Record<string, string> = raw ? JSON.parse(raw) : {};
-
-            // Получаем вопросы из questions.ts
-            const questionCategory = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
-            const questionSet = finalParent
-                ? questionCategory?.form.questions.find((qs) => qs.parent === finalParent)
-                : questionCategory?.form.questions.find((qs) => qs.parent === null);
-
-            const answers: GenerationDraftAnswer[] = Object.entries(parsed)
-                .map(([key, value]) => {
-                    const id = Number(key);
-                    if (!Number.isFinite(id)) {
-                        return null;
-                    }
-                    // Используем индекс вопроса
-                    const questionSource = questionSet?.questions[id];
-                    const questionText = questionSource?.text ?? `Вопрос ${id + 1}`;
-                    return {
-                        id,
-                        question: questionText,
-                        answer: value,
-                    };
-                })
-                .filter((entry): entry is GenerationDraftAnswer => Boolean(entry));
-
-            const summary = answers
-                .filter((answer) => answer.answer?.trim())
-                .map((answer) => `${answer.question}: ${answer.answer}`)
-                .join("\n");
-
-            patchTextScenario((draft) => ({
-                ...draft,
-                answers,
-                summary: summary.length > 0 ? summary : null,
-            }));
-        } catch {
+        if (!lookup) {
             patchTextScenario((draft) => ({
                 ...draft,
                 answers: [],
                 summary: null,
             }));
+            return;
         }
+
+        const storedAnswers = qaStorage.getAnswers(lookup, finalParent);
+        const questionCategory = allQuestions.find((q) => q.category === lookup);
+        const questionSet = finalParent
+            ? questionCategory?.form.questions.find((qs) => qs.parent === finalParent)
+            : questionCategory?.form.questions.find((qs) => qs.parent === null);
+
+        const answers: GenerationDraftAnswer[] = Object.entries(storedAnswers)
+            .map(([key, value]) => {
+                const id = Number(key);
+                if (!Number.isFinite(id)) {
+                    return null;
+                }
+                const questionSource = questionSet?.questions[id];
+                const questionText = questionSource?.text ?? `Вопрос ${id + 1}`;
+                return {
+                    id,
+                    question: questionText,
+                    answer: value,
+                };
+            })
+            .filter((entry): entry is GenerationDraftAnswer => Boolean(entry));
+
+        const summary = answers
+            .filter((answer) => answer.answer?.trim())
+            .map((answer) => `${answer.question}: ${answer.answer}`)
+            .join("\n");
+
+        patchTextScenario((draft) => ({
+            ...draft,
+            answers,
+            summary: summary.length > 0 ? summary : null,
+        }));
     }, [patchTextScenario, lookup, finalParent]);
 
     useEffect(() => {
@@ -245,6 +281,15 @@ export function TextGenerateScreen() {
             setSkipClicked(false);
         }
     }, [step, hasEmptyBalance, isPro]);
+
+    useEffect(() => {
+        if (!lookup) {
+            setQuestSelections([]);
+            return;
+        }
+        const storedSelections = qaStorage.getQuestSelections(lookup);
+        setQuestSelections(storedSelections);
+    }, [lookup]);
 
 
     const handleNext = () => {
@@ -272,40 +317,57 @@ export function TextGenerateScreen() {
     const handlePrev = () => {
         if (currentIndex > 0) {
             setCurrentIndex((i) => i - 1);
-        } else {
-            // Если это первый вопрос, возвращаемся к последнему quest или к intro
-            if (questSelections.length > 0 && found?.form.quest && found.form.quest.length > 0) {
-                const lastSelection = questSelections[questSelections.length - 1];
-                const lastQuestIndex = found.form.quest.findIndex((q) => q.parent === lastSelection);
-                if (lastQuestIndex >= 0) {
-                    setCurrentQuestIndex(lastQuestIndex);
-                    setStep('audience');
-                } else {
-                    setStep('intro');
-                }
+            syncAnswersFromStorage();
+            return;
+        }
+
+        if (questSelections.length === 0) {
+            setStep('intro');
+            syncAnswersFromStorage();
+            return;
+        }
+
+        const prevSelections = questSelections.slice(0, -1);
+        setQuestSelections(prevSelections);
+
+        if (lookup) {
+            qaStorage.saveQuestSelections(lookup, prevSelections);
+            const candidateParent = prevSelections.length > 0 ? prevSelections[prevSelections.length - 1] : null;
+            const nextQuestForCandidate = candidateParent ? getNextQuestForValue(candidateParent) : undefined;
+            if (candidateParent && !nextQuestForCandidate) {
+                qaStorage.saveFinalParent(lookup, candidateParent);
             } else {
-                // Для категорий без quest (например, others) возвращаемся к intro
-                setStep('intro');
+                qaStorage.saveFinalParent(lookup, null);
+            }
+        }
+
+        if (prevSelections.length === 0) {
+            setStep('intro');
+        } else {
+            const previousValue = prevSelections[prevSelections.length - 1];
+            const prevQuest = getNextQuestForValue(previousValue);
+            if (prevQuest) {
+                setCurrentQuestIndex(prevQuest.index);
+                setStep('audience');
+            } else {
+                setStep('questions');
             }
         }
         syncAnswersFromStorage();
     };
 
     const handleCategorySelect = (category: ChangeButtonProps['category']) => {
+        const mappedCategory = categoryMap[category] ?? category;
         setSelectedCategory(category);
         setCurrentIndex(0);
-        setQuestSelections([]);
         setCurrentQuestIndex(0);
         setStep('intro');
         setShowProReminder(false);
-        setSkipClicked(false); // Сбрасываем состояние при выборе новой категории
-        const mappedCategory = categoryMap[category] ?? category;
-        try {
-            localStorage.setItem('qa_category', mappedCategory);
-            localStorage.removeItem('qa_answers');
-        } catch {
-            // ignore storage errors
-        }
+        setSkipClicked(false);
+        qaStorage.setSelectedUICategory(category);
+        qaStorage.setActiveCategory(mappedCategory);
+        const storedSelections = qaStorage.getQuestSelections(mappedCategory);
+        setQuestSelections(storedSelections);
         patchTextScenario(() => ({
             ...createTextGenerationDraft(),
             category: mappedCategory,
@@ -322,53 +384,100 @@ export function TextGenerateScreen() {
     }
 
     const handleStartScenario = () => {
-        // Находим первый quest с parent: null или undefined (не указан)
-        const firstQuest = found?.form.quest?.find((q) => q.parent === null || q.parent === undefined);
-        if (firstQuest) {
-            const firstQuestIndex = found?.form.quest?.findIndex((q) => q.parent === null || q.parent === undefined) ?? 0;
-            setCurrentQuestIndex(firstQuestIndex);
-            setStep('audience');
-        } else {
-            // Если нет quest, сразу переходим к вопросам (для категории others)
+        if (!found?.form.quest || found.form.quest.length === 0) {
             setCurrentIndex(0);
             setStep('questions');
-            // Сохраняем parent: null для questionsFinish
-            try {
-                localStorage.removeItem('qa_parent');
-            } catch {
-                // ignore
-            }
+            return;
         }
-    }
+
+        const firstQuestIndex = findQuestIndexByParent(null);
+        if (questSelections.length === 0) {
+            setCurrentQuestIndex(firstQuestIndex >= 0 ? firstQuestIndex : 0);
+            setStep('audience');
+            return;
+        }
+
+        const lastSelection = questSelections[questSelections.length - 1];
+        const nextQuest = getNextQuestForValue(lastSelection);
+
+        if (nextQuest) {
+            setCurrentQuestIndex(nextQuest.index);
+        } else {
+            const parentOfLast =
+                questSelections.length > 1 ? questSelections[questSelections.length - 2] : null;
+            const currentQuest = findQuestIndexByParent(parentOfLast);
+            setCurrentQuestIndex(currentQuest >= 0 ? currentQuest : firstQuestIndex >= 0 ? firstQuestIndex : 0);
+        }
+        setStep('audience');
+    };
 
     const handleSelectAudience = (value: string) => {
-        const newSelections = [...questSelections, value];
-        setQuestSelections(newSelections);
-        
-        // Ищем следующий quest с parent равным выбранному значению
-        const nextQuest = found?.form.quest?.find((q) => q.parent === value);
-        
-        if (nextQuest) {
-            // Есть следующий quest - остаемся на шаге audience
-            setCurrentQuestIndex(found?.form.quest?.findIndex((q) => q.parent === value) ?? 0);
-            setShowProReminder(false);
-        } else {
-            // Нет следующего quest - переходим к вопросам
-            setCurrentIndex(0);
-            setStep('questions');
-            setShowProReminder(false);
-            // Сохраняем parent в localStorage для questionsFinish
-            try {
-                localStorage.setItem('qa_parent', value);
-            } catch {
-                // ignore
-            }
-            patchTextScenario((draft) => ({
-                ...draft,
-                audience: value,
-            }));
+        if (!lookup || !currentQuestItem) return;
+        const parentValue = currentQuestItem.parent ?? null;
+        const parentIndex = parentValue ? questSelections.indexOf(parentValue) : -1;
+        const depthIndex = parentIndex + 1;
+        const baseSelections = depthIndex > 0 ? questSelections.slice(0, depthIndex) : [];
+        const updatedSelections = [...baseSelections, value];
+        setQuestSelections(updatedSelections);
+        qaStorage.saveQuestSelections(lookup, updatedSelections);
+    };
+
+    const handleAudienceContinue = () => {
+        if (!lookup || !currentQuestItem) return;
+        const parentKey = getParentKey(currentQuestItem.parent);
+        const selectedValue = questSelectionMap[parentKey];
+        if (!selectedValue) {
+            return;
         }
-    }
+        const nextQuest = getNextQuestForValue(selectedValue);
+        if (nextQuest) {
+            setCurrentQuestIndex(nextQuest.index);
+            qaStorage.saveFinalParent(lookup, null);
+            return;
+        }
+        qaStorage.saveFinalParent(lookup, selectedValue);
+        setCurrentIndex(0);
+        setStep('questions');
+        setShowProReminder(false);
+        patchTextScenario((draft) => ({
+            ...draft,
+            audience: selectedValue,
+        }));
+    };
+
+    const handleAudienceBack = () => {
+        if (!currentQuestItem) {
+            setStep('intro');
+            return;
+        }
+        const parentValue = currentQuestItem.parent ?? null;
+        if (parentValue === null) {
+            setStep('intro');
+            return;
+        }
+        const parentIndex = questSelections.indexOf(parentValue);
+        if (parentIndex === -1) {
+            setStep('intro');
+            return;
+        }
+        const trimmedSelections = questSelections.slice(0, parentIndex + 1);
+        setQuestSelections(trimmedSelections);
+        if (lookup) {
+            qaStorage.saveQuestSelections(lookup, trimmedSelections);
+            qaStorage.saveFinalParent(
+                lookup,
+                trimmedSelections.length > 0 ? trimmedSelections[trimmedSelections.length - 1] : null
+            );
+        }
+        const previousParent =
+            parentIndex <= 0 ? null : trimmedSelections[parentIndex - 1] ?? null;
+        const prevQuestIndex = findQuestIndexByParent(previousParent);
+        if (prevQuestIndex >= 0) {
+            setCurrentQuestIndex(prevQuestIndex);
+            return;
+        }
+        setStep('intro');
+    };
 
     const handleBackToCategories = () => {
         setSelectedCategory(null);
@@ -377,16 +486,11 @@ export function TextGenerateScreen() {
         setCurrentQuestIndex(0);
         setStep('category');
         setShowProReminder(false);
-        setSkipClicked(false); // Сбрасываем состояние при возврате к категориям
-        try {
-            localStorage.removeItem('qa_answers');
-            localStorage.removeItem('qa_category');
-            localStorage.removeItem('qa_parent');
-        } catch {
-            // ignore
-        }
+        setSkipClicked(false);
+        qaStorage.setSelectedUICategory(null);
+        qaStorage.setActiveCategory(null);
         patchTextScenario(() => createTextGenerationDraft());
-    }
+    };
 
     if (isLoading) {
         return <TrackLoadingScreen />;
@@ -479,35 +583,31 @@ export function TextGenerateScreen() {
                         <Box px={5} py={6} color={COLOR.kit.orangeWhite}>
                             <Heading size="md" mb={2}>{currentQuestItem.text}</Heading>
                             <Grid gap={3} templateColumns={{ base: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' }} mt={4}>
-                                {currentQuestItem.options.map((option) => (
-                                    <OptionButton
-                                        key={option.value}
-                                        option={option}
-                                        onClick={() => handleSelectAudience(option.value)}
-                                    />
-                                ))}
+                                {currentQuestItem.options.map((option) => {
+                                    const parentKey = getParentKey(currentQuestItem.parent);
+                                    const selectedValue = questSelectionMap[parentKey];
+                                    return (
+                                        <OptionButton
+                                            key={option.value}
+                                            option={option}
+                                            onClick={() => handleSelectAudience(option.value)}
+                                            isSelected={selectedValue === option.value}
+                                        />
+                                    );
+                                })}
                             </Grid>
-                            <GrayButton mt={6} w="full" onClick={() => {
-                                if (currentQuestIndex === 0 || questSelections.length === 0) {
-                                    setStep('intro');
-                                } else {
-                                    // Возврат к предыдущему quest
-                                    const prevSelections = questSelections.slice(0, -1);
-                                    setQuestSelections(prevSelections);
-                                    if (prevSelections.length === 0) {
-                                        // Возврат к первому quest с parent: null или undefined
-                                        const firstQuestIndex = found?.form.quest?.findIndex((q) => q.parent === null || q.parent === undefined) ?? 0;
-                                        setCurrentQuestIndex(firstQuestIndex >= 0 ? firstQuestIndex : 0);
-                                    } else {
-                                        // Находим quest, который соответствует предыдущему выбору
-                                        const prevValue = prevSelections[prevSelections.length - 1];
-                                        const prevQuestIndex = found?.form.quest?.findIndex((q) => q.parent === prevValue) ?? 0;
-                                        setCurrentQuestIndex(prevQuestIndex >= 0 ? prevQuestIndex : 0);
-                                    }
-                                }
-                            }}>
-                                Назад
-                            </GrayButton>
+                            <Grid mt={6} templateColumns="1fr 1fr" gap={3} w="full">
+                                <GrayButton w="full" onClick={handleAudienceBack}>
+                                    Назад
+                                </GrayButton>
+                                <BrandButton
+                                    w="full"
+                                    onClick={handleAudienceContinue}
+                                    disabled={!questSelectionMap[getParentKey(currentQuestItem.parent)]}
+                                >
+                                    Далее
+                                </BrandButton>
+                            </Grid>
                         </Box>
                     </MotionDiv>
                 ) : step === 'results' ? (
