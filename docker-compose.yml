@@ -3,8 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_DEBUG: ${VITE_DEBUG:-false}
     container_name: frontend
     restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
     ports:
       - "80:80"  # снаружи:80 → внутрь контейнера:80
     labels:
@@ -13,6 +19,12 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=cloudflare"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
     networks:
       - traefik_traefik
 
