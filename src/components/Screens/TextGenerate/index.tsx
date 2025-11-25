@@ -1,10 +1,10 @@
 import { COLOR } from '../../../components/ui/colors'
-import { Box, Button, Grid, GridItem, Heading, Text } from '@chakra-ui/react'
+import { Box, Button, Grid, GridItem, Heading, Icon, Text } from '@chakra-ui/react'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
 import { RiHomeHeartLine, RiShieldStarLine } from 'react-icons/ri'
-import { TbHeartBroken, TbHeart, TbConfetti } from 'react-icons/tb'
+import { TbHeartBroken, TbHeart, TbConfetti, TbExternalLink } from 'react-icons/tb'
 import { AnimatePresence, motion } from "framer-motion";
 import { QuestionModal } from "../../../components/QuestionModal";
 import { questions as allQuestions, type QuestionCategory, type QuestItem } from "../../../components/ui/questions";
@@ -98,10 +98,10 @@ export function TextGenerateScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const isPro = useIsPro();
     const user = useUser();
-        const scenarioState = useGenerationScenario();
-        const [step, setStep] = useState<string>('category');
+    const scenarioState = useGenerationScenario();
+    const [step, setStep] = useState<string>('category');
     const [selectedCategory, setSelectedCategory] = useState<ChangeButtonProps['category'] | null>(null);
-    
+
     // showProReminder должен быть true только если у пользователя пустой баланс
     const hasEmptyBalance = user.limit === 0;
 
@@ -158,10 +158,10 @@ export function TextGenerateScreen() {
         : undefined;
 
     const found: QuestionCategory | undefined = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
-    
+
     // Получаем текущий quest элемент
     const currentQuestItem: QuestItem | undefined = found?.form.quest?.[currentQuestIndex];
-    
+
     // Получаем финальный выбранный parent (последний элемент в questSelections)
     // Это значение должно соответствовать parent в QuestionSet
     const finalParent = questSelections.length > 0 ? questSelections[questSelections.length - 1] : null;
@@ -271,7 +271,7 @@ export function TextGenerateScreen() {
             setShowProReminder(true);
         }
     }, [step, selectedCategory, currentIndex, hasEmptyBalance, showProReminder, skipClicked]);
-    
+
     // Если баланс пополнился и мы на шаге pro-pay, возвращаемся к artist-params
     useEffect(() => {
         if (step === 'pro-pay' && !hasEmptyBalance && !isPro) {
@@ -375,7 +375,7 @@ export function TextGenerateScreen() {
     const handleCloseDialog = () => {
         setShowProReminder(false);
     }
-    
+
     const handleSkipReminder = () => {
         setShowProReminder(false);
         setSkipClicked(true);
@@ -534,7 +534,7 @@ export function TextGenerateScreen() {
                                 {selectedCategory === 'self' && '🌿 Анкета «Про себя»'}
                                 {selectedCategory === 'friend' && '🎓 Анкета «Для друзей и коллег»'}
                                 {selectedCategory === 'broken-heart' && '💔 Анкета «Для разбитого сердца»'}
-                                {selectedCategory === 'love' && '💖 Анкета «Для любимого человека»'}
+                                {selectedCategory === 'lover' && '💖 Анкета «Для любимого человека»'}
                                 {selectedCategory === 'relation' && '👨‍👩‍👧‍👦 Анкета «Для близких»'}
                                 {selectedCategory === 'baby' && '🍼 Анкета «Про ребёнка»'}
                                 {selectedCategory === 'hero' && '🎖️ Анкета «О герое или солдате»'}
@@ -545,7 +545,7 @@ export function TextGenerateScreen() {
                                 {selectedCategory === 'self' && 'Личная история, путь, характер, внутренний монолог.'}
                                 {selectedCategory === 'friend' && 'Подарок другу, коллеге, наставнику или всей команде — с теплом и юмором.'}
                                 {selectedCategory === 'broken-heart' && 'Песня-переосмысление после расставания — бережно, честно, со смыслом.'}
-                                {selectedCategory === 'love' && 'Признание в любви, годовщина, свадьба, романтика — всё, что от сердца.'}
+                                {selectedCategory === 'lover' && 'Признание в любви, годовщина, свадьба, романтика — всё, что от сердца.'}
                                 {selectedCategory === 'relation' && 'Мама, папа, брат, сестра — семейная история в музыке.'}
                                 {selectedCategory === 'baby' && 'Песня о малыше — от нежных колыбельных до выпускного из садика.'}
                                 {selectedCategory === 'hero' && 'О тех, кто защищает и спасает — от врачей до спасателей.'}
@@ -562,12 +562,17 @@ export function TextGenerateScreen() {
                             >
                                 Можно пропускать любые вопросы — просто переходите дальше.
                             </Box>
-                            <BrandButton w="full" mb={4} onClick={handleStartScenario}>
+                            <Grid templateColumns="1fr 1fr" gap={3} w="full">
+                                <GrayButton w="full" onClick={handleBackToCategories}>
+                                    Назад к темам
+                                </GrayButton>
+                                <GrayButton w="full" onClick={() => window.open("https://nika--art.ru?dog&tg")}>
+                                    Хочу портрет <Icon as={TbExternalLink} size={"sm"} />
+                                </GrayButton>
+                            </Grid>
+                            <BrandButton w="full" mt={4} onClick={handleStartScenario}>
                                 Начать
                             </BrandButton>
-                            <GrayButton w="full" onClick={handleBackToCategories}>
-                                Назад к темам
-                            </GrayButton>
                         </Box>
                     </MotionDiv>
                 ) : step === 'audience' && currentQuestItem ? (
@@ -605,8 +610,12 @@ export function TextGenerateScreen() {
                                 >
                                     Далее
                                 </BrandButton>
+
                             </Grid>
+
+
                         </Box>
+
                     </MotionDiv>
                 ) : step === 'results' ? (
                     <MotionDiv
@@ -649,12 +658,12 @@ export function TextGenerateScreen() {
                         exit={{ x: -100, opacity: 0 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <ProPayScreen 
+                        <ProPayScreen
                             onBack={() => {
                                 setStep('generation-params');
                                 setSkipClicked(false);
-                            }} 
-                            onPay={() => navigate({ to: '/subscription', search: { tarrif: 'pro', source: 'propay' } })} 
+                            }}
+                            onPay={() => navigate({ to: '/subscription', search: { tarrif: 'pro', source: 'propay' } })}
                         />
                     </MotionDiv>
                 ) : (
@@ -681,7 +690,7 @@ export function TextGenerateScreen() {
                 )}
 
             </AnimatePresence>
-                        <DiaologWindow
+            <DiaologWindow
                 open={showProReminder}
                 footer={(
                     <>
@@ -700,7 +709,7 @@ export function TextGenerateScreen() {
                     <Text fontWeight="bolder" textAlign={"center"} letterSpacing={1} textTransform={"uppercase"} color={COLOR.kit.orange} fontSize={"lg"} mb={2}>
                         Гав! Напоминаю
                     </Text>
-                <Text fontSize={"20px"} color={COLOR.kit.orangeWhite} pb={3} pt={3}>Отличный старт!</Text>
+                    <Text fontSize={"20px"} color={COLOR.kit.orangeWhite} pb={3} pt={3}>Отличный старт!</Text>
                     <Text>
                         Трек по точным настройкам (жанр, настроение, сценарий) доступен в <b>PRO</b> — 990 ₽.
                     </Text>
@@ -710,7 +719,7 @@ export function TextGenerateScreen() {
                     </Text>
                 </Box>
             </DiaologWindow>
-           
+
         </>
     )
 }
