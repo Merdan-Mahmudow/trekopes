@@ -15,6 +15,6 @@ export default defineConfig({
     // ...
   ],
   server: {
-    allowedHosts: ['unsteadily-succulent-tiger.cloudpub.ru']
+    allowedHosts: ['dev.tpekollec.ru']
   }
 })

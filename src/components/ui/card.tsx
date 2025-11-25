@@ -78,9 +78,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           transform: "translateY(0)",
         }}
         _focusVisible={{
-          outline: "2px solid",
-          outlineColor: "rgba(243, 146, 4, 0.8)",
-          outlineOffset: "2px",
+          outline: "none",
         }}
         {...props}
       >

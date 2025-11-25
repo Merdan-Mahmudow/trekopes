@@ -2,12 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-store";
 import { getWebAppGenerationTemplateArtists } from "../api/webapp";
 import store from "../store";
-import type { GetGenerationTemplateArtistsQuery } from "../types/webapp";
+import type {
+  GetGenerationTemplateArtistsQuery,
+  GetGenerationTemplateArtistsResponse,
+  GenerationTemplateArtist,
+} from "../types/webapp";
 
 export function useGenerationTemplateArtists(query?: GetGenerationTemplateArtistsQuery) {
     const token = useStore(store, (state) => state.auth.token);
 
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading, error } = useQuery<GetGenerationTemplateArtistsResponse>({
         queryKey: ["generation-template-artists", token, query],
         queryFn: async () => {
             if (!token) {

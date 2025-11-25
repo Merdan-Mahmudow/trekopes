@@ -45,9 +45,7 @@ export function BrandButton({
                 transform: "translateY(0)",
             }}
             _focusVisible={{
-                outline: "2px solid",
-                outlineColor: "rgba(243, 146, 4, 0.8)",
-                outlineOffset: "2px",
+                outline: "none",
             }}
             {...props}
         >
@@ -90,9 +88,7 @@ export function GrayButton({
                 transform: "translateY(0)",
             }}
             _focusVisible={{
-                outline: "2px solid",
-                outlineColor: "rgba(243, 146, 4, 0.8)",
-                outlineOffset: "2px",
+                outline: "none",
             }}
             {...props}
         >

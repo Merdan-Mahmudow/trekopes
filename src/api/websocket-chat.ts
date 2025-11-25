@@ -1,215 +1,147 @@
-import type {
-  WebSocketRequest,
-  WebSocketResponse,
-  WebSocketChatMessage,
-} from "../types/webapp";
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
+import type { ChatMessageChunkEvent } from "../types/webapp";
 
 type WebSocketStatus = "connecting" | "connected" | "disconnected" | "error";
 
-type MessageHandler = (response: WebSocketResponse) => void;
+type ChunkHandler = (event: ChatMessageChunkEvent) => void;
 type ErrorHandler = (error: Error) => void;
 type StatusChangeHandler = (status: WebSocketStatus) => void;
+type EchoInstance = Echo<any>;
+type EchoChannel = ReturnType<Echo<any>["channel"]>;
 
-const WS_URL = import.meta.env.VITE_WS_URL || "wss://gpt.skyrodev.ru/ws/chat";
-const WS_URL_LOCAL = "wss://gpt.skyrodev.ru/ws/chat";
+const WS_KEY = import.meta.env.VITE_WS_KEY || "ga70dd0nakp1nrw0npza";
+const WS_HOST = import.meta.env.VITE_WS_HOST || "bot.tpekollec.ru";
+const WS_PORT = Number(import.meta.env.VITE_WS_PORT || 80);
+const WSS_PORT = Number(import.meta.env.VITE_WSS_PORT || 443);
+const AUTH_ENDPOINT =
+  import.meta.env.VITE_WS_AUTH_ENDPOINT ||
+  "https://bot.tpekollec.ru/broadcasting/auth";
+
+declare global {
+  interface Window {
+    Pusher?: typeof Pusher;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.Pusher = Pusher;
+}
 
 export class WebSocketChatClient {
-  private ws: WebSocket | null = null;
+  private echo: EchoInstance | null = null;
+  private channel: EchoChannel | null = null;
   private status: WebSocketStatus = "disconnected";
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private messageHandlers: Set<MessageHandler> = new Set();
+  private chunkHandlers: Set<ChunkHandler> = new Set();
   private errorHandlers: Set<ErrorHandler> = new Set();
   private statusChangeHandlers: Set<StatusChangeHandler> = new Set();
   private telegramChatId: string | null = null;
-  private isManualClose = false;
+  private authToken: string | null = null;
 
-  constructor() {
-    // Автоматическое переподключение при потере соединения
-  }
-
-  /**
-   * Подключение к WebSocket серверу
-   */
-  connect(telegramChatId: string): Promise<void> {
+  connect(telegramChatId: string, token: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        if (this.telegramChatId === telegramChatId) {
-          resolve();
-          return;
-        }
-        // Если уже подключен с другим chat_id, переподключаемся
-        this.disconnect();
+      if (!telegramChatId) {
+        reject(new Error("telegram_chat_id не указан"));
+        return;
+      }
+
+      if (!token) {
+        reject(new Error("Auth token не указан"));
+        return;
+      }
+
+      if (
+        this.telegramChatId === telegramChatId &&
+        this.authToken === token &&
+        this.isConnected()
+      ) {
+        resolve();
+        return;
       }
 
       this.telegramChatId = telegramChatId;
-      this.isManualClose = false;
+      this.authToken = token;
       this.setStatus("connecting");
 
-      // Определяем URL (локальный для разработки, продакшн для остального)
-      const url = import.meta.env.DEV ? WS_URL_LOCAL : WS_URL;
-
       try {
-        this.ws = new WebSocket(url);
-
-        this.ws.onopen = () => {
-          this.setStatus("connected");
-          this.reconnectAttempts = 0;
-          
-          // Отправляем команду new_connection для инициализации
-          this.send({
-            command: "new_connection",
-            data: [],
-            telegram_chat_id: telegramChatId,
-          });
-          
-          resolve();
-        };
-
-        this.ws.onmessage = (event) => {
-          try {
-            const response: WebSocketResponse = JSON.parse(event.data);
-            this.handleMessage(response);
-          } catch (error) {
-            const err = error instanceof Error 
-              ? error 
-              : new Error("Ошибка парсинга сообщения от сервера");
-            this.handleError(err);
-          }
-        };
-
-        this.ws.onerror = () => {
-          const error = new Error("WebSocket ошибка соединения");
-          this.handleError(error);
-          reject(error);
-        };
-
-        this.ws.onclose = () => {
-          this.setStatus("disconnected");
-          
-          // Автоматическое переподключение, если не было ручного закрытия
-          if (!this.isManualClose && this.reconnectAttempts < this.maxReconnectAttempts) {
-            this.scheduleReconnect();
-          } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            const error = new Error("Превышено максимальное количество попыток переподключения");
-            this.handleError(error);
-          }
-        };
+        this.initializeEcho(token);
+        this.subscribeToChannel(telegramChatId);
       } catch (error) {
-        const err = error instanceof Error 
-          ? error 
-          : new Error("Ошибка создания WebSocket соединения");
+        const err =
+          error instanceof Error
+            ? error
+            : new Error("Ошибка инициализации Echo");
         this.setStatus("error");
-        this.handleError(err);
+        this.emitError(err);
         reject(err);
+        return;
       }
+
+      const connection = this.getPusherConnection();
+
+      if (!connection) {
+        this.setStatus("connected");
+        resolve();
+        return;
+      }
+
+      const handleConnected = () => {
+        this.setStatus("connected");
+        cleanup();
+        resolve();
+      };
+
+      const handleError = (event?: { error?: { message?: string } }) => {
+        const err = new Error(
+          event?.error?.message || "Ошибка WebSocket соединения"
+        );
+        this.setStatus("error");
+        cleanup();
+        this.emitError(err);
+        reject(err);
+      };
+
+      const cleanup = () => {
+        connection.unbind("connected", handleConnected);
+        connection.unbind("error", handleError);
+        connection.unbind("failed", handleError);
+      };
+
+      if (connection.state === "connected") {
+        handleConnected();
+        return;
+      }
+
+      connection.bind("connected", handleConnected);
+      connection.bind("error", handleError);
+      connection.bind("failed", handleError);
+      connection.bind("disconnected", () => {
+        this.setStatus("disconnected");
+      });
     });
   }
 
-  /**
-   * Отправка команды на сервер
-   */
-  send(request: WebSocketRequest): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      throw new Error("WebSocket соединение не установлено");
-    }
-
-    try {
-      this.ws.send(JSON.stringify(request));
-    } catch (error) {
-      const err = error instanceof Error 
-        ? error 
-        : new Error("Ошибка отправки сообщения");
-      this.handleError(err);
-      throw err;
-    }
-  }
-
-  /**
-   * Отправка нового сообщения пользователя
-   */
-  sendMessage(content: string): void {
-    if (!this.telegramChatId) {
-      throw new Error("telegram_chat_id не установлен");
-    }
-
-    const message: WebSocketChatMessage = {
-      role: "user",
-      content: content,
-      sent: new Date().toISOString(),
-    };
-
-    this.send({
-      command: "new_message",
-      data: [message],
-      telegram_chat_id: this.telegramChatId,
-    });
-  }
-
-  /**
-   * Синхронизация ответа ассистента
-   */
-  syncAnswer(message: WebSocketChatMessage): void {
-    if (!this.telegramChatId) {
-      throw new Error("telegram_chat_id не установлен");
-    }
-
-    this.send({
-      command: "answer",
-      data: [message],
-      telegram_chat_id: this.telegramChatId,
-    });
-  }
-
-  /**
-   * Очистка истории
-   */
-  clearHistory(): void {
-    if (!this.telegramChatId) {
-      throw new Error("telegram_chat_id не установлен");
-    }
-
-    this.send({
-      command: "clear",
-      data: [],
-      telegram_chat_id: this.telegramChatId,
-    });
-  }
-
-  /**
-   * Отключение от сервера
-   */
   disconnect(): void {
-    this.isManualClose = true;
-    
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
+    if (this.channel) {
+      this.channel.stopListening(".ChatMessageChunk");
+      this.channel = null;
     }
 
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
+    if (this.echo) {
+      this.echo.disconnect();
+      this.echo = null;
     }
 
     this.setStatus("disconnected");
   }
 
-  /**
-   * Подписка на сообщения от сервера
-   */
-  onMessage(handler: MessageHandler): () => void {
-    this.messageHandlers.add(handler);
+  onChunk(handler: ChunkHandler): () => void {
+    this.chunkHandlers.add(handler);
     return () => {
-      this.messageHandlers.delete(handler);
+      this.chunkHandlers.delete(handler);
     };
   }
 
-  /**
-   * Подписка на ошибки
-   */
   onError(handler: ErrorHandler): () => void {
     this.errorHandlers.add(handler);
     return () => {
@@ -217,9 +149,6 @@ export class WebSocketChatClient {
     };
   }
 
-  /**
-   * Подписка на изменения статуса
-   */
   onStatusChange(handler: StatusChangeHandler): () => void {
     this.statusChangeHandlers.add(handler);
     return () => {
@@ -227,37 +156,86 @@ export class WebSocketChatClient {
     };
   }
 
-  /**
-   * Получить текущий статус соединения
-   */
   getStatus(): WebSocketStatus {
     return this.status;
   }
 
-  /**
-   * Проверка, подключен ли клиент
-   */
   isConnected(): boolean {
-    return this.status === "connected" && this.ws?.readyState === WebSocket.OPEN;
+    const connection = this.getPusherConnection();
+    return connection?.state === "connected";
   }
 
-  /**
-   * Обработка сообщения от сервера
-   */
-  private handleMessage(response: WebSocketResponse): void {
-    this.messageHandlers.forEach((handler) => {
-      try {
-        handler(response);
-      } catch (error) {
-        console.error("Ошибка в обработчике сообщений:", error);
-      }
+  private initializeEcho(token: string): void {
+    if (this.echo) {
+      this.echo.disconnect();
+      this.echo = null;
+    }
+
+    this.echo = new Echo({
+      broadcaster: "reverb",
+      key: WS_KEY,
+      wsHost: WS_HOST,
+      wsPort: WS_PORT,
+      wssPort: WSS_PORT,
+      forceTLS: true,
+      enabledTransports: ["ws", "wss"],
+      authEndpoint: AUTH_ENDPOINT,
+      auth: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      },
     });
   }
 
-  /**
-   * Обработка ошибок
-   */
-  private handleError(error: Error): void {
+  private subscribeToChannel(chatId: string): void {
+    if (!this.echo) {
+      throw new Error("Echo не инициализирован");
+    }
+
+    if (this.channel) {
+      this.channel.stopListening(".ChatMessageChunk");
+    }
+
+    this.channel = this.echo.channel(`chat.${chatId}`);
+
+    this.channel.listen(".ChatMessageChunk", (event: ChatMessageChunkEvent) => {
+      this.chunkHandlers.forEach((handler) => {
+        try {
+          handler(event);
+        } catch (error) {
+          console.error("Ошибка в обработчике чанка:", error);
+        }
+      });
+    });
+
+    const channelWithError = this.channel as unknown as {
+      error?: (cb: (error: any) => void) => void;
+    };
+
+    channelWithError.error?.((error: any) => {
+      const err =
+        error instanceof Error
+          ? error
+          : new Error("Ошибка канала WebSocket");
+      this.emitError(err);
+    });
+  }
+
+  private getPusherConnection():
+    | {
+        state: string;
+        bind: (name: string, cb: (...args: any[]) => void) => void;
+        unbind: (name: string, cb?: (...args: any[]) => void) => void;
+      }
+    | null {
+    const connector = (this.echo as any)?.connector;
+    const pusherConnection = connector?.pusher?.connection;
+    return pusherConnection ?? null;
+  }
+
+  private emitError(error: Error): void {
     this.errorHandlers.forEach((handler) => {
       try {
         handler(error);
@@ -267,54 +245,28 @@ export class WebSocketChatClient {
     });
   }
 
-  /**
-   * Установка статуса и уведомление подписчиков
-   */
   private setStatus(status: WebSocketStatus): void {
-    if (this.status !== status) {
-      this.status = status;
-      this.statusChangeHandlers.forEach((handler) => {
-        try {
-          handler(status);
-        } catch (error) {
-          console.error("Ошибка в обработчике изменения статуса:", error);
-        }
-      });
-    }
-  }
-
-  /**
-   * Планирование переподключения
-   */
-  private scheduleReconnect(): void {
-    if (this.reconnectTimer) {
+    if (this.status === status) {
       return;
     }
 
-    this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-
-    this.reconnectTimer = setTimeout(() => {
-      this.reconnectTimer = null;
-      if (this.telegramChatId && !this.isManualClose) {
-        this.connect(this.telegramChatId).catch((error) => {
-          console.error("Ошибка переподключения:", error);
-        });
+    this.status = status;
+    this.statusChangeHandlers.forEach((handler) => {
+      try {
+        handler(status);
+      } catch (error) {
+        console.error("Ошибка в обработчике статуса:", error);
       }
-    }, delay);
+    });
   }
 }
 
-// Singleton экземпляр клиента
 let chatClientInstance: WebSocketChatClient | null = null;
 
-/**
- * Получить экземпляр WebSocket клиента (singleton)
- */
 export function getWebSocketChatClient(): WebSocketChatClient {
   if (!chatClientInstance) {
     chatClientInstance = new WebSocketChatClient();
   }
+
   return chatClientInstance;
 }
-

@@ -29,6 +29,8 @@ import { createWebAppGeneration } from "../../../api/webapp";
 import { useTracks } from "../../../hooks/useTracks";
 import { toaster } from "../../ui/toaster";
 import { logError } from "../../../utils/logger";
+import { moodOptions } from "../../../utils/moodPrompts";
+import { genreOptions } from "../../../utils/genrePrompts";
 
 type GenerationParamsAccordionProps = {
     mode?: "collect" | "submit";
@@ -37,23 +39,6 @@ type GenerationParamsAccordionProps = {
     onGenerate?: (params: GenerationParams) => void | boolean | Promise<void | boolean>;
     onLoadingStart?: () => void;
 };
-
-const moodOptions = [
-    { value: "happy", label: "Веселое" },
-    { value: "sad", label: "Грустное" },
-    { value: "energetic", label: "Энергичное" },
-    { value: "calm", label: "Спокойное" },
-    { value: "romantic", label: "Романтичное" },
-];
-
-const styleOptions = [
-    { value: "pop", label: "Поп" },
-    { value: "rock", label: "Рок" },
-    { value: "hip-hop", label: "Хип-хоп" },
-    { value: "electronic", label: "Электроника" },
-    { value: "jazz", label: "Джаз" },
-    { value: "classical", label: "Классика" },
-];
 
 const voiceOptions = [
     { value: "male", label: "Мужской" as const },
@@ -96,7 +81,7 @@ export function GenerationParamsAccordion({
 
     const styleLabel = useMemo(() => {
         if (!generationParams.style) return null;
-        return styleOptions.find((option) => option.value === generationParams.style)?.label ?? null;
+        return genreOptions.find((option) => option.value === generationParams.style)?.label ?? null;
     }, [generationParams.style]);
 
     const voiceLabel = useMemo(() => {
@@ -124,15 +109,17 @@ export function GenerationParamsAccordion({
         (key: keyof GenerationParams, value: number | string | null) => {
             setGenerationParams((prev) => {
                 const next = { ...prev, [key]: value };
-                updateGenerationScenario((scenario) => {
-                    if (!scenario) return scenario;
-                    if ("params" in scenario) {
-                        return {
-                            ...scenario,
-                            params: { ...next },
-                        } as typeof scenario;
-                    }
-                    return scenario;
+                queueMicrotask(() => {
+                    updateGenerationScenario((scenario) => {
+                        if (!scenario) return scenario;
+                        if ("params" in scenario) {
+                            return {
+                                ...scenario,
+                                params: { ...next },
+                            } as typeof scenario;
+                        }
+                        return scenario;
+                    });
                 });
                 return next;
             });
@@ -194,7 +181,7 @@ export function GenerationParamsAccordion({
         } catch (err: any) {
             logError("Failed to start generation", err);
             setIsLoading(false);
-            
+
             // Обработка ошибки 409 (Conflict)
             if (err?.response?.status === 409) {
                 toaster.create({
@@ -204,7 +191,7 @@ export function GenerationParamsAccordion({
                 });
                 return;
             }
-            
+
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.create({
                 type: "error",
@@ -336,23 +323,23 @@ export function GenerationParamsAccordion({
                                                 <Text fontSize="sm" fontWeight="medium">
                                                     {`Стиль${styleLabel ? `: ${styleLabel}` : ""}`}
                                                 </Text>
-                                                <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap={2} w="full">
-                                                    {styleOptions.map((style) => (
+                                            <Grid templateColumns="repeat(2, minmax(0, 1fr))" gap={2} w="full">
+                                                    {genreOptions.map((genre) => (
                                                         <Button
-                                                            key={style.value}
+                                                            key={genre.value}
                                                             rounded="xl"
                                                             size="md"
                                                             onClick={() =>
                                                                 handleParamsChange(
                                                                     "style",
-                                                                    generationParams.style === style.value ? null : style.value
+                                                                    generationParams.style === genre.value ? null : genre.value
                                                                 )
                                                             }
-                                                            bg={generationParams.style === style.value ? COLOR.kit.orange : COLOR.kit.darkGray}
+                                                            bg={generationParams.style === genre.value ? COLOR.kit.orange : COLOR.kit.darkGray}
                                                             color="white"
                                                             fontSize="xs"
                                                         >
-                                                            {style.label}
+                                                            {genre.label}
                                                         </Button>
                                                     ))}
                                                 </Grid>
@@ -406,7 +393,7 @@ export function GenerationParamsAccordion({
                     </VStack>
                 </VStack>
             </Box>
-			<Toaster />
+            <Toaster />
         </VStack>
     );
 }

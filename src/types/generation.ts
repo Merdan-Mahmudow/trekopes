@@ -4,6 +4,7 @@ export type Artist = {
   id: string;
   name: string;
   avatar?: string;
+  description?: string | null;
 };
 
 export type GenerationParams = {

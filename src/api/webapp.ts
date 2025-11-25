@@ -1,9 +1,12 @@
 import { request } from "../libs/request";
 import type {
+  ClearChatMessagesResponse,
   CreateGenerationRequest,
   CreateGenerationResponse,
   CreatePaymentRequest,
   CreatePaymentResponse,
+  GetChatMessagesQuery,
+  GetChatMessagesResponse,
   GetGenerationByIdResponse,
   GetGenerationTemplateArtistsQuery,
   GetGenerationTemplateArtistsResponse,
@@ -17,10 +20,9 @@ import type {
   GetPaymentsResponse,
   LoginRequest,
   LoginResponse,
-  GetChatMessagesQuery,
-  GetChatMessagesResponse,
   SendChatMessageRequest,
-  SendChatMessageResponse
+  SendChatMessageResponse,
+  StreamChatMessageResponse,
 } from "../types/webapp";
 
 const WEBAPP_PREFIX = "/webapp";
@@ -202,6 +204,35 @@ export async function sendWebAppChatMessage(
     payload,
     {
       headers: authHeaders(token)
+    }
+  );
+  return response.data;
+}
+
+export async function streamWebAppChatMessage(
+  token: string,
+  payload: SendChatMessageRequest
+): Promise<StreamChatMessageResponse> {
+  const response = await request<StreamChatMessageResponse>(
+    "post",
+    `${WEBAPP_PREFIX}/chat/messages/stream`,
+    payload,
+    {
+      headers: authHeaders(token),
+    }
+  );
+  return response.data;
+}
+
+export async function clearWebAppChatMessages(
+  token: string
+): Promise<ClearChatMessagesResponse> {
+  const response = await request<ClearChatMessagesResponse>(
+    "delete",
+    `${WEBAPP_PREFIX}/chat/messages`,
+    undefined,
+    {
+      headers: authHeaders(token),
     }
   );
   return response.data;

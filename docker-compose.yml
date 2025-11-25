@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env.production
+      - .env.production
     environment:
       TZ: ${TZ:-Europe/Moscow}
     labels:

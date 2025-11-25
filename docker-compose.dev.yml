@@ -1,0 +1,26 @@
+services:
+
+  vite:
+    image: node:22-alpine
+    container_name: vite-dev
+    working_dir: /app
+    volumes:
+      - ./:/app       # путь до твоего проекта с Vite
+    command: ["npm", "run", "dev", "--host", "0.0.0.0", "--port", "5173"]
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    expose:
+      - "5173"
+    networks:
+      - traefik_traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vite-dev.rule=Host(`dev.tpekollec.ru`)"
+      - "traefik.http.routers.vite-dev.entrypoints=websecure"
+      - "traefik.http.routers.vite-dev.tls.certresolver=cloudflare"
+      - "traefik.http.services.vite-dev.loadbalancer.server.port=5173"
+
+networks:
+  traefik_traefik:
+    external: true

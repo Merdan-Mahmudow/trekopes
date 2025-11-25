@@ -111,7 +111,7 @@ function RouteComponent() {
         {
             type: 'text' as const,
             title: 'Песня по тексту',
-            description: 'Опиши идею или вставь готовый текст — трек готов!',
+            description: 'Опиши идею или вставь готовый текст — я превращу это в трек за минуту!',
             icon: <TbTextSize />,
             iconSize: '5xl' as const,
             requiresPro: false,
@@ -119,7 +119,7 @@ function RouteComponent() {
         {
             type: 'scenario' as const,
             title: 'Песня по сценарию',
-            description: 'Выбери сценарий и заполни анкету - получишь персональную песню',
+            description: 'Выбери сценарий, ответь на вопросы — и получишь песню, которая знает о тебе всё',
             icon: <BsFileText />,
             iconSize: '5xl' as const,
             requiresPro: true,
@@ -127,7 +127,7 @@ function RouteComponent() {
         // {
         //     type: 'photo' as const,
         //     title: 'Песня по фото',
-        //     description: 'Сфотографируй человека, место или предмет — получишь уникальный трек',
+        //     description: 'Сфотографируй человека, место или предмет — я распознаю настроение и напишу трек',
         //     icon: <IoCameraOutline />,
         //     iconSize: '5xl' as const,
         //     requiresPro: true,
@@ -135,7 +135,7 @@ function RouteComponent() {
         // {
         //     type: 'link' as const,
         //     title: 'Песня по ссылке',
-        //     description: 'Вставь ссылку на VK-профиль — я изучу и напишу песню',
+        //     description: 'Вставь ссылку на VK-профиль — я изучу твои интересы и создам персональный трек',
         //     icon: <FaLink />,
         //     iconSize: '4xl' as const,
         //     requiresPro: true,
@@ -143,7 +143,7 @@ function RouteComponent() {
         {
             type: 'style' as const,
             title: 'Песня по артисту',
-            description: 'Выбери артиста',
+            description: 'Выбери любимого артиста — я подберу его звук, подачу и фирменные фишки стиля',
             icon: <GiMusicalNotes />,
             iconSize: '5xl' as const,
             requiresPro: true,
