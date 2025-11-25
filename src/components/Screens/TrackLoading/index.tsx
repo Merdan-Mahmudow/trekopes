@@ -1,9 +1,11 @@
 // TrackLoadingScreen.tsx
-import { Box, Flex, Heading, Text, VStack } from "@chakra-ui/react";
+import { Box, Flex, Heading, Icon, Text, VStack } from "@chakra-ui/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6";
 import { COLOR } from "../../../components/ui/colors";
+import { GrayButton } from "../../../components/ui/button";
+import { TbExternalLink } from "react-icons/tb";
 
 const MotionFlex = motion(Flex);
 
@@ -213,6 +215,9 @@ export const TrackLoadingScreen = () => {
           </VStack>
         </Box>
       </Box>
+      <GrayButton w="full" onClick={() => window.open("https://nika--art.ru?dog&tg")}>
+        Хочу портрет <Icon as={TbExternalLink} size={"sm"} />
+      </GrayButton>
     </VStack>
   );
 };

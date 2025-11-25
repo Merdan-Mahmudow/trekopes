@@ -20,6 +20,8 @@ import { useTracks } from "../../../hooks/useTracks";
 import { useGenerationTemplateArtists } from "../../../hooks/useGenerationTemplateArtists";
 import { toaster } from "../../ui/toaster";
 import { logError } from "../../../utils/logger";
+import { moodOptions } from "../../../utils/moodPrompts";
+import { genreOptions } from "../../../utils/genrePrompts";
 
 type ArtistParamsDisplayMode = "full" | "artist";
 
@@ -39,11 +41,12 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
     
     // Преобразуем артистов из API в формат Artist и добавляем "Не выбрано"
     const artists: Artist[] = useMemo(() => {
-        const defaultOption: Artist = { id: "none", name: "Случайный артист", avatar: "❔" };
+        const defaultOption: Artist = { id: "none", name: "Случайный артист", avatar: "❔", description: null };
         const mappedArtists: Artist[] = apiArtists.map((apiArtist) => ({
             id: apiArtist.id,
             name: apiArtist.name,
             avatar: "👨‍🎤", // Дефолтный аватар, можно заменить на логику с первыми буквами
+            description: apiArtist.description ?? null,
         }));
         return [defaultOption, ...mappedArtists];
     }, [apiArtists]);
@@ -138,7 +141,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
         }
     }, [generationDraft, artists, isLoadingArtists, selectedArtistId]);
 
-    const handleParamsChange = useCallback((key: keyof GenerationParams, value: number | string) => {
+    const handleParamsChange = useCallback((key: keyof GenerationParams, value: number | string | null) => {
         setGenerationParams(prev => {
             const next = { ...prev, [key]: value };
             updateGenerationScenario((scenario) => {
@@ -372,14 +375,23 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                         <VStack gap={3} w="full" align="start">
                             <Text fontSize="sm" fontWeight="medium">Настроение</Text>
                             <Grid templateColumns="repeat(2, 1fr)" gap={2} w="full">
-                                {[
-                                    { value: "happy", label: "Веселое" },
-                                    { value: "sad", label: "Грустное" },
-                                    { value: "energetic", label: "Энергичное" },
-                                    { value: "calm", label: "Спокойное" },
-                                    { value: "romantic", label: "Романтичное" }
-                                ].map((mood) => (
-                                    <Button rounded={"xl"} key={mood.value} size="md" onClick={() => handleParamsChange("mood", mood.value)} bg={generationParams.mood === mood.value ? COLOR.kit.orange : COLOR.kit.darkGray} color="white" fontSize="xs">{mood.label}</Button>
+                                {moodOptions.map((mood) => (
+                                    <Button
+                                        rounded={"xl"}
+                                        key={mood.value}
+                                        size="md"
+                                        onClick={() =>
+                                            handleParamsChange(
+                                                "mood",
+                                                generationParams.mood === mood.value ? null : mood.value
+                                            )
+                                        }
+                                        bg={generationParams.mood === mood.value ? COLOR.kit.orange : COLOR.kit.darkGray}
+                                        color="white"
+                                        fontSize="xs"
+                                    >
+                                        {mood.label}
+                                    </Button>
                                 ))}
                             </Grid>
                         </VStack>
@@ -387,15 +399,23 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                         <VStack gap={3} w="full" align="start">
                             <Text fontSize="sm" fontWeight="medium">Стиль</Text>
                             <Grid templateColumns="repeat(2, 1fr)" gap={2} w="full">
-                                {[
-                                    { value: "pop", label: "Поп" },
-                                    { value: "rock", label: "Рок" },
-                                    { value: "hip-hop", label: "Хип-хоп" },
-                                    { value: "electronic", label: "Электроника" },
-                                    { value: "jazz", label: "Джаз" },
-                                    { value: "classical", label: "Классика" }
-                                ].map((style) => (
-                                    <Button rounded={"xl"} key={style.value} size="md" onClick={() => handleParamsChange("style", style.value)} bg={generationParams.style === style.value ? COLOR.kit.orange : COLOR.kit.darkGray} color="white" fontSize="xs">{style.label}</Button>
+                                {genreOptions.map((genre) => (
+                                    <Button
+                                        rounded={"xl"}
+                                        key={genre.value}
+                                        size="md"
+                                        onClick={() =>
+                                            handleParamsChange(
+                                                "style",
+                                                generationParams.style === genre.value ? null : genre.value
+                                            )
+                                        }
+                                        bg={generationParams.style === genre.value ? COLOR.kit.orange : COLOR.kit.darkGray}
+                                        color="white"
+                                        fontSize="xs"
+                                    >
+                                        {genre.label}
+                                    </Button>
                                 ))}
                             </Grid>
                         </VStack>

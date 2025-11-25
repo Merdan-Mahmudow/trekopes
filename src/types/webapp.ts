@@ -99,6 +99,10 @@ export type CreateGenerationRequest = {
   template_id?: string;
   template_artist_id?: string;
   metadata?: unknown[];
+  tempo?: number;
+  style?: string;
+  mood?: string;
+  voice?: string;
 };
 
 export type CreateGenerationResponseData = {
@@ -171,11 +175,6 @@ export type GetPaymentsResponse = ApiSuccessResponse<PaymentDto[]>;
 export type GetPaymentByUUIDResponse = ApiSuccessResponse<PaymentDto>;
 
 // Generation Template types
-export type GenerationTemplateArtistList = {
-  id: string;
-  name: string;
-};
-
 export type GenerationTemplateArtist = {
   id: string;
   name: string;
@@ -219,7 +218,7 @@ export type GetGenerationTemplateArtistsQuery = {
   offset?: number;
 };
 
-export type GetGenerationTemplateArtistsResponse = ApiSuccessResponse<GenerationTemplateArtistList[]>;
+export type GetGenerationTemplateArtistsResponse = ApiSuccessResponse<GenerationTemplateArtist[]>;
 
 export type GetGenerationTemplatesQuery = {
   limit?: number;
@@ -257,6 +256,24 @@ export type GetChatMessagesQuery = {
 export type GetChatMessagesResponse = ApiSuccessResponse<ChatMessage[]>;
 
 export type SendChatMessageResponse = ApiSuccessResponse<SendChatMessage>;
+
+export type StreamChatMessageResponse = ApiSuccessResponse<{
+  status?: string;
+  message?: string;
+}>;
+
+export type ClearChatMessagesResponse = ApiSuccessResponse<{
+  success: boolean;
+}>;
+
+export type ChatMessageChunkEvent = {
+  chunk?: string;
+  done?: boolean;
+  role?: "assistant" | "user";
+  message_id?: string;
+  sent?: string;
+  error?: string;
+};
 
 // WebSocket Chat types
 export type WebSocketChatMessage = {

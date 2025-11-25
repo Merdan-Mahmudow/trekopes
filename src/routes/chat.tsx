@@ -1,5 +1,5 @@
 import { ChatInput } from '../components/Input'
-import { ChatList, type MessageProps, MessageHelpBox } from '../components/Message'
+import { ChatList, type MessageProps } from '../components/Message'
 import {
   Avatar,
   Box,
@@ -19,7 +19,12 @@ import { IoChevronBack } from "react-icons/io5"
 import { MdDelete } from "react-icons/md"
 import { useAuth } from "../hooks/useUser"
 import { getWebSocketChatClient } from "../api/websocket-chat"
-import type { WebSocketResponse } from "../types/webapp"
+import {
+  clearWebAppChatMessages,
+  getWebAppChatMessages,
+  streamWebAppChatMessage,
+} from "../api/webapp"
+import type { ChatMessage, ChatMessageChunkEvent } from "../types/webapp"
 
 export const Route = createFileRoute('/chat')({
   component: RouteComponent,
@@ -32,14 +37,17 @@ interface ChatMessageState {
   sent: string
   isPending?: boolean
   isHelpBox?: boolean
+  streamId?: string
 }
 
 function RouteComponent() {
   const tg: Telegram | undefined = window.Telegram
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const wsClientRef = useRef(getWebSocketChatClient())
+  const streamBufferRef = useRef("")
+  const streamMessageIdRef = useRef<string | null>(null)
   
   // Состояние сообщений
   const [messages, setMessages] = useState<ChatMessageState[]>([])
@@ -52,133 +60,167 @@ function RouteComponent() {
     ? String(user.data.telegram_chat_id) 
     : undefined
 
-  /* ----------------- WebSocket подключение и обработка сообщений ----------------- */
+  /* ----------------- Загрузка истории чата ----------------- */
   useEffect(() => {
-    if (!telegramChatId) {
+    if (!telegramChatId || !token) {
       setIsLoadingHistory(false)
+      return
+    }
+
+    let isMounted = true
+    setIsLoadingHistory(true)
+
+    getWebAppChatMessages(token)
+      .then((response) => {
+        if (!isMounted) return
+
+        const history = response.data.map((message: ChatMessage) => ({
+          role: message.role,
+          content: message.content,
+          sent: message.created_at,
+          isPending: false,
+        }))
+
+        setMessages(history)
+        setConnectionError(null)
+        setIsLoadingHistory(false)
+      })
+      .catch((error) => {
+        if (!isMounted) return
+        const err = error instanceof Error ? error : new Error("Ошибка загрузки истории")
+        setConnectionError(err)
+        setIsLoadingHistory(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [telegramChatId, token])
+
+  /* ----------------- WebSocket подключение и стриминг ----------------- */
+  const handleConnectionError = useCallback((error: Error) => {
+    setConnectionError(error)
+    setIsLoadingHistory(false)
+    setIsSending(false)
+  }, [])
+
+  const handleChunk = useCallback((event: ChatMessageChunkEvent) => {
+    if (event.error) {
+      handleConnectionError(new Error(event.error))
+      return
+    }
+
+    setConnectionError(null)
+
+    // Определяем ID стрима для группировки чанков
+    // Если сервер не прислал message_id, генерируем локальный для текущего потока
+    let streamId = event.message_id
+    
+    if (!streamId) {
+      // Если нет текущего активного стрима, создаем новый ID
+      if (!streamMessageIdRef.current) {
+        streamMessageIdRef.current = `local-stream-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+        streamBufferRef.current = "" // Новый стрим - новый буфер
+      }
+      streamId = streamMessageIdRef.current
+    } else {
+      // Если сервер прислал ID, и он отличается от текущего - это новый стрим
+      if (streamMessageIdRef.current !== streamId) {
+        streamMessageIdRef.current = streamId
+        streamBufferRef.current = "" // Сброс буфера при смене ID
+      }
+    }
+
+    // Накапливаем буфер
+    const chunkPart = event.chunk ?? ""
+    if (chunkPart) {
+      streamBufferRef.current += chunkPart
+    }
+    const currentContent = streamBufferRef.current
+
+    setMessages((prev) => {
+      let base = prev
+      const lastIndex = prev.length - 1
+
+      // Если последнее сообщение от пользователя и оно pending,
+      // значит мы только что получили ответ на него -> снимаем pending
+      if (
+        lastIndex >= 0 &&
+        prev[lastIndex].role === "user" &&
+        prev[lastIndex].isPending
+      ) {
+        base = [
+          ...prev.slice(0, lastIndex),
+          { ...prev[lastIndex], isPending: false },
+        ]
+      }
+
+      const assistantMessage: ChatMessageState = {
+        role: "assistant",
+        content: currentContent,
+        sent: event.sent || new Date().toISOString(),
+        isPending: !event.done,
+        streamId,
+      }
+
+      // Ищем, есть ли уже сообщение с таким streamId (обновление существующего)
+      const existingIndex = base.findIndex((msg) => msg.streamId === streamId)
+
+      if (existingIndex >= 0) {
+        const updated = [...base]
+        updated[existingIndex] = assistantMessage
+        return updated
+      }
+
+      // Если нет - добавляем новое
+      return [...base, assistantMessage]
+    })
+
+    if (event.done) {
+      streamMessageIdRef.current = null
+      streamBufferRef.current = ""
+      setIsSending(false)
+    }
+  }, [telegramChatId, handleConnectionError])
+
+  useEffect(() => {
+    if (!telegramChatId || !token) {
       return
     }
 
     const client = wsClientRef.current
     let isMounted = true
 
-    // Обработчик сообщений от сервера
-    const handleMessage = (response: WebSocketResponse) => {
+    const unsubscribeChunk = client.onChunk((event) => {
       if (!isMounted) return
+      handleChunk(event)
+    })
 
-      switch (response.command) {
-        case "history":
-          // Загружена история чата
-          setMessages(response.data.map(item => {
-            // Проверяем, является ли элемент helpbox
-            if ('command' in item && item.command === 'helpbox') {
-              return {
-                role: 'assistant' as const,
-                content: <MessageHelpBox />,
-                sent: response.sent,
-                isPending: false,
-                isHelpBox: true,
-              }
-            }
-            // Обычное сообщение (type guard для TypeScript)
-            if ('role' in item && 'content' in item && 'sent' in item) {
-              return {
-                role: item.role,
-                content: item.content,
-                sent: item.sent,
-                isPending: false,
-              }
-            }
-            // Fallback (не должно произойти, но для безопасности)
-            return {
-              role: 'assistant' as const,
-              content: '',
-              sent: response.sent,
-              isPending: false,
-            }
-          }))
-          setIsLoadingHistory(false)
-          setConnectionError(null)
-          break
-
-        case "answer":
-          // Получен ответ от ассистента
-          setMessages(prev => {
-            // Убираем pending статус с последнего сообщения пользователя
-            const updated = prev.map((msg, idx) => {
-              if (idx === prev.length - 1 && msg.role === "user" && msg.isPending) {
-                return { ...msg, isPending: false }
-              }
-              return msg
-            })
-            
-            // Добавляем ответ ассистента
-            return [
-              ...updated,
-              ...response.data.map(msg => ({
-                role: msg.role,
-                content: msg.content,
-                sent: msg.sent,
-                isPending: false,
-              }))
-            ]
-          })
-          setIsSending(false)
-          break
-
-        case "error":
-          // Ошибка от сервера
-          setConnectionError(new Error(response.error || "Неизвестная ошибка"))
-          setIsSending(false)
-          setIsLoadingHistory(false)
-          break
-
-        case "clear":
-          // История очищена
-          setMessages([])
-          break
-      }
-    }
-
-    // Обработчик ошибок
-    const handleError = (error: Error) => {
+    const unsubscribeError = client.onError((error) => {
       if (!isMounted) return
-      setConnectionError(error)
-      setIsLoadingHistory(false)
-      setIsSending(false)
-    }
+      handleConnectionError(error)
+    })
 
-    // Обработчик изменения статуса
-    const handleStatusChange = (status: string) => {
+    const unsubscribeStatus = client.onStatusChange((status) => {
       if (!isMounted) return
       if (status === "error") {
-        setConnectionError(new Error("Ошибка соединения"))
-      }
-    }
-
-    // Подписываемся на события
-    const unsubscribeMessage = client.onMessage(handleMessage)
-    const unsubscribeError = client.onError(handleError)
-    const unsubscribeStatus = client.onStatusChange(handleStatusChange)
-
-    // Подключаемся к WebSocket
-    setIsLoadingHistory(true)
-    client.connect(telegramChatId).catch((error) => {
-      if (isMounted) {
-        handleError(error)
+        handleConnectionError(new Error("Ошибка соединения"))
       }
     })
 
-    // Очистка при размонтировании
+    client.connect(telegramChatId, token).catch((error) => {
+      if (isMounted) {
+        handleConnectionError(error)
+      }
+    })
+
     return () => {
       isMounted = false
-      unsubscribeMessage()
+      unsubscribeChunk()
       unsubscribeError()
       unsubscribeStatus()
-      // Не отключаемся полностью, так как клиент может использоваться в других местах
-      // client.disconnect()
     }
-  }, [telegramChatId])
+  }, [telegramChatId, token, handleChunk, handleConnectionError])
 
   /* ----------------- Формирование списка сообщений для компонента ----------------- */
   const messageProps: MessageProps[] = useMemo(() => {
@@ -233,31 +275,28 @@ function RouteComponent() {
 
   /* ----------------- Очистка истории чата ----------------- */
   const handleClear = useCallback(() => {
-    if (!telegramChatId) return
-
-    const client = wsClientRef.current
-    
-    // Проверяем, что соединение установлено
-    if (!client.isConnected()) {
-      setConnectionError(new Error("Соединение не установлено. Попробуйте перезагрузить страницу."))
+    if (!token) {
+      setConnectionError(new Error("Токен авторизации недоступен"))
       return
     }
 
-    try {
-      client.clearHistory()
-      // Сообщения будут очищены при получении ответа от сервера (команда "clear")
-    } catch (error) {
-      const err = error instanceof Error 
-        ? error 
-        : new Error("Ошибка очистки истории")
-      setConnectionError(err)
-    }
-  }, [telegramChatId])
+    setIsLoadingHistory(true)
+    clearWebAppChatMessages(token)
+      .then(() => {
+        setMessages([])
+        setIsLoadingHistory(false)
+      })
+      .catch((error) => {
+        const err = error instanceof Error ? error : new Error("Ошибка очистки истории")
+        setConnectionError(err)
+        setIsLoadingHistory(false)
+      })
+  }, [token])
 
   /* ----------------- Отправка сообщения ----------------- */
   const handleSend = useCallback((content: string) => {
     const trimmed = content.trim()
-    if (!trimmed || isSending || !telegramChatId) return
+    if (!trimmed || isSending || !telegramChatId || !token) return
 
     const client = wsClientRef.current
     
@@ -275,23 +314,27 @@ function RouteComponent() {
       isPending: true,
     }
 
+    // Добавляем сообщение пользователя
     setMessages(prev => [...prev, userMessage])
+    
     setIsSending(true)
     setConnectionError(null)
+    
+    // Сбрасываем ID текущего стрима, чтобы следующий чанк воспринимался как новый
+    streamBufferRef.current = ""
+    streamMessageIdRef.current = null
 
-    try {
-      client.sendMessage(trimmed)
-    } catch (error) {
-      const err = error instanceof Error 
-        ? error 
-        : new Error("Ошибка отправки сообщения")
-      
-      // Убираем pending сообщение при ошибке
-      setMessages(prev => prev.filter(msg => msg !== userMessage))
-      setConnectionError(err)
-      setIsSending(false)
-    }
-  }, [isSending, telegramChatId])
+    streamWebAppChatMessage(token, { message: trimmed })
+      .catch((error) => {
+        const err = error instanceof Error 
+          ? error 
+          : new Error("Ошибка отправки сообщения")
+        
+        setMessages(prev => prev.filter(msg => msg !== userMessage))
+        setConnectionError(err)
+        setIsSending(false)
+      })
+  }, [isSending, telegramChatId, token])
 
   return (
     <>
@@ -393,7 +436,7 @@ function RouteComponent() {
       >
         <ChatInput
           onSend={handleSend}
-          isDisabled={isSending || !telegramChatId || isLoadingHistory}
+          isDisabled={isSending || !telegramChatId || isLoadingHistory || !token}
         />
       </Box>
     </>

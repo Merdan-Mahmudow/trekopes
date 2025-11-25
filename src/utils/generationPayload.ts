@@ -10,6 +10,8 @@ import type {
   StyleGenerationDraft,
   FastGenerationDraft,
 } from "../types/generation";
+import { withMoodDescription } from "./moodPrompts";
+import { withGenreDescription } from "./genrePrompts";
 
 type MetadataEntry = Record<string, unknown>;
 
@@ -21,9 +23,7 @@ const buildTextMetadata = (scenario: TextGenerationDraft): MetadataEntry => ({
   audience: scenario.audience,
   answers: scenario.answers,
   summary: scenario.summary,
-  // NOTE: временно не передаём artist/params до готовности генерации по сценариям на бэкенде
   artist: scenario.artist,
-  params: scenario.params,
 });
 
 const buildPhotoMetadata = (scenario: PhotoGenerationDraft): MetadataEntry => ({
@@ -31,28 +31,24 @@ const buildPhotoMetadata = (scenario: PhotoGenerationDraft): MetadataEntry => ({
   caption: scenario.caption,
   photo: sanitizePhoto(scenario.photo),
   artist: scenario.artist,
-  params: scenario.params,
 });
 
 const buildLinkMetadata = (scenario: LinkGenerationDraft): MetadataEntry => ({
   mode: scenario.mode,
   link: scenario.link,
   artist: scenario.artist,
-  params: scenario.params,
 });
 
 const buildStyleMetadata = (scenario: StyleGenerationDraft): MetadataEntry => ({
   mode: scenario.mode,
   prompt: scenario.prompt,
   artist: scenario.artist,
-  params: scenario.params,
 });
 
 const buildFastMetadata = (scenario: FastGenerationDraft): MetadataEntry => ({
   mode: scenario.mode,
   prompt: scenario.prompt,
   artist: scenario.artist,
-  params: scenario.params,
 });
 
 const sanitizePhoto = (
@@ -113,6 +109,15 @@ export const buildCreateGenerationRequest = (
   }
 
   const scenario = draft.scenario ?? null;
+  const scenarioParamsWithDescriptions = withGenreDescription(
+    withMoodDescription(scenario?.params)
+  );
+  const scenarioWithDescriptions = scenario
+    ? {
+        ...scenario,
+        params: scenarioParamsWithDescriptions,
+      }
+    : null;
   const prompt = derivePrompt(draft, scenario);
 
   if (!prompt || prompt.trim().length === 0) {
@@ -121,22 +126,22 @@ export const buildCreateGenerationRequest = (
 
   const metadata: MetadataEntry[] = [];
 
-  if (scenario) {
-    switch (scenario.mode) {
+  if (scenarioWithDescriptions) {
+    switch (scenarioWithDescriptions.mode) {
       case "scenario":
-        metadata.push(buildTextMetadata(scenario));
+        metadata.push(buildTextMetadata(scenarioWithDescriptions));
         break;
       case "photo":
-        metadata.push(buildPhotoMetadata(scenario));
+        metadata.push(buildPhotoMetadata(scenarioWithDescriptions));
         break;
       case "link":
-        metadata.push(buildLinkMetadata(scenario));
+        metadata.push(buildLinkMetadata(scenarioWithDescriptions));
         break;
       case "style":
-        metadata.push(buildStyleMetadata(scenario));
+        metadata.push(buildStyleMetadata(scenarioWithDescriptions));
         break;
       case "text":
-        metadata.push(buildFastMetadata(scenario));
+        metadata.push(buildFastMetadata(scenarioWithDescriptions));
         break;
       default:
         break;
@@ -147,13 +152,28 @@ export const buildCreateGenerationRequest = (
     prompt,
   };
 
+  const paramsForRequest =
+    scenarioWithDescriptions?.params ?? scenario?.params ?? null;
+  if (paramsForRequest && typeof paramsForRequest.tempo === "number") {
+    request.tempo = paramsForRequest.tempo;
+  }
+  if (paramsForRequest?.style) {
+    request.style = paramsForRequest.style;
+  }
+  if (paramsForRequest?.mood) {
+    request.mood = paramsForRequest.mood;
+  }
+  if (paramsForRequest?.voice) {
+    request.voice = paramsForRequest.voice;
+  }
+
   if (draft.type) {
     // NOTE: временно форсим тип text для сценариев, пока сервер не готов
     request.type = draft.type === "scenario" ? "text" : draft.type;
   }
   
   // Подставляем template_id для генерации по сценарию
-  if (scenario?.mode === "scenario") {
+  if (scenarioWithDescriptions?.mode === "scenario") {
     const scenarioTemplateId =
       draft.templateId ||
       store.state.templates.scenarioTemplateId ||
@@ -164,8 +184,8 @@ export const buildCreateGenerationRequest = (
   }
   
   // Подставляем template_artist_id для генерации по стилю из выбранного артиста
-  if (scenario?.mode === "style" && "artist" in scenario && scenario.artist?.id) {
-    request.template_artist_id = scenario.artist.id;
+  if (scenarioWithDescriptions?.mode === "style" && "artist" in scenarioWithDescriptions && scenarioWithDescriptions.artist?.id) {
+    request.template_artist_id = scenarioWithDescriptions.artist.id;
   } else if (draft.templateArtistId) {
     request.template_artist_id = draft.templateArtistId;
   }
