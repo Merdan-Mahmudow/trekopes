@@ -3,9 +3,16 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
+RUN npm install -g npm@latest
+RUN npm install -g typescript@latest
+
 # лучше сначала тянуть только package*, чтобы кэшировать deps
 COPY package*.json ./
-RUN npm ci --include=dev
+RUN npm ci
+
+# Устанавливаем NODE_ENV=production только после установки зависимостей
+# чтобы devDependencies были установлены (нужны для сборки)
+ENV NODE_ENV=production
 
 # теперь уже код
 COPY . .

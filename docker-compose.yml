@@ -5,9 +5,11 @@ services:
     #   dockerfile: Dockerfile
     #   args:
     #     VITE_DEBUG: ${VITE_DEBUG:-false}
+    # container_name: frontend
     image: frontend
     restart: unless-stopped
     env_file:
+      - .env.production
       - .env.production
     environment:
       TZ: ${TZ:-Europe/Moscow}
