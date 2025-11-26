@@ -17,11 +17,11 @@ import { useEffect, useMemo, useRef, useCallback, useLayoutEffect, useState } fr
 import type React from 'react'
 import type { Telegram } from "telegram-web-app"
 import { IoChevronBack, IoArrowDown } from "react-icons/io5"
-import { FaRegTrashAlt } from "react-icons/fa"
+// import { FaRegTrashAlt } from "react-icons/fa"
 import { useAuth } from "../hooks/useUser"
 import { getWebSocketChatClient } from "../api/websocket-chat"
 import {
-  clearWebAppChatMessages,
+  // clearWebAppChatMessages,
   getWebAppChatMessages,
   streamWebAppChatMessage,
 } from "../api/webapp"
@@ -290,24 +290,24 @@ function RouteComponent() {
   }, [messageProps.length, scrollToBottom])
 
   /* ----------------- Очистка истории чата ----------------- */
-  const handleClear = useCallback(() => {
-    if (!token) {
-      setConnectionError(new Error("Токен авторизации недоступен"))
-      return
-    }
+  // const handleClear = useCallback(() => {
+  //   if (!token) {
+  //     setConnectionError(new Error("Токен авторизации недоступен"))
+  //     return
+  //   }
 
-    setIsLoadingHistory(true)
-    clearWebAppChatMessages(token)
-      .then(() => {
-        setMessages([])
-        setIsLoadingHistory(false)
-      })
-      .catch((error) => {
-        const err = error instanceof Error ? error : new Error("Ошибка очистки истории")
-        setConnectionError(err)
-        setIsLoadingHistory(false)
-      })
-  }, [token])
+  //   setIsLoadingHistory(true)
+  //   clearWebAppChatMessages(token)
+  //     .then(() => {
+  //       setMessages([])
+  //       setIsLoadingHistory(false)
+  //     })
+  //     .catch((error) => {
+  //       const err = error instanceof Error ? error : new Error("Ошибка очистки истории")
+  //       setConnectionError(err)
+  //       setIsLoadingHistory(false)
+  //     })
+  // }, [token])
 
   /* ----------------- Отправка сообщения ----------------- */
   const handleSend = useCallback((content: string) => {
@@ -392,7 +392,7 @@ function RouteComponent() {
           </Box>
         </Flex>
 
-        <IconButton
+        {/* <IconButton
           variant="ghost"
           onClick={handleClear}
           aria-label="Очистить чат"
@@ -404,7 +404,7 @@ function RouteComponent() {
           color="gray.500"
         >
           <FaRegTrashAlt size="20px" />
-        </IconButton>
+        </IconButton> */}
       </Flex>
 
       {/* Messages Area */}

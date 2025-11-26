@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Box, Flex, Textarea, IconButton } from "@chakra-ui/react";
 import { useColorModeValue } from "../ui/color-mode";
-import { BsSendFill } from "react-icons/bs";
+import { FaArrowUp } from "react-icons/fa";
 import { useLenis } from "lenis/react";
 import { COLOR } from "../ui/colors";
 
@@ -112,7 +112,7 @@ export function ChatInput({
           _hover={{ bg: value.trim() ? COLOR.kit.orange : undefined }}
           transition="all 0.2s"
         >
-           <BsSendFill size="16px" />
+           <FaArrowUp size="16px" />
         </IconButton>
       </Flex>
 
