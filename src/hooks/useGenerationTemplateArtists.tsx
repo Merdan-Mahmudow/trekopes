@@ -5,7 +5,7 @@ import store from "../store";
 import type {
   GetGenerationTemplateArtistsQuery,
   GetGenerationTemplateArtistsResponse,
-  GenerationTemplateArtist,
+//   GenerationTemplateArtist,
 } from "../types/webapp";
 
 export function useGenerationTemplateArtists(query?: GetGenerationTemplateArtistsQuery) {

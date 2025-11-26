@@ -1,22 +1,23 @@
 import { ChatInput } from '../components/Input'
 import { ChatList, type MessageProps } from '../components/Message'
 import {
-  Avatar,
   Box,
-  Circle,
   Flex,
-  Float,
-  Grid,
   IconButton,
   Text,
-  Spinner
+  Spinner,
+  Container,
+  Avatar,
+  Float,
+  Circle
 } from '@chakra-ui/react'
+import { useColorModeValue } from "../components/ui/color-mode"
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useCallback, useLayoutEffect, useState } from 'react'
 import type React from 'react'
 import type { Telegram } from "telegram-web-app"
-import { IoChevronBack } from "react-icons/io5"
-import { MdDelete } from "react-icons/md"
+import { IoChevronBack, IoArrowDown } from "react-icons/io5"
+import { FaRegTrashAlt } from "react-icons/fa"
 import { useAuth } from "../hooks/useUser"
 import { getWebSocketChatClient } from "../api/websocket-chat"
 import {
@@ -25,6 +26,7 @@ import {
   streamWebAppChatMessage,
 } from "../api/webapp"
 import type { ChatMessage, ChatMessageChunkEvent } from "../types/webapp"
+import { COLOR } from '../components/ui/colors'
 
 export const Route = createFileRoute('/chat')({
   component: RouteComponent,
@@ -48,16 +50,24 @@ function RouteComponent() {
   const wsClientRef = useRef(getWebSocketChatClient())
   const streamBufferRef = useRef("")
   const streamMessageIdRef = useRef<string | null>(null)
-  
+
   // Состояние сообщений
   const [messages, setMessages] = useState<ChatMessageState[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [connectionError, setConnectionError] = useState<Error | null>(null)
   const [isSending, setIsSending] = useState(false)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+
+  // UI Colors
+  const bg = useColorModeValue("#FCFCFC", "#131313")
+  const headerBg = useColorModeValue("rgba(255,255,255,0.8)", "rgba(19,19,19,0.8)")
+  const borderColor = useColorModeValue("rgba(0,0,0,0.05)", "rgba(255,255,255,0.05)")
+  const scrollbarThumbBg = useColorModeValue('rgba(0,0,0,0.2)', 'rgba(255,255,255,0.2)')
+  const scrollButtonBg = useColorModeValue("white", "gray.700")
 
   // Получаем telegram_chat_id из данных пользователя
-  const telegramChatId = user?.data?.telegram_chat_id 
-    ? String(user.data.telegram_chat_id) 
+  const telegramChatId = user?.data?.telegram_chat_id
+    ? String(user.data.telegram_chat_id)
     : undefined
 
   /* ----------------- Загрузка истории чата ----------------- */
@@ -113,25 +123,21 @@ function RouteComponent() {
     setConnectionError(null)
 
     // Определяем ID стрима для группировки чанков
-    // Если сервер не прислал message_id, генерируем локальный для текущего потока
     let streamId = event.message_id
-    
+
     if (!streamId) {
-      // Если нет текущего активного стрима, создаем новый ID
       if (!streamMessageIdRef.current) {
         streamMessageIdRef.current = `local-stream-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-        streamBufferRef.current = "" // Новый стрим - новый буфер
+        streamBufferRef.current = ""
       }
       streamId = streamMessageIdRef.current
     } else {
-      // Если сервер прислал ID, и он отличается от текущего - это новый стрим
       if (streamMessageIdRef.current !== streamId) {
         streamMessageIdRef.current = streamId
-        streamBufferRef.current = "" // Сброс буфера при смене ID
+        streamBufferRef.current = ""
       }
     }
 
-    // Накапливаем буфер
     const chunkPart = event.chunk ?? ""
     if (chunkPart) {
       streamBufferRef.current += chunkPart
@@ -142,8 +148,6 @@ function RouteComponent() {
       let base = prev
       const lastIndex = prev.length - 1
 
-      // Если последнее сообщение от пользователя и оно pending,
-      // значит мы только что получили ответ на него -> снимаем pending
       if (
         lastIndex >= 0 &&
         prev[lastIndex].role === "user" &&
@@ -163,7 +167,6 @@ function RouteComponent() {
         streamId,
       }
 
-      // Ищем, есть ли уже сообщение с таким streamId (обновление существующего)
       const existingIndex = base.findIndex((msg) => msg.streamId === streamId)
 
       if (existingIndex >= 0) {
@@ -172,7 +175,6 @@ function RouteComponent() {
         return updated
       }
 
-      // Если нет - добавляем новое
       return [...base, assistantMessage]
     })
 
@@ -255,6 +257,7 @@ function RouteComponent() {
     const container = chatContainerRef.current
     if (!container) return
 
+    // Используем window.scrollTo если это основной скроллбар страницы, но у нас контейнер
     requestAnimationFrame(() => {
       container.scrollTo({
         top: container.scrollHeight,
@@ -263,11 +266,24 @@ function RouteComponent() {
     })
   }, [])
 
-  // Скролл при изменении сообщений
+  // Отслеживание скролла для кнопки "Вниз"
+  const handleScroll = useCallback(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const isBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollButton(!isBottom);
+  }, []);
+
+  // Скролл при добавлении новых сообщений (если мы уже внизу)
   const prevLengthRef = useRef(0)
   useLayoutEffect(() => {
     const currentLength = messageProps.length
+
     if (currentLength > prevLengthRef.current) {
+      // Если это ответ бота или пользователь только что отправил - скроллим
+      // Простая эвристика: всегда скроллим при новом сообщении
       scrollToBottom(prevLengthRef.current > 0)
     }
     prevLengthRef.current = currentLength
@@ -299,14 +315,12 @@ function RouteComponent() {
     if (!trimmed || isSending || !telegramChatId || !token) return
 
     const client = wsClientRef.current
-    
-    // Проверяем, что соединение установлено
+
     if (!client.isConnected()) {
       setConnectionError(new Error("Соединение не установлено. Попробуйте перезагрузить страницу."))
       return
     }
 
-    // Добавляем сообщение пользователя с pending статусом
     const userMessage: ChatMessageState = {
       role: "user",
       content: trimmed,
@@ -314,22 +328,19 @@ function RouteComponent() {
       isPending: true,
     }
 
-    // Добавляем сообщение пользователя
     setMessages(prev => [...prev, userMessage])
-    
     setIsSending(true)
     setConnectionError(null)
-    
-    // Сбрасываем ID текущего стрима, чтобы следующий чанк воспринимался как новый
+
     streamBufferRef.current = ""
     streamMessageIdRef.current = null
 
     streamWebAppChatMessage(token, { message: trimmed })
       .catch((error) => {
-        const err = error instanceof Error 
-          ? error 
+        const err = error instanceof Error
+          ? error
           : new Error("Ошибка отправки сообщения")
-        
+
         setMessages(prev => prev.filter(msg => msg !== userMessage))
         setConnectionError(err)
         setIsSending(false)
@@ -337,108 +348,147 @@ function RouteComponent() {
   }, [isSending, telegramChatId, token])
 
   return (
-    <>
-      <Grid templateRows="1fr" h="93dvh" overflow="hidden">
-        {/* Header */}
-        <Flex
-          bg="gray.800"
-          alignItems="center"
-          pl={2}
-          pr={2}
-          gapX={4}
-          justifyContent="space-between"
-          pos="fixed"
-          top={0}
-          left={0}
-          right={0}
-          zIndex={10}
-          h="70px"
-        >
-          <Flex gapX={2} alignItems="center" flex={1}>
-            <IconButton 
-              variant="ghost" 
-              onClick={handleBackClick}
-              aria-label="Назад"
-            >
-              <IoChevronBack />
-            </IconButton>
-
-            <Avatar.Root variant="subtle" size="lg">
-              <Avatar.Fallback name="ТРЕКОПЁС" />
-              <Avatar.Image 
-                src="https://storage.yandexcloud.net/trekopes/trekopes_ava.jpg"
-              />
-              <Float placement="bottom-end" offsetX="2" offsetY="1.5">
-                <Circle bg="green.500" size="8px" />
-              </Float>
-            </Avatar.Root>
-
-            <Box>
-              <Text textTransform="uppercase" lineHeight="15px">трекопёс</Text>
-              <Text fontSize="9pt" color="green">online</Text>
-            </Box>
-          </Flex>
-
+    <Box h="100dvh" bg={bg} display="flex" flexDirection="column" overflow="hidden">
+      {/* Header */}
+      <Flex
+        bg={headerBg}
+        backdropFilter="blur(10px)"
+        alignItems="center"
+        px={4}
+        justifyContent="space-between"
+        pos="fixed"
+        top={0}
+        left={0}
+        right={0}
+        zIndex={20}
+        h="60px"
+        borderBottom="1px solid"
+        borderColor={borderColor}
+      >
+        <Flex gap={3} alignItems="center">
           <IconButton
             variant="ghost"
-            onClick={handleClear}
-            aria-label="Очистить чат"
-            colorScheme="red"
-            disabled={messages.length === 0 || isLoadingHistory}
-            title="Очистить историю чата"
+            onClick={handleBackClick}
+            aria-label="Назад"
+            size="sm"
+            rounded="full"
           >
-            <MdDelete size="20px" />
+            <IoChevronBack size="20px" />
           </IconButton>
+          <Avatar.Root size="sm">
+            <Avatar.Fallback name="Трекопёс" />
+            <Avatar.Image src="https://storage.yandexcloud.net/trekopes/trekopes_ava.jpg" />
+            <Float placement="bottom-end" offsetX={1.5} offsetY={1.5}>
+              <Circle size="7px" bg={"green.500"} />
+            </Float>
+          </Avatar.Root>
+          <Box>
+            <Text fontWeight="600" fontSize="md" lineHeight="1.2">
+              Трекопёс
+            </Text>
+            <Text fontSize="xs" color="green.500" lineHeight="1.2">
+              online
+            </Text>
+          </Box>
         </Flex>
 
-        {/* Messages */}
-        <Box
-          ref={chatContainerRef}
-          overflowY="auto"
-          overflowX="hidden"
-          px={3}
-          py={2}
-          bg="gray.900"
-          pb="80px"
-          pt="80px"
-          minH={0}
-          css={{
-            WebkitOverflowScrolling: 'touch',
-            '&::-webkit-scrollbar': { width: '4px' },
-            '&::-webkit-scrollbar-thumb': { bg: 'gray.600', borderRadius: '2px' },
-          }}
+        <IconButton
+          variant="ghost"
+          onClick={handleClear}
+          aria-label="Очистить чат"
+          colorScheme="red"
+          size="sm"
+          rounded="full"
+          disabled={messages.length === 0 || isLoadingHistory}
+          title="Очистить историю чата"
+          color="gray.500"
         >
+          <FaRegTrashAlt size="20px" />
+        </IconButton>
+      </Flex>
+
+      {/* Messages Area */}
+      <Box
+        ref={chatContainerRef}
+        flex={1}
+        overflowY="auto"
+        overflowX="hidden"
+        pt="80px" // Header height + padding
+        pb="140px" // Input height + padding
+        px={4}
+        onScroll={handleScroll}
+        css={{
+          scrollBehavior: 'smooth',
+          '&::-webkit-scrollbar': { width: '6px' },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: scrollbarThumbBg,
+            borderRadius: '3px'
+          },
+          '&::-webkit-scrollbar-track': { background: 'transparent' }
+        }}
+      >
+        <Container maxW="800px" p={0}>
           {isLoadingHistory && messageProps.length === 0 ? (
-            <Flex justify="center" align="center" h="100%">
-              <Spinner size="lg" color="orange.500" />
+            <Flex justify="center" align="center" py={20}>
+              <Spinner size="xl" color={COLOR.kit.orange} borderWidth="3px" />
             </Flex>
           ) : connectionError && messageProps.length === 0 ? (
-            <Flex justify="center" align="center" h="100%" direction="column" gap={2}>
-              <Text color="red.500">Ошибка подключения к чату</Text>
-              <Text fontSize="sm" color="gray.400">
+            <Flex justify="center" align="center" direction="column" gap={3} py={20}>
+              <Text color="red.500" fontWeight="bold">Ошибка подключения</Text>
+              <Text fontSize="sm" color="gray.500">
                 {connectionError.message || "Попробуйте обновить страницу"}
               </Text>
             </Flex>
           ) : (
             <ChatList messages={messageProps} />
           )}
-        </Box>
-      </Grid>
+        </Container>
+      </Box>
 
-      {/* Input */}
-      <Box 
-        position="fixed" 
-        bottom={0} 
-        left={0} 
-        right={0} 
-        zIndex={10}
-        bg="gray.900"
+      {/* Scroll to Bottom Button */}
+      {showScrollButton && (
+        <IconButton
+          aria-label="Scroll to bottom"
+          position="fixed"
+          bottom="100px"
+          right="50%"
+          transform="translateX(50%)"
+          zIndex={15}
+          rounded="full"
+          size="sm"
+          shadow="md"
+          bg={scrollButtonBg}
+          onClick={() => scrollToBottom(true)}
+        >
+          <IoArrowDown color='white' />
+        </IconButton>
+      )}
+
+      {/* Input Area */}
+      <Box
+        position="fixed"
+        bottom={0}
+        left={0}
+        right={0}
+        zIndex={20}
+        bg={bg} // Match page bg to cover content
+        pt={2}
       >
+        {/* Gradient fade at top of input area */}
+        <Box
+          position="absolute"
+          top="-20px"
+          left={0}
+          right={0}
+          h="20px"
+          bg={`linear-gradient(to top, ${bg}, transparent)`}
+          pointerEvents="none"
+        />
         <ChatInput
           onSend={handleSend}
           isDisabled={isSending || !telegramChatId || isLoadingHistory || !token}
         />
       </Box>
-    </>
+    </Box>
   )
 }

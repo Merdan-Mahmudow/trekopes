@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect } from "react";
-import { Box, Flex, Input as ChakraInput, Button, Icon } from "@chakra-ui/react";
+import { Box, Flex, Textarea, IconButton } from "@chakra-ui/react";
+import { useColorModeValue } from "../ui/color-mode";
 import { BsSendFill } from "react-icons/bs";
-import { COLOR } from "../ui/colors";
 import { useLenis } from "lenis/react";
+import { COLOR } from "../ui/colors";
 
 export interface ChatInputProps {
   onSend: (content: string) => void;
@@ -12,13 +13,16 @@ export interface ChatInputProps {
 
 export function ChatInput({
   onSend,
-  placeholder = "Введите сообщение...",
+  placeholder = "Сообщение...",
   isDisabled = false,
 }: ChatInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const lenis = useLenis();
   const [value, setValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+
+  const bg = useColorModeValue("#FFFFFF", "#1C1C1C");
+  const borderColor = useColorModeValue("rgba(0,0,0,0.1)", "rgba(255,255,255,0.1)");
 
   useEffect(() => {
     if (!lenis) return;
@@ -30,52 +34,88 @@ export function ChatInput({
     }
   }, [isFocused, lenis]);
 
+  // Auto-resize effect
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`; // Max height approx 8 lines
+  }, [value]);
+
   const send = () => {
-    inputRef.current?.focus()
     const trimmed = value.trim();
     if (!trimmed || isDisabled) return;
     onSend(trimmed);
     setValue("");
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
   };
 
   return (
-    <Box bg="gray.800" p={3} h={"fit-content"}>
-      <Flex gap={2} align="center">
-        <ChakraInput
+    <Box w="full" maxW="880px" mx="auto" px={2} pb={4}>
+      <Flex 
+        align="flex-end" 
+        bg={bg}
+        border="1px solid"
+        borderColor={borderColor}
+        rounded="3xl"
+        p={2}
+        boxShadow="sm"
+        transition="border-color 0.2s"
+        _focusWithin={{ borderColor: COLOR.kit.orange, boxShadow: "md" }}
+      >
+
+
+        <Textarea
           value={value}
           ref={inputRef}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          bg="#0f1111"
-          color="white"
-          rounded={"2xl"}
-          size={"lg"}
+          bg="transparent"
+          border="none"
+          _focus={{ boxShadow: "none", borderColor: "transparent" }}
+          resize="none"
+          minH="44px"
+          py={2.5}
+          px={3}
           fontSize="16px"
-          h={"38px"}
-          outline={"none"}
-          _focus={{ borderColor: COLOR.kit.orange, outline: "none" }}
+          lineHeight="1.5"
+          rows={1}
+          overflow="hidden"
+          flex={1}
+          outline="none"
         />
-        <Button
+
+        <IconButton
           aria-label="Send"
           onClick={send}
-          disabled={isDisabled}
-          h={"38px"}
-          w={"45px"}
-          colorScheme="green"
-          rounded={"2xl"}
-          bg={"orange.500"}
+          disabled={isDisabled || !value.trim()}
+          h="40px"
+          w="40px"
+          rounded="full"
+          mb="3px"
+          bg={value.trim() ? COLOR.kit.orange : useColorModeValue("gray.200", "gray.700")}
+          color="white"
+          _hover={{ bg: value.trim() ? COLOR.kit.orange : undefined }}
+          transition="all 0.2s"
         >
-          <Icon as={BsSendFill} position={"relative"} right={0.5} color={"white"} />
-        </Button>
+           <BsSendFill size="16px" />
+        </IconButton>
       </Flex>
+
     </Box>
   );
 }

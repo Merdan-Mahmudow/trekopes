@@ -5,6 +5,7 @@ import { questions as allQuestions, type QuestionCategory, type QuestionSet } fr
 import { MdEdit, MdCheck } from 'react-icons/md'
 import { COLOR } from '../components/ui/colors'
 import { BrandButton } from '../components/ui/button'
+import { qaStorage } from '../utils/qaStorage'
 
 export const Route = createFileRoute('/questionsFinish')({
     component: ResultsComponent,
@@ -15,29 +16,16 @@ interface ResultsComponentProps {
 }
 
 export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
-    const [answers, setAnswers] = useState<Record<number, string>>({})
+    // Получаем категорию и parent из qaStorage
+    const category = useMemo(() => qaStorage.getActiveCategory(), []);
+    const parent = useMemo(() => qaStorage.getFinalParent(category || undefined), [category]);
+
+    const [answers, setAnswers] = useState<Record<number, string>>(() => 
+        qaStorage.getAnswers(category || undefined, parent)
+    )
     const [editingAnswer, setEditingAnswer] = useState<number | null>(null)
     const [tempAnswer, setTempAnswer] = useState("")
     const inputRef = useRef<HTMLInputElement | null>(null);
-
-    // Получаем категорию и parent из localStorage
-    const category = useMemo(() => {
-        try {
-            return localStorage.getItem('qa_category') ?? null;
-        } catch {
-            return null;
-        }
-    }, []);
-
-    const parent = useMemo(() => {
-        try {
-            const stored = localStorage.getItem('qa_parent');
-            // Если значение есть и не пустое, возвращаем его, иначе null
-            return stored && stored !== 'null' ? stored : null;
-        } catch {
-            return null;
-        }
-    }, []);
 
     // Находим QuestionSet с нужным parent
     const questionSet: QuestionSet | undefined = useMemo(() => {
@@ -65,7 +53,7 @@ export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
         if (tempAnswer.trim()) {
             const newAnswers = { ...answers, [index]: tempAnswer }
             setAnswers(newAnswers)
-            localStorage.setItem('qa_answers', JSON.stringify(newAnswers))
+            qaStorage.saveAnswers(category || undefined, parent, newAnswers)
         }
         setEditingAnswer(null)
         setTempAnswer("")
@@ -75,22 +63,6 @@ export function ResultsComponent({ onFinish }: ResultsComponentProps = {}) {
         setEditingAnswer(index)
         setTempAnswer(currentAnswer)
     }
-
-    useEffect(() => {
-        // Загружаем ответы из localStorage
-        try {
-            const rawA = localStorage.getItem('qa_answers')
-            const parsedA = rawA ? JSON.parse(rawA) : {}
-            const normA: Record<number, string> = {}
-            Object.keys(parsedA || {}).forEach(k => {
-                const n = Number(k)
-                if (!Number.isNaN(n)) normA[n] = parsedA[k]
-            })
-            setAnswers(normA)
-        } catch {
-            setAnswers({})
-        }
-    }, [])
 
     const maxIndex = (() => {
         const ansMax = Object.keys(answers).reduce((m, k) => Math.max(m, Number(k) || 0), 0)
