@@ -40,11 +40,7 @@ const Dock: React.FC = () => {
 
   useEffect(() => {
     const update = () => setActivePath(window.location.pathname);
-
-    // initial
     update();
-
-    console.log("Dock mounted, current path:", window.location.pathname);
   }, []);
 
   // храним id кнопки, на которую кликнули — анимация будет только у неё

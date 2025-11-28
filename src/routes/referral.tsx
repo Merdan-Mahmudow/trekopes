@@ -15,14 +15,14 @@ export const Route = createFileRoute('/referral')({
 
 function RouteComponent() {
     const refLink = "https://t.me/TPEKOllEC_BOT?start=87968768"
-    const tg: Telegram = window.Telegram;
+    const tg: Telegram | undefined = window.Telegram;
     useEffect(() => {
         setDockActive("left")
     }, [])
     const handleSend = () => {
+        if (!tg?.WebApp) return;
         const sendLink = `https://t.me/share/url?url=${encodeURIComponent(refLink)}`
         tg.WebApp.openTelegramLink(sendLink)
-        
     }
     return (
         <>

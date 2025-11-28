@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import z from 'zod';
 import { questions } from '../components/ui/questions';
 import { useState, useEffect } from 'react';
+import { CATEGORY_MAP } from '../utils/constants';
 
 const questionSearchSchema = z.object({
     category: z.enum(['self', 'friend', 'broken-heart', 'love', 'relation', 'baby', 'hero', 'congrats', 'others']),
@@ -19,15 +20,7 @@ export const Route = createFileRoute('/question')({
 function RouteComponent() {
     const params = Route.useSearch();
 
-    // маппинг категорий (маршрут -> файл)
-    const categoryMap: Record<string, string> = {
-        'friend': 'friends',
-        'broken-heart': 'heart-crack',
-        'love': 'lover',
-        // остальные совпадают: self, relation, baby, hero, congrats, others
-    };
-
-    const lookup = params?.category ? (categoryMap[params.category] ?? params.category) : undefined;
+    const lookup = params?.category ? (CATEGORY_MAP[params.category] ?? params.category) : undefined;
     const found = lookup ? questions.find(q => q.category === lookup) : undefined;
     const qList = found ? found.questions : null;
 

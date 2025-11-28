@@ -1,7 +1,7 @@
 import { Flex, Link, Text } from "@chakra-ui/react"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Transition } from "framer-motion";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, memo } from "react";
 import { BsChatDots, BsQuestionLg } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
 import { FaArrowRightLong } from "react-icons/fa6";
@@ -10,8 +10,9 @@ export interface MessageProps {
   role: "user" | "assistant"
   content: any
   isHelpBox?: boolean
+  id?: string
 }
-export function MessageBox({ role, content }: MessageProps) {
+export const MessageBox = memo(function MessageBox({ role, content }: MessageProps) {
   return (
     <>
       {role == "assistant" ? (
@@ -57,7 +58,7 @@ export function MessageBox({ role, content }: MessageProps) {
       )}
     </>
   );
-}
+});
 
 export function ChatList({ messages }: { messages: MessageProps[] }) {
   const prefersReduced = useReducedMotion();
@@ -96,7 +97,7 @@ export function ChatList({ messages }: { messages: MessageProps[] }) {
       <AnimatePresence initial={false}>
         {messages.map((msg, idx) => (
           <motion.div
-            key={idx}
+            key={msg.id || `msg-${idx}`}
             layout
             initial={enter}
             animate={show}
@@ -138,7 +139,7 @@ export function MessageHelpBox() {
           Нужна помощь? 
         </Text>
         <FaArrowRightLong size={"18px"} color={COLOR.brand.orange} style={{position: "relative", marginRight: "5px", top: "2px", marginLeft: "5px"}}/>
-        <Link href="https:/t.me/Help_llec_bot" color={COLOR.brand.orange}> GAVHELP
+        <Link href="https://t.me/Help_llec_bot" color={COLOR.brand.orange} target="_blank" rel="noopener noreferrer"> GAVHELP
         </Link>
       </Flex>
       </Flex>

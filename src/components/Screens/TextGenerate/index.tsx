@@ -1,6 +1,6 @@
 import { COLOR } from '../../../components/ui/colors'
 import { Button, Grid, GridItem, } from '@chakra-ui/react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { BsPeople, BsMagic } from 'react-icons/bs'
 import { FaRegFaceSmile } from 'react-icons/fa6'
 import { LuBaby } from 'react-icons/lu'
@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { QuestionModal } from "../../../components/QuestionModal";
 import { questions as allQuestions } from "../../../components/ui/questions";
 import { ResultsComponent } from '../../../routes/questionsFinish'
+import { CATEGORY_MAP } from '../../../utils/constants';
 const MotionDiv = motion.div;
 
 const buttonStyle = {
@@ -72,19 +73,15 @@ export function TextGenerateScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const categoryMap: Record<string, string> = {
-        friend: "friends",
-        "broken-heart": "heart-crack",
-        love: "lover",
-    };
-
-    const lookup = selectedCategory
-        ? categoryMap[selectedCategory] ?? selectedCategory
-        : undefined;
-
-    const found = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
-    const qList = found ? found.questions : null;
-    const currentQuestion = qList?.[currentIndex];
+    const { qList, currentQuestion } = useMemo(() => {
+        const lookup = selectedCategory
+            ? CATEGORY_MAP[selectedCategory] ?? selectedCategory
+            : undefined;
+        const found = lookup ? allQuestions.find((q) => q.category === lookup) : undefined;
+        const qList = found ? found.questions : null;
+        const currentQuestion = qList?.[currentIndex];
+        return { qList, currentQuestion };
+    }, [selectedCategory, currentIndex]);
 
 
     const handleNext = () => {

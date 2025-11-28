@@ -15,14 +15,13 @@ export const Route = createRootRoute({
 
 
 function RootComponent() {
-  const tg: Telegram = window.Telegram;
+  const tg: Telegram | undefined = window.Telegram;
 
   useEffect(() => {
-    if (tg) {
+    if (tg?.WebApp) {
       tg.WebApp.setHeaderColor(COLOR.bg.hex.subtle);
-      
     }
-  }, [tg]);
+  }, []);
   
   return (
     <>

@@ -74,7 +74,6 @@ export function QuestionModal({
         onNext && onNext();
 
         if (isLast){
-            console.log("yeeeeees")
             onFinish && onFinish();
         }
     };

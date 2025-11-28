@@ -8,12 +8,14 @@ export const Route = createFileRoute('/')({
 })
 
 function Index() {
-    const tg: Telegram = window.Telegram;
+    const tg: Telegram | undefined = window.Telegram;
     const navigate = useNavigate();
     useEffect(() => {
-        tg.WebApp.BackButton.hide()
-        navigate({ to: '/referral' })
-    }, [tg]);
+        if (tg?.WebApp) {
+            tg.WebApp.BackButton.hide();
+        }
+        navigate({ to: '/referral' });
+    }, [navigate, tg]);
     return <>
         
     </>

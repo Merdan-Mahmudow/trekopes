@@ -2,13 +2,8 @@ import { Flex, Image, Text } from "@chakra-ui/react";
 import { Link } from "@tanstack/react-router";
 import { BsChatDots } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
-// import { useState, useEffect } from "react";
 
 export function Balance() {
-    // const [chatID, setChatID] = useState<string>()
-    // useEffect(() => {
-    //     setChatID("735673465")
-    // })
     return <>
         <Flex
         
@@ -33,20 +28,6 @@ export function Balance() {
                 
                 <Text>18</Text>
             </Flex>
-            {/* <Flex>
-                <Text
-                    color={"gray"}
-                    fontSize={"10pt"}
-                    mt={"8px"}>ID: {chatID}
-                </Text>
-                <Clipboard.Root value={chatID}>
-                    <Clipboard.Trigger asChild>
-                        <IconButton variant="ghost" color={"orange.400"} size="xs">
-                            <Clipboard.Indicator />
-                        </IconButton>
-                    </Clipboard.Trigger>
-                </Clipboard.Root>
-            </Flex> */}
         </Flex>
     </>
 }

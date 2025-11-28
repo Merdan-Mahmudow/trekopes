@@ -1,8 +1,9 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import { API_BASE_URL } from "../utils/constants";
 
 const api = axios.create({
-    baseURL: "https://trekopes.ru/api",
+    baseURL: API_BASE_URL,
     timeout: 10_000
 })
 
