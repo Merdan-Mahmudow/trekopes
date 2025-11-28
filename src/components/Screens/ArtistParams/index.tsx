@@ -1,7 +1,7 @@
 import { Box, Text, VStack, Input, Icon, Flex, Grid, GridItem, Button, Slider, Skeleton, Image } from "@chakra-ui/react";
 import { Toaster } from "../../ui/toaster";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FaPaw, FaQuestion } from 'react-icons/fa';
+import { FaQuestion } from 'react-icons/fa';
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
 import { TrackLoadingScreen } from "../TrackLoading";
@@ -452,13 +452,8 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                         disabled={isGenerating || (!isArtistOnly && activeTab === "mode" && (selectedArtistId === "none"))}
                         w="full"
                     >
-                        <Flex alignItems="center" gap={2}>
-                            <Text>Сгенерировать</Text>
-                            <Flex alignItems="center" gap={1}>
-                                <Text fontSize="md">-1</Text>
-                                <Icon as={FaPaw} />
-                            </Flex>
-                        </Flex>
+                            <Text>Далее</Text>
+
                     </BrandButton>
                 </VStack>
             </Box >

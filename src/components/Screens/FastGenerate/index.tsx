@@ -25,15 +25,15 @@ import { toaster } from "../../ui/toaster"
 import { logError } from "../../../utils/logger"
 import { Dictaphone } from "../../ui/SpeechRecognitionButton"
 import { TbSparkles, TbX } from "react-icons/tb"
+import { GenerationParamsAccordion } from "../GenerationParamsAccordion"
 
 export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void }) => {
 	const [prompt, setPrompt] = useState("")
-	const [screen, setScreen] = useState<"form" | "loading">("form")
+	const [screen, setScreen] = useState<"form" | "params" | "loading">("form")
 	const [isGenerated, setIsGenerated] = useState(false)
 	const scenarioState = useGenerationScenario()
 	const generationDraft = useGenerationDraft()
 	const token = useStore(store, (state) => state.auth.token)
-	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false)
 	const { loadTracks } = useTracks()
 
@@ -184,6 +184,93 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 		return <TrackLoadingScreen />
 	}
 
+	if (screen === "params") {
+		return (
+			<GenerationParamsAccordion
+				mode="submit"
+				onBack={() => setScreen("form")}
+				onCancel={_onClose}
+				onGenerate={async () => {
+					const draft = generationDraft
+					if (!draft?.scenario || draft.scenario.mode !== "text") {
+						throw new Error("Заполните описание для генерации")
+					}
+
+					const updatedScenario = {
+						...draft.scenario,
+						prompt,
+					}
+
+					const effectiveDraft: GenerationDraft = {
+						...draft,
+						prompt,
+						scenario: updatedScenario,
+					}
+
+					const basePayload = buildCreateGenerationRequest(effectiveDraft)
+					
+					// Если лирика уже сгенерирована, извлекаем title и lyrics из текста
+					let payload: typeof basePayload & { skip_lyrics_generation?: boolean; lyrics?: string; title?: string } = { ...basePayload }
+					
+					if (isGenerated && prompt.trim()) {
+						const lines = prompt.trim().split('\n').filter(line => line.trim().length > 0)
+						
+						if (lines.length > 1) {
+							// Первая непустая строка - название песни
+							const title = lines[1].trim()
+							// Остальной текст - лирика
+							const lyrics = lines.slice(1).join('\n').trim()
+							
+							payload = {
+								...basePayload,
+								skip_lyrics_generation: true,
+								lyrics: lyrics || prompt, // если нет строк после первой, используем весь текст
+								title: title,
+							}
+						} else {
+							// Если нет строк, используем весь текст как лирику
+							payload = {
+								...basePayload,
+								skip_lyrics_generation: true,
+								lyrics: prompt,
+							}
+						}
+					} else {
+						payload = {
+							...basePayload,
+							skip_lyrics_generation: false,
+						}
+					}
+
+					if (!token) {
+						throw new Error("Нет токена авторизации")
+					}
+
+					await createWebAppGeneration(token, payload)
+
+					setGenerationScenario(updatedScenario)
+					setGenerationPrompt(payload.prompt)
+					setScreen("loading")
+
+					try {
+						await loadTracks()
+					} catch (loadError) {
+						logError("Failed to load tracks after fast generation", loadError)
+					}
+
+					resetGenerationDraft()
+					toaster.create({
+						type: "success",
+						title: "Генерация запущена",
+						description: "Новый трек появится в списке после обработки.",
+					})
+					return true
+				}}
+				onLoadingStart={() => setScreen("loading")}
+			/>
+		)
+	}
+
 	return (
 		<VStack gap={4} w="full" alignItems="stretch">
 			<Heading size="lg" color={COLOR.kit.white}>Песня по тексту</Heading>
@@ -229,7 +316,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 							boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)"
 						}}
 						// после генерации текста кнопка блокируется, пока пользователь не очистит текст (< 200 символов)
-						disabled={isGenerated || !prompt.trim() || isGeneratingLyrics || isSubmitting}
+						disabled={isGenerated || !prompt.trim() || isGeneratingLyrics}
 						onClick={handleGenerateLyrics}
 						transition="all 0.3s ease"
 						loading={isGeneratingLyrics}
@@ -272,108 +359,12 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					color={COLOR.kit.white}
 					_disabled={{ opacity: 0.5, cursor: "not-allowed" }}
 					_hover={{ bg: COLOR.brand.orange700 }}
-					disabled={!prompt.trim() || isSubmitting || isGeneratingLyrics}
-					onClick={async () => {
-						setIsSubmitting(true)
-						try {
-							const draft = generationDraft
-							if (!draft?.scenario || draft.scenario.mode !== "text") {
-								throw new Error("Заполните описание для генерации")
-							}
-
-							const updatedScenario = {
-								...draft.scenario,
-								prompt,
-							}
-
-							const effectiveDraft: GenerationDraft = {
-								...draft,
-								prompt,
-								scenario: updatedScenario,
-							}
-
-							const basePayload = buildCreateGenerationRequest(effectiveDraft)
-							
-							// Если лирика уже сгенерирована, извлекаем title и lyrics из текста
-							let payload: typeof basePayload & { skip_lyrics_generation?: boolean; lyrics?: string; title?: string } = { ...basePayload }
-							
-							if (isGenerated && prompt.trim()) {
-								const lines = prompt.trim().split('\n').filter(line => line.trim().length > 0)
-								
-								if (lines.length > 1) {
-									// Первая непустая строка - название песни
-									const title = lines[1].trim()
-									// Остальной текст - лирика
-									const lyrics = lines.slice(1).join('\n').trim()
-									
-									payload = {
-										...basePayload,
-										skip_lyrics_generation: true,
-										lyrics: lyrics || prompt, // если нет строк после первой, используем весь текст
-										title: title,
-									}
-								} else {
-									// Если нет строк, используем весь текст как лирику
-									payload = {
-										...basePayload,
-										skip_lyrics_generation: true,
-										lyrics: prompt,
-									}
-								}
-							} else {
-								payload = {
-									...basePayload,
-									skip_lyrics_generation: false,
-								}
-							}
-
-							if (!token) {
-								throw new Error("Нет токена авторизации")
-							}
-
-							await createWebAppGeneration(token, payload)
-
-							setGenerationScenario(updatedScenario)
-							setGenerationPrompt(payload.prompt)
-							setScreen("loading")
-
-						try {
-							await loadTracks()
-						} catch (loadError) {
-							logError("Failed to load tracks after fast generation", loadError)
-						}
-
-						resetGenerationDraft()
-						toaster.create({
-							type: "success",
-							title: "Генерация запущена",
-							description: "Новый трек появится в списке после обработки.",
-						})
-					} catch (err: any) {
-						logError("Failed to start fast generation", err)
-						
-						// Обработка ошибки 409 (Conflict)
-						if (err?.response?.status === 409) {
-							toaster.create({
-								type: "error",
-								title: "Ошибка генерации",
-								description: "У вас есть активная генерация. Пожалуйста, дождитесь её завершения.",
-							})
-							return
-						}
-						
-						const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
-						toaster.create({
-							type: "error",
-							title: "Ошибка запуска генерации",
-							description: errorMessage,
-						})
-					} finally {
-						setIsSubmitting(false)
-					}
+					disabled={!prompt.trim() || isGeneratingLyrics}
+					onClick={() => {
+						setScreen("params")
 					}}
 				>
-					Сгенерировать трек
+					Далее
 				</Button>
 			</VStack>
 			<Toaster />

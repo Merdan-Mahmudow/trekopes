@@ -27,7 +27,7 @@ const slides: SlideItem[] = [
         badge: "ПЕСНЯ ПО АРТИСТУ",
         title: "Трек голосом популярного артиста",
         description: `«Выбери одного из популярных артистов, а Трекопёс подберёт звук, подачу и фирменные фишки стиля.
-В итоге трек звуит так, будто любимый артист записал его по твоим мыслям 🐾`,
+В итоге трек звучит так, будто любимый артист записал его по твоим мыслям 🐾`,
         image: "/slider-1.jpeg"
     },
     {
@@ -402,24 +402,21 @@ const DetailSlideItem = ({
                                                 }}
                                             >
                                                 <Badge
-                                                    as="span"
-                                                    display="inline-flex"
-                                                    alignItems="center"
-                                                    justifyContent="center"
-                                                    padding="10px 18px"
-                                                    borderRadius="8px"
-                                                    bg="transparent"
-                                                    border="1.5px solid"
-                                                    borderColor="#ff6a00"
-                                                    fontSize="12px"
-                                                    fontWeight={700}
-                                                    letterSpacing="0.15em"
-                                                    textTransform="uppercase"
-                                                    color="#ff6a00"
-                                                    boxShadow="0 0 20px rgba(255, 106, 0, 0.4)"
-                                                >
-                                                    {slide.badge}
-                                                </Badge>
+                                                as="span"
+                                                display="inline-flex"
+                                                alignItems="center"
+                                                justifyContent="center"
+                                                padding="6px 10px"
+                                                borderRadius="full"
+                                                bg={COLOR.kit.iconBg}
+                                                fontSize={"xx-small"}
+                                                fontWeight={700}
+                                                letterSpacing="0.15em"
+                                                textTransform="uppercase"
+                                                color={COLOR.text.primary}
+                                            >
+                                                {slide.badge}
+                                            </Badge>
                                             </motion.div>
                                         )}
 

@@ -38,6 +38,7 @@ type GenerationParamsAccordionProps = {
     onCancel: () => void;
     onGenerate?: (params: GenerationParams) => void | boolean | Promise<void | boolean>;
     onLoadingStart?: () => void;
+    hideButtons?: boolean;
 };
 
 const voiceOptions = [
@@ -51,6 +52,7 @@ export function GenerationParamsAccordion({
     onBack,
     onGenerate,
     onLoadingStart,
+    hideButtons = false,
 }: GenerationParamsAccordionProps) {
     const [tempo, setTempo] = useState(105);
     const [generationParams, setGenerationParams] = useState<GenerationParams>({
@@ -133,6 +135,12 @@ export function GenerationParamsAccordion({
             const callbackResult = await onGenerate?.(generationParams);
 
             if (mode === "collect" || callbackResult === false) {
+                setIsGenerating(false);
+                return;
+            }
+
+            // Если onGenerate успешно выполнился и вернул true, не выполняем дополнительную логику
+            if (onGenerate && callbackResult === true) {
                 setIsGenerating(false);
                 return;
             }
@@ -377,20 +385,22 @@ export function GenerationParamsAccordion({
                         </Accordion.Item>
                     </Accordion.Root>
 
-                    <VStack gap={3}>
-                        <BrandButton onClick={handleGenerate} disabled={isGenerating} w="full">
-                            <Flex alignItems="center" gap={2}>
-                                <Text>Сгенерировать</Text>
-                                <Flex alignItems="center" gap={1}>
-                                    <Text fontSize="md">-1</Text>
-                                    <Icon as={FaPaw} />
+                    {!hideButtons && (
+                        <VStack gap={3}>
+                            <BrandButton onClick={handleGenerate} disabled={isGenerating} w="full">
+                                <Flex alignItems="center" gap={2}>
+                                    <Text>Сгенерировать</Text>
+                                    <Flex alignItems="center" gap={1}>
+                                        <Text fontSize="md">-1</Text>
+                                        <Icon as={FaPaw} />
+                                    </Flex>
                                 </Flex>
-                            </Flex>
-                        </BrandButton>
-                        <GrayButton onClick={onBack} disabled={isGenerating} w="full">
-                            Назад
-                        </GrayButton>
-                    </VStack>
+                            </BrandButton>
+                            <GrayButton onClick={onBack} disabled={isGenerating} w="full">
+                                Назад
+                            </GrayButton>
+                        </VStack>
+                    )}
                 </VStack>
             </Box>
             <Toaster />
