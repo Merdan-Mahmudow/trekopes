@@ -40,9 +40,9 @@ const NavBar = () => {
   }, []);
 
   const positions = {
-    left: svgWidth * 0.23,
-    center: svgWidth * 0.5,
-    right: svgWidth * 0.77,
+    left: (svgWidth || 400) * 0.23,
+    center: (svgWidth || 400) * 0.5,
+    right: (svgWidth || 400) * 0.77,
     none: 0,
   };
 
@@ -61,9 +61,13 @@ const NavBar = () => {
     changeConvexParams();
   }, [active])
 
-  const createPath = (centerX: number) => {
-    const waveWidth = convexParams.width;
-    const waveHeight = convexParams.height;
+  const createPath: (centerX: number) => string = (centerX: number) => {
+    // Проверяем, что все значения валидны
+    const validSvgWidth = svgWidth && svgWidth > 0 && !isNaN(svgWidth) ? svgWidth : 400;
+    
+
+    const waveWidth = (convexParams.width ?? 0) || 0;
+    const waveHeight = (convexParams.height ?? 0) || 0;
     const topY = 29;
 
     const waveStart = centerX - waveWidth / 2;
@@ -74,7 +78,7 @@ const NavBar = () => {
     // Параметры для симметричных углов
     const cornerRadius = 40;
     const cornerStartX = cornerRadius;
-    const cornerEndX = svgWidth - cornerRadius;
+    const cornerEndX = validSvgWidth - cornerRadius;
     const cornerTopY = topY;
     const cornerBottomY = 60;
     const cornerControlY1 = 36;
@@ -82,21 +86,27 @@ const NavBar = () => {
     const cornerBottomControlY = 85;
     const cornerBottomYFinal = 86;
 
-    return `
-      M ${cornerStartX} ${cornerTopY}
-      H ${waveStart}
-      C ${waveStart + controlDistance * 0.4} ${topY}, ${centerX - controlDistance} ${peakY}, ${centerX} ${peakY}
-      C ${centerX + controlDistance} ${peakY}, ${waveEnd - controlDistance * 0.4} ${topY}, ${waveEnd} ${topY}
-      H ${cornerEndX}
-      C ${cornerEndX + 17} ${cornerTopY}, ${cornerEndX + 17} ${cornerControlY1}, ${cornerEndX + 17.5} ${cornerBottomY}
-      V ${cornerBottomY}
-      C ${cornerEndX + 15} ${cornerControlY2}, ${cornerEndX + 25} ${cornerBottomControlY + 2}, ${cornerEndX} ${cornerBottomYFinal}
-      H ${cornerStartX}
-      C ${cornerStartX - 15} ${cornerBottomYFinal}, ${cornerStartX - 20} ${cornerBottomControlY}, ${cornerStartX - 20} ${cornerBottomY}
-      V ${cornerBottomY}
-      C ${cornerStartX - 20} ${cornerControlY1}, ${cornerStartX - 15} ${cornerTopY}, ${cornerStartX} ${cornerTopY}
-      Z
-    `;
+    // Проверяем, что все вычисленные значения валидны и преобразуем их в числа
+    const safeNum = (v: number): number => {
+      const num = Number(v);
+      return isNaN(num) || !isFinite(num) ? 0 : num;
+    };
+
+    const csX = safeNum(cornerStartX);
+    const ctY = safeNum(cornerTopY);
+    const wS = safeNum(waveStart);
+    const wE = safeNum(waveEnd);
+    const cD = safeNum(controlDistance);
+    const cX = safeNum(centerX);
+    const pY = safeNum(peakY);
+    const ceX = safeNum(cornerEndX);
+    const cbY = safeNum(cornerBottomY);
+    const ccY1 = safeNum(cornerControlY1);
+    const ccY2 = safeNum(cornerControlY2);
+    const cbcY = safeNum(cornerBottomControlY);
+    const cbfY = safeNum(cornerBottomYFinal);
+
+    return `m ${csX} ${ctY} H ${wS} C ${wS + cD * 0.4} ${ctY}, ${cX - cD} ${pY}, ${cX} ${pY} C ${cX + cD} ${pY}, ${wE - cD * 0.4} ${ctY}, ${wE} ${ctY} H ${ceX} C ${ceX + 17} ${ctY}, ${ceX + 17} ${ccY1}, ${ceX + 17.5} ${cbY} V ${cbY} C ${ceX + 15} ${ccY2}, ${ceX + 25} ${cbcY + 2}, ${ceX} ${cbfY} H ${csX} C ${csX - 15} ${cbfY}, ${csX - 20} ${cbcY}, ${csX - 20} ${cbY} V ${cbY} C ${csX - 20} ${ccY1}, ${csX - 15} ${ctY}, ${csX} ${ctY} Z`;
   };
   const handleClick = (position: "left" | "center" | "right", href: object) => {
     setActive(position);
@@ -114,13 +124,13 @@ const NavBar = () => {
       justifyContent="center"
       alignItems="center"
     >
-      <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} 100`} preserveAspectRatio="none" overflow={"visible"}>
+      <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth || 400} 100`} preserveAspectRatio="none" overflow={"visible"}>
       <defs>
         <filter
           id="dock-shadow"
           x={-80}
           y={0}
-          width={svgWidth + 160}
+          width={(svgWidth || 400) + 160}
           height={160}
           filterUnits="userSpaceOnUse"
           colorInterpolationFilters="sRGB"
@@ -136,10 +146,10 @@ const NavBar = () => {
         </filter>
       </defs>
         <MotionPath
-          d={createPath(positions[active])}
+          d={createPath(positions[active] ?? 0)}
           fill={"#27272a"}
           filter="url(#dock-shadow)"
-          animate={{ d: createPath(positions[active]) }}
+          animate={{ d: createPath(positions[active] ?? 0) }}
           transition={{ duration: 0.15, ease: "easeInOut" }}
           style={{ overflow: "visible" }}
         />

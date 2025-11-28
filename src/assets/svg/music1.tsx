@@ -11,7 +11,7 @@ const toCssSize = (v: number | string | undefined, fallback: string) =>
 
 const IconNote: React.FC<IconNoteProps> = ({ width, height, fillColor = "#fff", ...rest }) => {
   const w = toCssSize(width, "100%");
-  const h = toCssSize(height, "auto");
+  const h = toCssSize(height, "100%");
 
   return (
     <svg

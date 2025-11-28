@@ -81,7 +81,7 @@ const IconKorona = React.memo(function IconKorona({
   );
 
   const w = toCssSize(width, "100%");
-  const h = toCssSize(height, "auto");
+  const h = toCssSize(height, "100%");
 
   return (
     <svg
