@@ -25,7 +25,7 @@ const buttonStyle = {
 }
 
 type ChangeButtonProps = {
-    icon: any,
+    icon: React.ReactNode,
     title: string,
     category: 'self' | 'friend' | 'broken-heart' | 'love' | 'relation' | 'baby' | 'hero' | 'congrats' | 'others',
     onClick?: () => void,

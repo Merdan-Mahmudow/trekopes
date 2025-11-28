@@ -11,8 +11,8 @@ export function Balance() {
     // })
     return <>
         <Flex
-        
-            justifyContent={"space-arond"}
+
+            justifyContent={"space-around"}
             pt={"9px"}
             gap={3}
             alignItems={"center"}>

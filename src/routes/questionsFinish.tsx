@@ -133,7 +133,8 @@ export function ResultsComponent() {
                                 p={"12px 24px"}
                                 rounded={"3xl"}
                                 height={"58px"}
-                                border={{ _focus: `${COLOR.kit.orange} 2px solid` }}
+                                focusBorderColor={COLOR.kit.orange}
+                                borderWidth={"2px"}
                                 outline={"none"}
                                 lineHeight={"130%"}
                                 ref={inputRef}

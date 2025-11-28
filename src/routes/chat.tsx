@@ -14,15 +14,23 @@ function RouteComponent() {
   const tg: Telegram = window.Telegram;
   const [messages, addMessage] = useState<MessageProps[]>([])
   const navigate = useNavigate()
+
   useEffect(() => {
-    setTimeout(() => addMessage(prev => [...prev, {role: "assistant", content: <MessageHelpBox />, isHelpBox: true}]), 725)
-  }, [addMessage])
+    const timer = setTimeout(() => addMessage(prev => [...prev, {role: "assistant", content: <MessageHelpBox />, isHelpBox: true}]), 725)
+    return () => clearTimeout(timer)
+  }, [])
 
+  useEffect(() => {
+    tg.WebApp.BackButton.show()
+    const handleBack = () => {
+      navigate({ to: '/' })
+    }
+    tg.WebApp.BackButton.onClick(handleBack)
 
-  tg.WebApp.BackButton.show()
-  tg.WebApp.BackButton.onClick(() => {
-    navigate({ to: '/' })
-  })
+    return () => {
+      tg.WebApp.BackButton.offClick(handleBack)
+    }
+  }, [navigate, tg])
 
 
   const handleSend = (content: string) => {

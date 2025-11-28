@@ -2,7 +2,7 @@ import { PawIcon } from "../../assets/svg/paw";
 import UsersIcon from "../../assets/svg/invite";
 import { Box, Flex, IconButton } from "@chakra-ui/react";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MusicIcon } from "../../assets/svg/music";
 import { COLOR } from "../ui/colors";
 import { useNavigate } from "@tanstack/react-router";
@@ -13,6 +13,7 @@ const [active, setActive] = useState<"left" | "center" | "right">("left");
   const [convexParams, setConvexParams] = useState({ centerX: 200, width: 95, height: 15 });
   const [svgWidth, setSvgWidth] = useState(400);
   const navigate = useNavigate()
+  const animationTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     const handleResize = () => {
@@ -30,11 +31,23 @@ const [active, setActive] = useState<"left" | "center" | "right">("left");
   };
 
   const changeConvexParams = () => {
+    if (animationTimerRef.current !== null) {
+      clearTimeout(animationTimerRef.current);
+    }
     setConvexParams({ centerX: positions[active], width: 90, height: 13 });
-    setTimeout(() => {
+    animationTimerRef.current = window.setTimeout(() => {
       setConvexParams({ centerX: positions[active], width: 95, height: 15 });
+      animationTimerRef.current = null;
     }, 400);
   };
+
+  useEffect(() => {
+    return () => {
+      if (animationTimerRef.current !== null) {
+        clearTimeout(animationTimerRef.current);
+      }
+    };
+  }, []);
 
   const createPath = (centerX: number) => {
     const waveWidth = convexParams.width;

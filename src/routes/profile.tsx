@@ -13,7 +13,7 @@ export const Route = createFileRoute('/profile')({
 function RouteComponent() {
 
     useEffect(() => {
-            setDockActive("left")
+            setDockActive("right")
         }, [])
     return (
         <>

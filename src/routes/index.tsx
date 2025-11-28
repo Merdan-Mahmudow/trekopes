@@ -13,7 +13,7 @@ function Index() {
     useEffect(() => {
         tg.WebApp.BackButton.hide()
         navigate({ to: '/referral' })
-    }, [tg]);
+    }, [tg, navigate]);
     return <>
         
     </>

@@ -74,7 +74,6 @@ export function QuestionModal({
         onNext && onNext();
 
         if (isLast){
-            console.log("yeeeeees")
             onFinish && onFinish();
         }
     };
@@ -138,7 +137,8 @@ export function QuestionModal({
                     value={value}
                     onChange={(e) => handleChange(e.target.value)}
                     fontSize={"16px"}
-                    border={{ _focus: `${COLOR.kit.orange} 2px solid` }}
+                    focusBorderColor={COLOR.kit.orange}
+                    borderWidth={"2px"}
                     outline={"none"}
                     lineHeight={"130%"}
                 />

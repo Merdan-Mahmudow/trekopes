@@ -1,12 +1,12 @@
 import { Box, HStack, Text, Image } from '@chakra-ui/react';
 import { motion, type Variants } from 'framer-motion';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate, useLocation } from '@tanstack/react-router';
 import { PawIcon } from '../../assets/svg/paw';
 import MusicIcon from '../../assets/img/music.svg';
 import React, { useEffect, useState } from 'react';
 import { MdGroup } from 'react-icons/md';
 
-const MotionBox = motion(Box as any);
+const MotionBox = motion(Box);
 
 const dropVariants: Variants = {
   initial: { scale: 0.6, y: 8, opacity: 0.18 },
@@ -35,17 +35,13 @@ const bubbleVariants: Variants = {
 
 const Dock: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const [activePath, setActivePath] = useState<string>(window.location.pathname);
+  const [activePath, setActivePath] = useState<string>(location.pathname);
 
   useEffect(() => {
-    const update = () => setActivePath(window.location.pathname);
-
-    // initial
-    update();
-
-    console.log("Dock mounted, current path:", window.location.pathname);
-  }, []);
+    setActivePath(location.pathname);
+  }, [location.pathname]);
 
   // храним id кнопки, на которую кликнули — анимация будет только у неё
   const [clickedId, setClickedId] = useState<string | null>(null);

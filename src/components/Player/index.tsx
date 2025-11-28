@@ -125,9 +125,7 @@ export function Player() {
 
   // expose some global to allow programmatic control (optional)
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    window.__GLOBAL_PLAYER__ = {
+    (window as typeof window & { __GLOBAL_PLAYER__?: { play: () => void; pause: () => void } }).__GLOBAL_PLAYER__ = {
       play: () => setIsPlaying(true),
       pause: () => setIsPlaying(false),
     }
@@ -150,7 +148,7 @@ export function Player() {
               value={current}
               style={{ width: '100%' }}
               onPointerDown={() => { seekingRef.current = true }}
-              onPointerUp={(e: any) => {
+              onPointerUp={(e: React.PointerEvent<HTMLInputElement>) => {
                 seekingRef.current = false
                 const val = Number(e.currentTarget?.value ?? e.target?.value ?? 0)
                 const a = audioRef.current
@@ -160,7 +158,7 @@ export function Player() {
                 setCurrent(val)
               }}
               onTouchStart={() => { seekingRef.current = true }}
-              onTouchEnd={(e: any) => {
+              onTouchEnd={(e: React.TouchEvent<HTMLInputElement>) => {
                 seekingRef.current = false
                 const val = Number(e.currentTarget?.value ?? e.target?.value ?? 0)
                 const a = audioRef.current
@@ -169,7 +167,7 @@ export function Player() {
                 }
                 setCurrent(val)
               }}
-              onChange={(e: any) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 // reflect thumb position while dragging
                 setCurrent(Number(e.target.value))
               }}

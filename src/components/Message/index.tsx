@@ -8,7 +8,7 @@ import { FaArrowRightLong } from "react-icons/fa6";
 
 export interface MessageProps {
   role: "user" | "assistant"
-  content: any
+  content: React.ReactNode
   isHelpBox?: boolean
 }
 export function MessageBox({ role, content }: MessageProps) {
@@ -138,7 +138,7 @@ export function MessageHelpBox() {
           Нужна помощь? 
         </Text>
         <FaArrowRightLong size={"18px"} color={COLOR.brand.orange} style={{position: "relative", marginRight: "5px", top: "2px", marginLeft: "5px"}}/>
-        <Link href="https:/t.me/Help_llec_bot" color={COLOR.brand.orange}> GAVHELP
+        <Link href="https://t.me/Help_llec_bot" color={COLOR.brand.orange}> GAVHELP
         </Link>
       </Flex>
       </Flex>
