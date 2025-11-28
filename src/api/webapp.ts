@@ -3,6 +3,8 @@ import type {
   ClearChatMessagesResponse,
   CreateGenerationRequest,
   CreateGenerationResponse,
+  CreateLyricsGenerationRequest,
+  CreateLyricsGenerationResponse,
   CreatePaymentRequest,
   CreatePaymentResponse,
   GetChatMessagesQuery,
@@ -14,6 +16,7 @@ import type {
   GetGenerationTemplatesResponse,
   GetGenerationsQuery,
   GetGenerationsResponse,
+  GetLyricsGenerationResponse,
   GetMeResponse,
   GetPaymentByUUIDResponse,
   GetPaymentsQuery,
@@ -230,6 +233,36 @@ export async function clearWebAppChatMessages(
   const response = await request<ClearChatMessagesResponse>(
     "delete",
     `${WEBAPP_PREFIX}/chat/messages`,
+    undefined,
+    {
+      headers: authHeaders(token),
+    }
+  );
+  return response.data;
+}
+
+export async function createLyricsGeneration(
+  token: string,
+  payload: CreateLyricsGenerationRequest
+): Promise<CreateLyricsGenerationResponse> {
+  const response = await request<CreateLyricsGenerationResponse>(
+    "post",
+    `${WEBAPP_PREFIX}/generations/lyrics`,
+    payload,
+    {
+      headers: authHeaders(token),
+    }
+  );
+  return response.data;
+}
+
+export async function getLyricsGenerationStatus(
+  token: string,
+  uuid: string
+): Promise<GetLyricsGenerationResponse> {
+  const response = await request<GetLyricsGenerationResponse>(
+    "get",
+    `${WEBAPP_PREFIX}/generations/lyrics/${uuid}`,
     undefined,
     {
       headers: authHeaders(token),
