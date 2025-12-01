@@ -186,6 +186,7 @@ export type GenerationTemplateArtist = {
   description?: string | null;
   is_active: boolean;
   templates_count: number;
+  avatar_url?: string | null;
 };
 
 export type GenerationTemplateList = {

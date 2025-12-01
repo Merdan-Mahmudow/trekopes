@@ -3,7 +3,7 @@ import type { CreateGenerationRequest, SongGenerationType } from "./webapp";
 export type Artist = {
   id: string;
   name: string;
-  avatar?: string;
+  avatar_url?: string;
   description?: string | null;
 };
 

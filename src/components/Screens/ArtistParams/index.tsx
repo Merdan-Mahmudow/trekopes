@@ -43,11 +43,11 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
     
     // Преобразуем артистов из API в формат Artist и добавляем "Не выбрано"
     const artists: Artist[] = useMemo(() => {
-        const defaultOption: Artist = { id: "none", name: "Случайный артист", avatar: "❔", description: null };
+        const defaultOption: Artist = { id: "none", name: "Случайный артист", avatar_url: "❔", description: null };
         const mappedArtists: Artist[] = apiArtists.map((apiArtist) => ({
             id: apiArtist.id,
             name: apiArtist.name,
-            avatar: "👨‍🎤", // Дефолтный аватар, можно заменить на логику с первыми буквами
+            avatar_url: apiArtist.avatar_url ?? "", // Дефолтный аватар, можно заменить на логику с первыми буквами
             description: apiArtist.description ?? null,
         }));
         return [defaultOption, ...mappedArtists];
@@ -349,7 +349,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
                                                 {artist.id === "none" ? (
                                                     <Icon as={FaQuestion} w="24px" h="24px" color={selectedArtistId === artist.id ? "black" : COLOR.kit.white} />
                                                 ) : (
-                                                    <Image src={`https://storage.yandexcloud.net/trekopes-ai/avatars/${artist.id}.jpg`} alt={artist.name} w="100%" h="100%" borderRadius="50%" />
+                                                    <Image src={artist.avatar_url} alt={artist.name} w="100%" h="100%" borderRadius="50%" />
                                                 )}
                                             </Box>
                                             <Text fontSize="xs" textAlign="center" color={selectedArtistId === artist.id ? "white" : "#8A8A8A"} fontWeight={selectedArtistId === artist.id ? "bold" : "normal"}>
