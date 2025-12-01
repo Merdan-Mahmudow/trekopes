@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { Telegram } from "telegram-web-app";
 import { getWebAppMe, loginWebApp } from "../api/webapp";
 import type { GetMeResponse, LoginResponse } from "../types/webapp";
-import { debugLog } from "../utils/logger";
+import { debugLog, logAuth, logError, identifyUser } from "../utils/logger";
+import { useEffect } from "react";
 
 export const getTelegramUserId = (): string | undefined => {
     const tg: Telegram | undefined = window.Telegram;
@@ -26,16 +27,28 @@ export function useAuth() {
             hasDevInitData: !!DEV_INIT_DATA 
         });
         
+        logAuth('login_start', {
+            has_telegram: !!telegram,
+            has_init_data: !!rawInitData
+        });
+        
         if (!rawInitData) {
             const error = new Error("Данные Telegram недоступны");
             debugLog("[Auth] No init data available", error);
+            logAuth('login_error', { reason: 'no_init_data' });
             throw error;
         }
         try {
             debugLog("[Auth] Attempting login", { initDataLength: rawInitData.toString().length });
-            return await loginWebApp({
+            const response = await loginWebApp({
                 initData: rawInitData.toString()
             });
+            
+            logAuth('login_success', {
+                has_token: !!response.data.token
+            });
+            
+            return response;
         } catch (error: any) {
             // Проверяем ошибки 500 или CORS
             const status = error?.response?.status;
@@ -50,6 +63,19 @@ export function useAuth() {
                 (error?.response === undefined && error?.request !== undefined && error?.code !== 'ECONNABORTED');
             
             debugLog("[Auth] Ошибка логина:", { status, isServerError, isCorsError, error });
+            
+            logAuth('login_error', {
+                status_code: status || 0,
+                is_server_error: isServerError,
+                is_cors_error: isCorsError,
+                error_message: error?.message || 'unknown'
+            });
+            
+            logError('Auth login failed', error, {
+                status,
+                isServerError,
+                isCorsError
+            });
             
             if (isServerError || isCorsError) {
                 // Пробрасываем ошибку с флагом для показа экрана технических работ
@@ -100,6 +126,39 @@ export function useAuth() {
         queryFn: getUser,
         enabled: Boolean(bearerToken) && isTokenSuccess,
     });
+
+    // Идентификация пользователя в LogRocket при успешной загрузке данных
+    useEffect(() => {
+        if (isUserSuccess && user?.data) {
+            const userData = user.data;
+            
+            // Формируем идентификатор из chat_id + username
+            const chatId = userData.telegram_chat_id ? String(userData.telegram_chat_id) : undefined;
+            const username = userData.username || undefined;
+            const userId = chatId 
+                ? (username ? `${chatId}_${username}` : chatId)
+                : String(userData.id);
+            
+            identifyUser(
+                userId,
+                {
+                    telegram_chat_id: chatId,
+                    username: username,
+                    first_name: userData.first_name || undefined,
+                    last_name: userData.last_name || undefined,
+                    is_pro: userData.isPro || false,
+                    subscription_type: userData.pack_id ? String(userData.pack_id) : undefined,
+                }
+            );
+            
+            debugLog("[Auth] User identified in LogRocket", {
+                userId,
+                chatId,
+                username,
+                isPro: userData.isPro
+            });
+        }
+    }, [isUserSuccess, user]);
 
     return {
         getToken,

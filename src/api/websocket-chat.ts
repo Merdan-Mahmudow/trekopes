@@ -1,6 +1,7 @@
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import type { ChatMessageChunkEvent } from "../types/webapp";
+import { logWebSocket, logError, debugLog, addBreadcrumb } from "../utils/logger";
 
 type WebSocketStatus = "connecting" | "connected" | "disconnected" | "error";
 
@@ -37,16 +38,28 @@ export class WebSocketChatClient {
   private statusChangeHandlers: Set<StatusChangeHandler> = new Set();
   private telegramChatId: string | null = null;
   private authToken: string | null = null;
+  private messageCount: number = 0;
+  private connectionAttempts: number = 0;
+  private reconnectDelay: number = 1000;
+  private maxReconnectDelay: number = 30000;
+  private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private maxReconnectAttempts: number = 10;
+  private reconnectAttempts: number = 0;
+  private shouldReconnect: boolean = true;
 
   connect(telegramChatId: string, token: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!telegramChatId) {
-        reject(new Error("telegram_chat_id не указан"));
+        const error = new Error("telegram_chat_id не указан");
+        logWebSocket('error', { reason: 'missing_chat_id' });
+        reject(error);
         return;
       }
 
       if (!token) {
-        reject(new Error("Auth token не указан"));
+        const error = new Error("Auth token не указан");
+        logWebSocket('error', { reason: 'missing_token' });
+        reject(error);
         return;
       }
 
@@ -55,13 +68,22 @@ export class WebSocketChatClient {
         this.authToken === token &&
         this.isConnected()
       ) {
+        debugLog('[WebSocket] Already connected, reusing connection');
         resolve();
         return;
       }
 
       this.telegramChatId = telegramChatId;
       this.authToken = token;
+      this.connectionAttempts++;
+      this.shouldReconnect = true; // Включаем переподключение при новом подключении
       this.setStatus("connecting");
+
+      addBreadcrumb(`WebSocket connecting to chat.${telegramChatId}`, 'websocket', 'info');
+      logWebSocket('connect', { 
+        chat_id: telegramChatId,
+        attempt: this.connectionAttempts 
+      });
 
       try {
         this.initializeEcho(token);
@@ -73,6 +95,7 @@ export class WebSocketChatClient {
             : new Error("Ошибка инициализации Echo");
         this.setStatus("error");
         this.emitError(err);
+        logError('WebSocket initialization failed', err, { chat_id: telegramChatId });
         reject(err);
         return;
       }
@@ -81,12 +104,24 @@ export class WebSocketChatClient {
 
       if (!connection) {
         this.setStatus("connected");
+        logWebSocket('connect', { 
+          chat_id: telegramChatId, 
+          status: 'connected_no_pusher' 
+        });
         resolve();
         return;
       }
 
       const handleConnected = () => {
         this.setStatus("connected");
+        this.reconnectDelay = 1000; // Сброс задержки при успешном подключении
+        this.reconnectAttempts = 0; // Сброс счетчика попыток
+        this.cancelReconnect(); // Отменяем запланированное переподключение
+        logWebSocket('connect', { 
+          chat_id: telegramChatId, 
+          status: 'connected',
+          attempts: this.connectionAttempts 
+        });
         cleanup();
         resolve();
       };
@@ -98,6 +133,16 @@ export class WebSocketChatClient {
         this.setStatus("error");
         cleanup();
         this.emitError(err);
+        logWebSocket('error', { 
+          chat_id: telegramChatId,
+          error_message: err.message 
+        });
+        logError('WebSocket connection error', err, { chat_id: telegramChatId });
+        
+        if (this.shouldReconnect && this.telegramChatId && this.authToken) {
+          this.scheduleReconnect();
+        }
+        
         reject(err);
       };
 
@@ -117,11 +162,19 @@ export class WebSocketChatClient {
       connection.bind("failed", handleError);
       connection.bind("disconnected", () => {
         this.setStatus("disconnected");
+        logWebSocket('disconnect', { chat_id: telegramChatId });
+        if (this.shouldReconnect && this.telegramChatId && this.authToken) {
+          this.scheduleReconnect();
+        }
       });
     });
   }
 
   disconnect(): void {
+    const chatId = this.telegramChatId;
+    this.shouldReconnect = false; // Отключаем автоматическое переподключение
+    this.cancelReconnect(); // Отменяем запланированное переподключение
+    
     if (this.channel) {
       this.channel.stopListening(".ChatMessageChunk");
       this.channel = null;
@@ -133,6 +186,15 @@ export class WebSocketChatClient {
     }
 
     this.setStatus("disconnected");
+    
+    logWebSocket('disconnect', { 
+      chat_id: chatId || 'unknown',
+      messages_received: this.messageCount 
+    });
+    
+    this.messageCount = 0;
+    this.reconnectDelay = 1000; // Сброс задержки
+    this.reconnectAttempts = 0; // Сброс счетчика попыток
   }
 
   onChunk(handler: ChunkHandler): () => void {
@@ -171,6 +233,8 @@ export class WebSocketChatClient {
       this.echo = null;
     }
 
+    debugLog('[WebSocket] Initializing Echo', { host: WS_HOST });
+
     this.echo = new Echo({
       broadcaster: "reverb",
       key: WS_KEY,
@@ -198,14 +262,26 @@ export class WebSocketChatClient {
       this.channel.stopListening(".ChatMessageChunk");
     }
 
+    debugLog('[WebSocket] Subscribing to channel', { chatId });
+    
     this.channel = this.echo.channel(`chat.${chatId}`);
 
     this.channel.listen(".ChatMessageChunk", (event: ChatMessageChunkEvent) => {
+      this.messageCount++;
+      
+      logWebSocket('message', { 
+        chat_id: chatId,
+        message_id: event.message_id,
+        is_done: event.done,
+        has_error: !!event.error,
+        chunk_size: event.chunk?.length || 0
+      });
+
       this.chunkHandlers.forEach((handler) => {
         try {
           handler(event);
         } catch (error) {
-          console.error("Ошибка в обработчике чанка:", error);
+          logError('Error in chunk handler', error, { chat_id: chatId });
         }
       });
     });
@@ -219,6 +295,11 @@ export class WebSocketChatClient {
         error instanceof Error
           ? error
           : new Error("Ошибка канала WebSocket");
+      logWebSocket('error', { 
+        chat_id: chatId, 
+        error_message: err.message,
+        type: 'channel_error' 
+      });
       this.emitError(err);
     });
   }
@@ -240,7 +321,7 @@ export class WebSocketChatClient {
       try {
         handler(error);
       } catch (err) {
-        console.error("Ошибка в обработчике ошибок:", err);
+        logError('Error in error handler', err);
       }
     });
   }
@@ -250,14 +331,87 @@ export class WebSocketChatClient {
       return;
     }
 
+    const previousStatus = this.status;
     this.status = status;
+    
+    debugLog('[WebSocket] Status changed', { from: previousStatus, to: status });
+
     this.statusChangeHandlers.forEach((handler) => {
       try {
         handler(status);
       } catch (error) {
-        console.error("Ошибка в обработчике статуса:", error);
+        logError('Error in status handler', error);
       }
     });
+  }
+
+  private scheduleReconnect(): void {
+    if (!this.shouldReconnect) {
+      return;
+    }
+
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      debugLog('[WebSocket] Max reconnect attempts reached', { attempts: this.reconnectAttempts });
+      logWebSocket('error', { 
+        reason: 'max_reconnect_attempts',
+        attempts: this.reconnectAttempts 
+      });
+      this.shouldReconnect = false;
+      return;
+    }
+
+    this.cancelReconnect(); // Отменяем предыдущий timeout если есть
+
+    this.reconnectAttempts++;
+    const delay = Math.min(this.reconnectDelay, this.maxReconnectDelay);
+    
+    debugLog('[WebSocket] Scheduling reconnect', { 
+      attempt: this.reconnectAttempts,
+      delay,
+      maxAttempts: this.maxReconnectAttempts
+    });
+    
+    logWebSocket('reconnect', {
+      attempt: this.reconnectAttempts,
+      delay_ms: delay
+    });
+
+    this.reconnectTimeoutId = setTimeout(() => {
+      if (!this.shouldReconnect || !this.telegramChatId || !this.authToken) {
+        return;
+      }
+
+      debugLog('[WebSocket] Attempting reconnect', { 
+        attempt: this.reconnectAttempts,
+        chat_id: this.telegramChatId
+      });
+
+      this.connect(this.telegramChatId, this.authToken).catch((error) => {
+        debugLog('[WebSocket] Reconnect failed', { error, attempt: this.reconnectAttempts });
+        // scheduleReconnect будет вызван снова через handleError или disconnected event
+      });
+
+      // Увеличиваем задержку экспоненциально для следующей попытки
+      this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
+    }, delay);
+  }
+
+  private cancelReconnect(): void {
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
+    }
+  }
+
+  enableReconnect(): void {
+    this.shouldReconnect = true;
+    this.reconnectDelay = 1000;
+    this.reconnectAttempts = 0;
+  }
+
+  disableReconnect(): void {
+    this.shouldReconnect = false;
+    this.cancelReconnect();
   }
 }
 
@@ -266,6 +420,7 @@ let chatClientInstance: WebSocketChatClient | null = null;
 export function getWebSocketChatClient(): WebSocketChatClient {
   if (!chatClientInstance) {
     chatClientInstance = new WebSocketChatClient();
+    debugLog('[WebSocket] Created new chat client instance');
   }
 
   return chatClientInstance;

@@ -10,6 +10,7 @@ import "swiper/css/pagination"
 import { Box, Flex, VStack, Text, Heading, Badge } from "@chakra-ui/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { COLOR } from "../ui/colors"
+import { BrandButton } from "../ui/button"
 
 type SlideItem = {
     id: string
@@ -19,6 +20,11 @@ type SlideItem = {
     extendedDescription?: string
     content?: ReactNode
     image?: string
+    onSubmit: () => void
+}
+
+type FMCarouselProps = {
+    onSlideSubmit?: (slideId: string) => void
 }
 
 const slides: SlideItem[] = [
@@ -28,42 +34,34 @@ const slides: SlideItem[] = [
         title: "Трек голосом популярного артиста",
         description: `«Выбери одного из популярных артистов, а Трекопёс подберёт звук, подачу и фирменные фишки стиля.
 В итоге трек звучит так, будто любимый артист записал его по твоим мыслям 🐾`,
-        image: "/slider-1.jpeg"
+        image: "/slider-1.jpeg",
+        onSubmit: () => {
+            console.log("submit")
+        }
     },
     {
         id: "2",
         badge: "ПЕСНЯ ПО СЦЕНАРИЮ",
         title: `Песня, которая знает \nо вас всё`,
         description: "Глубоко проработанные сценарии извлекают из ответов не только факты, но и настроение, внутренние шутки и ситуации. В в результате песня кажется невероятно личной и созданной специально для тебя!",
-        image: "/slider-2.JPEG"
+        image: "/slider-2.JPEG",
+        onSubmit: () => {
+            console.log("submit")
+        }
     },
     {
         id: "3",
         badge: "МУЗЫКА И ДОБРО",
         title: "Твой хит спасает жизнь!",
         description: "Оформляя подписку, ты не просто качаешь свой аккаунт, ты наполняешь чью-то миску. Мы перечисляем до 30% выручки в собачьи приюты. Получай максимум функций и помогай хвостикам просто занимаясь творчеством ❤️",
-        image: "/slider-3.PNG"
+        image: "/slider-3.PNG",
+        onSubmit: () => {
+            console.log("submit")
+        }
     },
-    // {
-    //     id: "4",
-    //     badge: "вдохновение",
-    //     title: "Выберите стиль",
-    //     description: "Поп, инди или синтвейв? Подберите референс — и получите песню с нужным звучанием.",
-    //     extendedDescription: "Выберите из множества музыкальных стилей или загрузите референсный трек. Нейросеть воссоздаст характерное звучание выбранного направления, сохраняя при этом уникальность и оригинальность композиции.",
-    // },
-    // {
-    //     id: "5",
-    //     badge: "быстрый старт",
-    //     title: "Готовый текст — готовый трек",
-    //     description: "Вставьте текст, добавьте пару подсказок и получите за минуту демо-песню.",
-    //     extendedDescription: "Просто вставьте ваш текст, и система автоматически определит ритм, настроение и структуру. Добавьте несколько подсказок о желаемом стиле, и через минуту вы получите полноценную демо-версию трека с вокалом и инструментальной частью.",
-    //     content: <Text>
-
-    //     </Text>
-    // },
 ]
 
-function FMCarouselComponent() {
+function FMCarouselComponent({ onSlideSubmit }: FMCarouselProps) {
     const [activeSlide, setActiveSlide] = useState<SlideItem | null>(null)
     const [isOpen, setIsOpen] = useState(false)
     const handleOpen = (slide: SlideItem) => {
@@ -75,6 +73,14 @@ function FMCarouselComponent() {
         setTimeout(() => {
             setActiveSlide(null)
         }, 500)
+    }
+    const handleSubmit = () => {
+        if (activeSlide && onSlideSubmit) {
+            onSlideSubmit(activeSlide.id)
+        } else if (activeSlide) {
+            activeSlide.onSubmit()
+        }
+        handleClose()
     }
     return (
         <section className={styles.scope}>
@@ -239,6 +245,7 @@ function FMCarouselComponent() {
                 slide={activeSlide!}
                 open={isOpen}
                 onClose={handleClose}
+                onSubmit={handleSubmit}
             />
         </section>
     )
@@ -255,11 +262,13 @@ const MotionArticle = motion(Box)
 const DetailSlideItem = ({
     slide,
     open,
-    onClose
+    onClose,
+    onSubmit
 }: {
     slide: SlideItem | null
     open: boolean
     onClose: () => void
+    onSubmit: () => void
 }) => {
     if (!slide) return null
 
@@ -466,7 +475,11 @@ const DetailSlideItem = ({
                                                 {slide.description}
                                             </Text>
                                         </motion.div>
-
+                                        <BrandButton 
+                                        onClick={onSubmit}
+                                        >
+                                            Перейти
+                                        </BrandButton>
                                         {slide.extendedDescription && (
                                             <motion.div
                                                 initial={{ opacity: 0, y: 20 }}

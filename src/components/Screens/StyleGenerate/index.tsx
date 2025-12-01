@@ -26,6 +26,8 @@ import { logError } from "../../../utils/logger";
 import { useTracks } from "../../../hooks/useTracks";
 import { toaster, Toaster } from "../../ui/toaster";
 import { Dictaphone } from "../../ui/SpeechRecognitionButton";
+import { useAuth } from "../../../hooks/useUser";
+import { setUserState } from "../../../store";
 type StyleGenerateScreenProps = {
     onClose: () => void;
 };
@@ -42,6 +44,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
     const token = useStore(store, (state) => state.auth.token);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { loadTracks } = useTracks();
+    const { getUser } = useAuth();
 
     useEffect(() => {
         if (!scenarioState || scenarioState.mode !== "style") {
@@ -116,6 +119,16 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             setGenerationPrompt(payload.prompt);
             setCurrentStep("loading");
 
+            // Обновляем данные пользователя для актуального баланса
+            try {
+                const userResponse = await getUser();
+                if (userResponse?.data) {
+                    setUserState(userResponse.data);
+                }
+            } catch (userError) {
+                logError("Failed to refresh user data after style generation", userError);
+            }
+
             try {
                 await loadTracks();
             } catch (loadError) {
@@ -123,6 +136,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             }
 
             resetGenerationDraft();
+            toaster.dismiss()
             toaster.create({
                 type: "success",
                 title: "Генерация запущена",
@@ -133,6 +147,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             
             // Обработка ошибки 409 (Conflict)
             if (err?.response?.status === 409) {
+                toaster.dismiss()
                 toaster.create({
                     type: "error",
                     title: "Ошибка генерации",
@@ -142,6 +157,7 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
             }
             
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
+            toaster.dismiss()
             toaster.create({
                 type: "error",
                 title: "Ошибка запуска генерации",

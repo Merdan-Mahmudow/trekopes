@@ -9,6 +9,7 @@ import type {
   GetPaymentsQuery,
 } from "../types/webapp";
 import { useAuth } from "./useUser";
+import { logPayment, logError, debugLog } from "../utils/logger";
 
 // Маппинг тарифов на pack_id (разовые покупки)
 export const TARIFF_TO_PACK_ID: Record<"track" | "pro" | "ultra", number> = {
@@ -33,6 +34,7 @@ export function useWebAppPayments(params?: GetPaymentsQuery) {
     queryKey: ["webapp-payments", token, params?.limit, params?.offset],
     queryFn: async () => {
       if (!token) throw new Error("Токен недоступен");
+      debugLog('[WebAppPayments] Fetching payments', { params });
       return getWebAppPayments(token, params);
     },
     enabled: !!token,
@@ -50,6 +52,7 @@ export function useWebAppPaymentByUUID(uuid: string | undefined) {
     queryFn: async () => {
       if (!token) throw new Error("Токен недоступен");
       if (!uuid) throw new Error("Требуется UUID");
+      debugLog('[WebAppPayments] Fetching payment by UUID', { uuid });
       return getWebAppPaymentByUUID(token, uuid);
     },
     enabled: !!token && !!uuid,
@@ -66,7 +69,32 @@ export function useCreateWebAppPayment() {
   return useMutation({
     mutationFn: async (payload: CreatePaymentRequest) => {
       if (!token) throw new Error("Токен недоступен");
-      return createWebAppPayment(token, payload);
+      
+      debugLog('[WebAppPayments] Creating payment', { payload });
+      logPayment('initiate', {
+        pack_id: payload.pack_id,
+        is_recurring: payload.is_recurring
+      });
+      
+      try {
+        const result = await createWebAppPayment(token, payload);
+        
+        logPayment('success', {
+          pack_id: payload.pack_id,
+          is_recurring: payload.is_recurring,
+          payment_id: result.data?.uuid
+        });
+        
+        return result;
+      } catch (error) {
+        logPayment('error', {
+          pack_id: payload.pack_id,
+          is_recurring: payload.is_recurring,
+          error_message: error instanceof Error ? error.message : 'unknown'
+        });
+        logError('WebApp payment creation failed', error, { payload });
+        throw error;
+      }
     },
     onSuccess: () => {
       // Инвалидируем список платежей после создания
@@ -87,10 +115,11 @@ export function createPaymentFromTariff(
     ? SUBSCRIPTION_TO_PACK_ID[tariffId as "pro" | "ultra"]
     : TARIFF_TO_PACK_ID[tariffId];
 
+  debugLog('[WebAppPayments] Creating payment from tariff', { tariffId, isSubscription, pack_id });
+
   return {
     pack_id,
     is_recurring: isSubscription,
     email,
   };
 }
-

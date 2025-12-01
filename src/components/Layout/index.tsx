@@ -1,14 +1,17 @@
 import { Grid, Box } from "@chakra-ui/react";
 import { Outlet, useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense, lazy } from "react";
 import Header from "../Header";
 import { COLOR } from "../ui/colors";
 import NavBar from "../Dock/second";
-import { Player } from "../Player";
+import { LoadingFallback } from "../LoadingFallback";
 import store from "../../store";
 import { useStore } from "@tanstack/react-store";
 import { ReactLenis } from "lenis/react"; // или '@studio-freight/react-lenis'
 import "lenis/dist/lenis.css";
+
+// Lazy load Player component
+const Player = lazy(() => import("../Player").then(m => ({ default: m.Player })));
 
 export function Layout() {
   const path = useLocation();
@@ -68,7 +71,9 @@ export function Layout() {
 
       {hasPlayerRow && (
         <Box>
-          <Player />
+          <Suspense fallback={<LoadingFallback message="Загрузка плеера..." />}>
+            <Player />
+          </Suspense>
         </Box>
       )}
 

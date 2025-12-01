@@ -7,7 +7,7 @@ import { usePlans, useActiveTarrifId, useSelectedTarrifId, setSelectedTarrif, us
 import { useCreateWebAppPayment, createPaymentFromTariff } from '../hooks/useWebAppPayments'
 import { FaAngleLeft } from "react-icons/fa6";
 import { toaster, Toaster } from '../components/ui/toaster'
-import { logAnalytics, logError } from '../utils/logger'  
+import { addBreadcrumb, logError } from '../utils/logger'  
 
 export const Route = createFileRoute('/subscription')({
   component: RouteComponent,
@@ -61,7 +61,7 @@ function RouteComponent() {
 
   // Аналитика открытия
   useEffect(() => {
-    logAnalytics('subscription_open', { source: search?.source ?? 'direct', tarrif_param: search?.tarrif })
+    addBreadcrumb('subscription_open', search?.source ?? 'direct', 'info')
   }, [])
 
   // Инициализация выбранного тарифа
@@ -69,7 +69,7 @@ function RouteComponent() {
     const urlTar = search?.tarrif && VALID[search.tarrif]
     if (urlTar) {
       setSelectedTarrif(urlTar)
-      logAnalytics('subscription_select', { id: urlTar })
+      addBreadcrumb('subscription_select', urlTar, 'info')
       return
     }
     if (!selectedId) {
@@ -112,11 +112,7 @@ function RouteComponent() {
     setSubscriptionSaving(true)
 
     try {
-      logAnalytics('payment_create_start', {
-        id: current.id,
-        isSubscription,
-        email
-      })
+        addBreadcrumb('payment_create_start', current.id, 'info')
 
       const paymentRequest = createPaymentFromTariff(
         current.id as 'track' | 'pro' | 'ultra',
@@ -126,16 +122,14 @@ function RouteComponent() {
 
       const response = await createPayment.mutateAsync(paymentRequest)
 
-      logAnalytics('payment_create_success', {
-        paymentUuid: response.data.uuid,
-        paymentUrl: response.data.payment_url
-      })
+      addBreadcrumb('payment_create_success', response.data.uuid, 'info')
 
       // Если есть payment_url, перенаправляем на страницу оплаты
       if (response.data.payment_url) {
         window.location.href = response.data.payment_url
       } else {
         setSubscriptionSaving(false)
+        toaster.dismiss()
         toaster.create({
           type: "error",
           title: "Ошибка",
@@ -146,6 +140,7 @@ function RouteComponent() {
       logError('payment_create_error', error, { id: current.id, isSubscription, email })
       setSubscriptionSaving(false)
       const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка создания платежа'
+      toaster.dismiss()
       toaster.create({
         type: "error",
         title: "Ошибка создания платежа",

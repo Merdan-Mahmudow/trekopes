@@ -22,6 +22,8 @@ import { toaster } from "../../ui/toaster";
 import { logError } from "../../../utils/logger";
 import { moodOptions } from "../../../utils/moodPrompts";
 import { genreOptions } from "../../../utils/genrePrompts";
+import { useAuth } from "../../../hooks/useUser";
+import { setUserState } from "../../../store";
 
 type ArtistParamsDisplayMode = "full" | "artist";
 
@@ -65,6 +67,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
     const generationDraft = useGenerationDraft();
     const token = useStore(store, (state) => state.auth.token);
     const { loadTracks } = useTracks();
+    const { getUser } = useAuth();
 
     const TEMPO_COLORS = {
         slow: (generationParams.tempo >= 60 && generationParams.tempo <= 90) ? COLOR.kit.orange : COLOR.kit.smoke,
@@ -87,6 +90,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
     useEffect(() => {
         if (artistsError) {
             logError("Failed to load generation template artists", artistsError);
+            toaster.dismiss()
             toaster.create({
                 type: "error",
                 title: "Ошибка загрузки артистов",
@@ -217,6 +221,16 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
             setGenerationScenario(updatedScenario);
             setGenerationPrompt(payload.prompt);
 
+            // Обновляем данные пользователя для актуального баланса
+            try {
+                const userResponse = await getUser();
+                if (userResponse?.data) {
+                    setUserState(userResponse.data);
+                }
+            } catch (userError) {
+                logError("Failed to refresh user data after artist generation", userError);
+            }
+
             try {
                 await loadTracks();
             } catch (loadError) {
@@ -224,6 +238,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
             }
 
             resetGenerationDraft();
+            toaster.dismiss()
             toaster.create({
                 type: "success",
                 title: "Генерация запущена",
@@ -235,6 +250,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
             
             // Обработка ошибки 409 (Conflict)
             if (err?.response?.status === 409) {
+                toaster.dismiss()
                 toaster.create({
                     type: "error",
                     title: "Ошибка генерации",
@@ -244,6 +260,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
             }
             
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
+            toaster.dismiss()
             toaster.create({
                 type: "error",
                 title: "Ошибка запуска генерации",

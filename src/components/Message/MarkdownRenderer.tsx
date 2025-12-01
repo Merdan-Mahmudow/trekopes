@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import remarkGfm from 'remark-gfm';
@@ -77,64 +77,60 @@ const CodeBlock = ({ children, className }: { children: React.ReactNode, classNa
 /**
  * Компонент для рендеринга Markdown с поддержкой LaTeX формул
  */
-export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, role }) => {
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = memo(function MarkdownRenderer({ content, role }) {
   const linkColor = useColorModeValue('blue.500', 'blue.300');
   const assistantTextColor = useColorModeValue('gray.800', 'gray.100');
   const userTextColor = useColorModeValue('white', 'white');
   
   const textColor = role === 'assistant' ? assistantTextColor : userTextColor;
 
-  return (
-    <Box className="markdown-content" color={textColor} fontSize="md" lineHeight="1.6">
-      <ReactMarkdown
-        remarkPlugins={[remarkMath, remarkGfm]}
-        rehypePlugins={[rehypeKatex, rehypeRaw]}
-        components={{
+  // Мемоизируем компоненты для ReactMarkdown
+  const markdownComponents = useMemo(() => ({
         // Заголовки
-        h1: ({ children }) => (
+        h1: ({ children }: { children?: React.ReactNode }) => (
           <Heading as="h1" size="xl" mb={4} mt={6} fontWeight="700">
             {children}
           </Heading>
         ),
-        h2: ({ children }) => (
+        h2: ({ children }: { children?: React.ReactNode }) => (
           <Heading as="h2" size="lg" mb={3} mt={5} fontWeight="600">
             {children}
           </Heading>
         ),
-        h3: ({ children }) => (
+        h3: ({ children }: { children?: React.ReactNode }) => (
           <Heading as="h3" size="md" mb={2} mt={4} fontWeight="600">
             {children}
           </Heading>
         ),
-        h4: ({ children }) => (
+        h4: ({ children }: { children?: React.ReactNode }) => (
           <Heading as="h4" size="sm" mb={2} mt={3} fontWeight="600">
             {children}
           </Heading>
         ),
         // Параграфы
-        p: ({ children }) => (
+        p: ({ children }: { children?: React.ReactNode }) => (
           <Text as="p" mb={3} lineHeight="1.6">
             {children}
           </Text>
         ),
         // Списки
-        ul: ({ children }) => (
+        ul: ({ children }: { children?: React.ReactNode }) => (
           <Box as="ul" mb={3} pl={5} listStyleType="disc">
             {children}
           </Box>
         ),
-        ol: ({ children }) => (
+        ol: ({ children }: { children?: React.ReactNode }) => (
           <Box as="ol" mb={3} pl={5} listStyleType="decimal">
             {children}
           </Box>
         ),
-        li: ({ children }) => (
+        li: ({ children }: { children?: React.ReactNode }) => (
           <Box as="li" mb={1} pl={1}>
             {children}
           </Box>
         ),
         // Ссылки
-        a: ({ href, children }) => (
+        a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
           <Link
             href={href}
             color={linkColor}
@@ -147,7 +143,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, rol
           </Link>
         ),
         // Код
-        code: ({ children, className }) => {
+        code: ({ children, className }: { children?: React.ReactNode; className?: string }) => {
           // Проверяем, является ли это инлайн кодом
           const isInline = !className && !String(children).includes('\n');
           
@@ -175,7 +171,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, rol
           );
         },
         // Блочные цитаты
-        blockquote: ({ children }) => (
+        blockquote: ({ children }: { children?: React.ReactNode }) => (
           <Box
             as="blockquote"
             borderLeft="3px solid"
@@ -200,60 +196,66 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, rol
           />
         ),
         // Таблицы
-        table: ({ children }) => (
+        table: ({ children }: { children?: React.ReactNode }) => (
           <Box overflowX="auto" mb={4}>
             <Box as="table" width="100%" borderCollapse="collapse">
               {children}
             </Box>
           </Box>
         ),
-        thead: ({ children }) => (
+        thead: ({ children }: { children?: React.ReactNode }) => (
           <Box as="thead" bg="blackAlpha.50" _dark={{ bg: "whiteAlpha.50" }}>
             {children}
           </Box>
         ),
-        tbody: ({ children }) => (
+        tbody: ({ children }: { children?: React.ReactNode }) => (
           <Box as="tbody">
             {children}
           </Box>
         ),
-        tr: ({ children }) => (
+        tr: ({ children }: { children?: React.ReactNode }) => (
           <Box as="tr" borderBottom="1px solid" borderColor="blackAlpha.100" _dark={{ borderColor: "whiteAlpha.100" }}>
             {children}
           </Box>
         ),
-        th: ({ children }) => (
+        th: ({ children }: { children?: React.ReactNode }) => (
           <Box as="th" p={3} textAlign="left" fontWeight="600">
             {children}
           </Box>
         ),
-        td: ({ children }) => (
+        td: ({ children }: { children?: React.ReactNode }) => (
           <Box as="td" p={3}>
             {children}
           </Box>
         ),
         // Выделение текста
-        strong: ({ children }) => (
+        strong: ({ children }: { children?: React.ReactNode }) => (
           <Text as="strong" fontWeight="700">
             {children}
           </Text>
         ),
-        em: ({ children }) => (
+        em: ({ children }: { children?: React.ReactNode }) => (
           <Text as="em" fontStyle="italic">
             {children}
           </Text>
         ),
         // Зачёркнутый текст
-        del: ({ children }) => (
+        del: ({ children }: { children?: React.ReactNode }) => (
           <Text as="del" textDecoration="line-through" opacity={0.7}>
             {children}
           </Text>
         ),
-      }}
+  }), [linkColor, textColor, role]);
+
+  return (
+    <Box className="markdown-content" color={textColor} fontSize="md" lineHeight="1.6">
+      <ReactMarkdown
+        remarkPlugins={[remarkMath, remarkGfm]}
+        rehypePlugins={[rehypeKatex, rehypeRaw]}
+        components={markdownComponents}
       >
         {content}
       </ReactMarkdown>
     </Box>
   );
-};
-
+});

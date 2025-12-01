@@ -2,18 +2,21 @@ import { Popup } from '../components/Popup'
 import { COLOR } from '../components/ui/colors'
 import { Box, Flex, Heading, Text, Grid, GridItem, Icon, } from '@chakra-ui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode, Suspense, lazy } from 'react'
 import { setDockActive } from '../store'
-import { TextGenerateScreen } from '../components/Screens/TextGenerate'
-import { LinkGenerate } from '../components/Screens/LinkGenerate'
+import { LoadingFallback } from '../components/LoadingFallback'
 // import { IoCameraOutline } from 'react-icons/io5'
 import { GiMusicalNotes } from "react-icons/gi";
 import { BsFileText } from "react-icons/bs";
 import { TbTextSize } from "react-icons/tb";
-import { PhotoGenerateScreen } from '../components/Screens/PhotoGenerate'
 import FMCarousel from '../components/Slider'
-import { StyleGenerateScreen } from '../components/Screens/StyleGenerate'
-import { FastGenerateScreen } from '../components/Screens/FastGenerate'
+
+// Lazy load Screen components
+const TextGenerateScreen = lazy(() => import('../components/Screens/TextGenerate').then(m => ({ default: m.TextGenerateScreen })))
+const LinkGenerate = lazy(() => import('../components/Screens/LinkGenerate').then(m => ({ default: m.LinkGenerate })))
+const PhotoGenerateScreen = lazy(() => import('../components/Screens/PhotoGenerate').then(m => ({ default: m.PhotoGenerateScreen })))
+const StyleGenerateScreen = lazy(() => import('../components/Screens/StyleGenerate').then(m => ({ default: m.StyleGenerateScreen })))
+const FastGenerateScreen = lazy(() => import('../components/Screens/FastGenerate').then(m => ({ default: m.FastGenerateScreen })))
 import {
     resetGenerationDraft,
     setGenerationScenario,
@@ -29,6 +32,7 @@ import {
 import type { SongGenerationType } from '../types/webapp'
 import { useIsPro } from '../store/user'
 import { toaster, Toaster } from '../components/ui/toaster'
+import { logUserAction, logGeneration, debugLog, addBreadcrumb } from '../utils/logger'
 
 
 
@@ -53,6 +57,8 @@ function RouteComponent() {
 
     // При закрытии поп-апа, сбрасываем состояние
     const handleClosePopup = () => {
+        debugLog('[Generate] Popup closed', { genType })
+        logUserAction('generation_popup_close', { type: genType || 'unknown' })
         setIsPopupOpen(false);
     }
 
@@ -61,7 +67,12 @@ function RouteComponent() {
             return;
         }
 
+        debugLog('[Generate] User selected generation type', { type, isPro })
+        logUserAction('generation_type_select', { type, is_pro: isPro })
+
         if (!isPro && type !== "text") {
+            logUserAction('generation_blocked_not_pro', { type })
+            toaster.dismiss()
             toaster.create({
                 type: "info",
                 title: "Только для PRO",
@@ -69,6 +80,7 @@ function RouteComponent() {
                 action: {
                     label: "Купить PRO",
                     onClick: () => {
+                        logUserAction('generation_upgrade_click', { from_type: type })
                         navigate({ to: "/tarrifs", search: { tarrif: "pro" } })
                         toaster.dismiss()
                     }
@@ -96,6 +108,9 @@ function RouteComponent() {
         resetGenerationDraft();
         setGenerationType(typeToGenerationMap[type]);
         setGenerationScenario(scenarioFactory[type]());
+
+        addBreadcrumb(`Opening generation: ${type}`, 'generation', 'info')
+        logGeneration('start', { generation_id: undefined })
 
         setGenType(type);
         setIsPopupOpen(true);
@@ -168,6 +183,20 @@ function RouteComponent() {
                 pt={4}
                 pb={"11vh"}>
                     <FMCarousel 
+                        onSlideSubmit={(slideId) => {
+                            logUserAction('carousel_slide_click', { slide_id: slideId })
+                            if (slideId === "1") {
+                                // ПЕСНЯ ПО АРТИСТУ -> открыть StyleGenerateScreen
+                                handleChangeType("style")
+                            } else if (slideId === "2") {
+                                // ПЕСНЯ ПО СЦЕНАРИЮ -> открыть TextGenerateScreen
+                                handleChangeType("scenario")
+                            } else if (slideId === "3") {
+                                // МУЗЫКА И ДОБРО -> открыть страницу тарифов
+                                logUserAction('carousel_tariffs_click', {})
+                                navigate({ to: "/tarrifs" })
+                            }
+                        }}
                     />
                 <Text w={"11/12"} fontSize={"24px"} color={COLOR.kit.orangeWhite}>Создать трек</Text>
                 <Grid templateColumns="1fr"
@@ -211,11 +240,13 @@ function RouteComponent() {
                 title=""
                 onOpenChange={handleClosePopup}
             >
-                { genType == 'scenario' && <TextGenerateScreen /> }
-                { genType == 'link' && <LinkGenerate onClose={handleClosePopup} /> }
-                { genType == 'photo' && <PhotoGenerateScreen onClose={handleClosePopup} /> }
-                { genType == 'style' && <StyleGenerateScreen onClose={handleClosePopup} /> }
-                { genType == 'text' && <FastGenerateScreen onClose={handleClosePopup} /> }
+                <Suspense fallback={<LoadingFallback message="Загрузка генератора..." />}>
+                    { genType == 'scenario' && <TextGenerateScreen /> }
+                    { genType == 'link' && <LinkGenerate onClose={handleClosePopup} /> }
+                    { genType == 'photo' && <PhotoGenerateScreen onClose={handleClosePopup} /> }
+                    { genType == 'style' && <StyleGenerateScreen onClose={handleClosePopup} /> }
+                    { genType == 'text' && <FastGenerateScreen onClose={handleClosePopup} /> }
+                </Suspense>
             </Popup>
             <Toaster />
         </>

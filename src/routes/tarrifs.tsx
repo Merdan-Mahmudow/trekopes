@@ -7,6 +7,7 @@ import IconMicrophone from '../assets/svg/microphone'
 import IconKorona from '../assets/svg/korona'
 import IconNote from '../assets/svg/music1'
 import { COLOR } from '../components/ui/colors'
+import { logSubscription, logUserAction, debugLog, addBreadcrumb } from '../utils/logger'
 
 export const Route = createFileRoute('/tarrifs')({
     component: RouteComponent,
@@ -82,13 +83,18 @@ function TariffCard({ tariff }: { tariff: Tariff }) {
             }}
             onClick={() => {
                 const id = tariff.id === 'track' ? 'track' : tariff.id
-                navigate({ to: '/subscription', search: { tarrif: id, source: '' } })
+                debugLog('[Tariffs] Tariff card clicked', { tariffId: id })
+                logSubscription('view', { plan_id: id, plan_name: tariff.title })
+                logUserAction('tariff_card_click', { tariff_id: id, tariff_name: tariff.title })
+                addBreadcrumb(`Selected tariff: ${tariff.title}`, 'subscription', 'info')
+                navigate({ to: '/subscription', search: { tarrif: id, source: 'onetime' } })
             }}
             onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
                     const id = tariff.id === 'track' ? 'track' : tariff.id
-                    navigate({ to: '/subscription', search: { tarrif: id, source: '' } })
+                    logUserAction('tariff_card_click', { tariff_id: id, tariff_name: tariff.title, via_keyboard: true })
+                    navigate({ to: '/subscription', search: { tarrif: id, source: 'onetime' } })
                 }
             }}
         >
@@ -200,12 +206,25 @@ function SubscriptionCard({ subscription }: { subscription: Subscription }) {
             }}
             onClick={() => {
                 const tariffId = getTariffId(subscription.id)
+                debugLog('[Tariffs] Subscription card clicked', { subscriptionId: subscription.id, tariffId })
+                logSubscription('view', { plan_id: subscription.id, plan_name: subscription.title })
+                logUserAction('subscription_card_click', { 
+                    subscription_id: subscription.id, 
+                    subscription_name: subscription.title,
+                    price_label: subscription.priceLabel 
+                })
+                addBreadcrumb(`Selected subscription: ${subscription.title}`, 'subscription', 'info')
                 navigate({ to: '/subscription', search: { tarrif: tariffId, source: 'subscription' } })
             }}
             onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
                     const tariffId = getTariffId(subscription.id)
+                    logUserAction('subscription_card_click', { 
+                        subscription_id: subscription.id, 
+                        subscription_name: subscription.title,
+                        via_keyboard: true 
+                    })
                     navigate({ to: '/subscription', search: { tarrif: tariffId, source: 'subscription' } })
                 }
             }}
@@ -444,6 +463,9 @@ function RouteComponent() {
     }, [measureContent])
 
     const handleTabChange = (index: number) => {
+        const tabName = tabs[index]?.id || 'unknown'
+        debugLog('[Tariffs] Tab changed', { index, tabName })
+        logUserAction('tariffs_tab_change', { tab_index: index, tab_name: tabName })
         setActiveIndex(index)
     }
 

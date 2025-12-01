@@ -32,6 +32,7 @@ import type { ChatMessage, ChatMessageChunkEvent } from "../types/webapp"
 import { COLOR } from '../components/ui/colors'
 import { useIsPro } from '../store/user'
 import { BrandButton } from '../components/ui/button'
+import { logChat, logError, debugLog, addBreadcrumb, logUserAction } from '../utils/logger'
 
 export const Route = createFileRoute('/chat')({
   component: RouteComponent,
@@ -85,6 +86,9 @@ function RouteComponent() {
 
     let isMounted = true
     setIsLoadingHistory(true)
+    
+    debugLog('[Chat] Loading chat history', { telegramChatId })
+    addBreadcrumb('Loading chat history', 'chat', 'info')
 
     getWebAppChatMessages(token)
       .then((response) => {
@@ -100,12 +104,17 @@ function RouteComponent() {
         setMessages(history)
         setConnectionError(null)
         setIsLoadingHistory(false)
+        
+        debugLog('[Chat] Chat history loaded', { messageCount: history.length })
       })
       .catch((error) => {
         if (!isMounted) return
         const err = error instanceof Error ? error : new Error("Ошибка загрузки истории")
         setConnectionError(err)
         setIsLoadingHistory(false)
+        
+        logError('Failed to load chat history', error, { telegramChatId })
+        logChat('connection_error', { reason: 'history_load_failed' })
       })
 
     return () => {
@@ -118,7 +127,10 @@ function RouteComponent() {
     setConnectionError(error)
     setIsLoadingHistory(false)
     setIsSending(false)
-  }, [])
+    
+    logError('Chat connection error', error, { telegramChatId })
+    logChat('connection_error', { error_message: error.message })
+  }, [telegramChatId])
 
   const handleChunk = useCallback((event: ChatMessageChunkEvent) => {
     if (event.error) {
@@ -188,6 +200,9 @@ function RouteComponent() {
       streamMessageIdRef.current = null
       streamBufferRef.current = ""
       setIsSending(false)
+      
+      debugLog('[Chat] Message stream completed', { messageId: event.message_id })
+      logChat('receive_message', { message_id: event.message_id || 'unknown' })
     }
   }, [telegramChatId, handleConnectionError])
 
@@ -227,6 +242,7 @@ function RouteComponent() {
       unsubscribeChunk()
       unsubscribeError()
       unsubscribeStatus()
+      client.disconnect()
     }
   }, [telegramChatId, token, handleChunk, handleConnectionError])
 
@@ -244,6 +260,7 @@ function RouteComponent() {
 
   /* ----------------- Telegram Back Button ----------------- */
   const handleBackClick = useCallback(() => {
+    logUserAction('chat_back_click', {})
     navigate({ to: '/' })
   }, [navigate])
 
@@ -254,7 +271,10 @@ function RouteComponent() {
     tg.WebApp.BackButton.onClick(handleBackClick)
 
     return () => {
-      tg.WebApp.BackButton.hide()
+      if (tg?.WebApp) {
+        tg.WebApp.BackButton.offClick(handleBackClick)
+        tg.WebApp.BackButton.hide()
+      }
     }
   }, [tg, handleBackClick])
 
@@ -323,9 +343,15 @@ function RouteComponent() {
     const client = wsClientRef.current
 
     if (!client.isConnected()) {
-      setConnectionError(new Error("Соединение не установлено. Попробуйте перезагрузить страницу."))
+      const error = new Error("Соединение не установлено. Попробуйте перезагрузить страницу.")
+      setConnectionError(error)
+      logChat('connection_error', { reason: 'not_connected' })
       return
     }
+
+    debugLog('[Chat] Sending message', { contentLength: trimmed.length })
+    addBreadcrumb('Sending chat message', 'chat', 'info')
+    logUserAction('chat_send_message', { message_length: trimmed.length })
 
     const userMessage: ChatMessageState = {
       role: "user",
@@ -350,6 +376,9 @@ function RouteComponent() {
         setMessages(prev => prev.filter(msg => msg !== userMessage))
         setConnectionError(err)
         setIsSending(false)
+        
+        logError('Failed to send chat message', error, { telegramChatId })
+        logChat('connection_error', { reason: 'send_failed' })
       })
   }, [isSending, telegramChatId, token])
 
@@ -434,7 +463,7 @@ function RouteComponent() {
                   </Text>
                 </Flex>
               ) : (
-                <ChatList messages={messageProps} />
+                <ChatList messages={messageProps} containerRef={chatContainerRef} />
               )}
             </Container>
           </Box>

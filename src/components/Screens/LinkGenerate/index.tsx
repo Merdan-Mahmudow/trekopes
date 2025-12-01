@@ -90,6 +90,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
 
     const handleLinkSubmit = async () => {
         if (!link.trim()) {
+            toaster.dismiss()
             toaster.create({
                 type: "error",
                 title: "Ошибка",
@@ -101,6 +102,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
         const normalizedLink = normalizeLink(link);
         
         if (!validateVKLink(normalizedLink)) {
+            toaster.dismiss()
             toaster.create({
                 type: "error",
                 title: "Ошибка",
@@ -120,6 +122,7 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
             }));
             setCurrentScreen("params");
         } catch (err) {
+            toaster.dismiss()
             toaster.create({
                 type: "error",
                 title: "Ошибка",

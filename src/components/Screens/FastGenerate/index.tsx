@@ -26,6 +26,8 @@ import { logError } from "../../../utils/logger"
 import { Dictaphone } from "../../ui/SpeechRecognitionButton"
 import { TbSparkles, TbX } from "react-icons/tb"
 import { GenerationParamsAccordion } from "../GenerationParamsAccordion"
+import { useAuth } from "../../../hooks/useUser"
+import { setUserState } from "../../../store"
 
 export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void }) => {
 	const [prompt, setPrompt] = useState("")
@@ -36,6 +38,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 	const token = useStore(store, (state) => state.auth.token)
 	const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false)
 	const { loadTracks } = useTracks()
+	const { getUser } = useAuth()
 
 	useEffect(() => {
 		if (!scenarioState || scenarioState.mode !== "text") {
@@ -97,6 +100,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 
 	const handleGenerateLyrics = useCallback(async () => {
 		if (!prompt.trim()) {
+			toaster.dismiss()
 			toaster.create({
 				type: "error",
 				title: "Ошибка",
@@ -106,6 +110,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 		}
 
 		if (!token) {
+			toaster.dismiss()
 			toaster.create({
 				type: "error",
 				title: "Ошибка",
@@ -141,6 +146,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 						prompt: generatedLyrics,
 					}))
 					setIsGeneratingLyrics(false)
+					toaster.dismiss()
 					toaster.create({
 						type: "success",
 						title: "Лирика сгенерирована!",
@@ -172,6 +178,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			setIsGeneratingLyrics(false)
 			
 			const errorMessage = err instanceof Error ? err.message : "Не удалось сгенерировать лирику"
+			toaster.dismiss()
 			toaster.create({
 				type: "error",
 				title: "Ошибка генерации лирики",
@@ -252,6 +259,16 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					setGenerationPrompt(payload.prompt)
 					setScreen("loading")
 
+					// Обновляем данные пользователя для актуального баланса
+					try {
+						const userResponse = await getUser()
+						if (userResponse?.data) {
+							setUserState(userResponse.data)
+						}
+					} catch (userError) {
+						logError("Failed to refresh user data after fast generation", userError)
+					}
+
 					try {
 						await loadTracks()
 					} catch (loadError) {
@@ -259,6 +276,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					}
 
 					resetGenerationDraft()
+					toaster.dismiss()
 					toaster.create({
 						type: "success",
 						title: "Генерация запущена",

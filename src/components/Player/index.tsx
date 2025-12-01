@@ -30,6 +30,7 @@ export function Player() {
   const [status, setStatus] = useState<PlayerStatus>('idle')
   const seekingRef = useRef(false)
   const coverCacheRef = useRef<Map<string, string | null>>(new Map())
+  const MAX_CACHE_SIZE = 50
   // const progressRef = useRef<HTMLDivElement | null>(null)
   // const [isScrubbing, setIsScrubbing] = useState(false)
 
@@ -168,6 +169,13 @@ export function Player() {
     if (!trackId || !src) return
 
     if (playerState.cover) {
+      // Ограничиваем размер кеша (LRU логика)
+      if (coverCacheRef.current.size >= MAX_CACHE_SIZE) {
+        const firstKey = coverCacheRef.current.keys().next().value
+        if (firstKey) {
+          coverCacheRef.current.delete(firstKey)
+        }
+      }
       coverCacheRef.current.set(trackId, playerState.cover)
       return
     }
@@ -189,6 +197,13 @@ export function Player() {
       if (!isActive) return
 
       if (dataUrl) {
+        // Ограничиваем размер кеша (LRU логика)
+        if (coverCacheRef.current.size >= MAX_CACHE_SIZE) {
+          const firstKey = coverCacheRef.current.keys().next().value
+          if (firstKey) {
+            coverCacheRef.current.delete(firstKey)
+          }
+        }
         coverCacheRef.current.set(trackId, dataUrl)
         updatePlayerState({ cover: dataUrl })
       } else {
@@ -223,19 +238,23 @@ export function Player() {
     }
   }, [playerState.src])
 
-  // Persist state to sessionStorage
+  // Persist state to sessionStorage with debounce
   useEffect(() => {
-    try {
-      const payload: PlayerState = {
-        currentTime: current,
-        isPlaying,
-        src: playerState.src,
-        currentTrackId: playerState.currentTrackId,
+    const timeoutId = setTimeout(() => {
+      try {
+        const payload: PlayerState = {
+          currentTime: current,
+          isPlaying,
+          src: playerState.src,
+          currentTrackId: playerState.currentTrackId,
+        }
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+      } catch {
+        // ignore
       }
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
-    } catch {
-      // ignore
-    }
+    }, 500) // Debounce 500ms
+
+    return () => clearTimeout(timeoutId)
   }, [current, isPlaying, playerState.src, playerState.currentTrackId])
 
   // Auto-hide removed - player stays visible when paused
@@ -746,7 +765,18 @@ function dispatchEvent(eventName: string, detail: any) {
 
 function trackTelemetry(action: string, data: any) {
   // Телеметрия: отправка событий
-  logTelemetry(action, data)
+  // Маппинг действий на типы телеметрии
+  const telemetryActionMap: Record<string, 'player' | 'user_action'> = {
+    'play': 'player',
+    'pause': 'player',
+    'seek': 'player',
+    'next': 'player',
+    'prev': 'player',
+    'complete': 'player',
+  };
+  
+  const telemetryType = telemetryActionMap[action] || 'user_action';
+  logTelemetry(telemetryType, { action, ...data });
 }
 
 export default Player

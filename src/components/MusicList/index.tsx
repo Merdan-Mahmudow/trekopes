@@ -11,6 +11,7 @@ import {
     Icon,
     Skeleton,
     Portal,
+    Spinner,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { FaPlay } from "react-icons/fa";
@@ -33,6 +34,7 @@ import { Popup } from "../Popup";
 import { motion } from "framer-motion";
 import { useReducedMotion } from "../ui/accessibility";
 import { ReactLenis } from "lenis/react";
+import TextType from "../TextType";
 const MotionBox = motion(Box);
 
 export default function LoadingWave({
@@ -374,7 +376,10 @@ export function MusicList() {
                                         const status = generation.status;
                                         if (status === 'processing' || status === 'pending') {
                                             return (
-                                                <Skeleton key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" />
+                                                <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" position="relative" display="flex" alignItems="center" justifyContent="center">
+                                                    <Skeleton position="absolute" inset={0} />
+                                                    <Text fontSize="sm" color={COLOR.kit.smoke} position="relative" zIndex={1}>генерируется</Text>
+                                                </Box>
                                             )
                                         }
                                         const trackId = generation.song?.id ?? generation.id;
@@ -487,7 +492,10 @@ export function MusicList() {
                                         const status = generation.status;
                                         if (status === 'processing' || status === 'pending') {
                                             return (
-                                                <Skeleton key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" >Генерирую...</Skeleton>
+                                                <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" position="relative" display="flex" alignItems="center" justifyContent="center">
+                                                    <Skeleton position="absolute" inset={0} borderRadius="2xl" />
+                                                    <Box display="flex" alignItems="center" gap={2}><Spinner size="sm" /><TextType text="Генерирую..."  cursorCharacter="_" textColors={[COLOR.kit.orange, COLOR.kit.orangeWhite]}/></Box>
+                                                </Box>
                                             )
                                         }
                                         const trackId = generation.song?.id ?? generation.id;

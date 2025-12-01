@@ -1,5 +1,6 @@
 import type { PlayerProps, Track } from '../../types/player';
 import store from '../';
+import { logPlayer, debugLog } from '../../utils/logger';
 
 export const updatePlayerState = (payload: Partial<PlayerProps>) => {
     store.setState((state) => {
@@ -21,9 +22,15 @@ export const setPlayerPlaying = (isPlaying: boolean) => {
             isPlaying,
         }
     }))
+    
+    logPlayer(isPlaying ? 'play' : 'pause', {
+        track_id: store.state.player.currentTrackId || undefined
+    });
 }
 
 export const setCurrentTrack = (id: string | null, src?: string, play = true, title?: string, artist?: string, cover?: string) => {
+    debugLog('[Player] Setting current track', { id, title, artist, play });
+    
     store.setState((state) => ({
         ...state,
         player: {
@@ -37,23 +44,40 @@ export const setCurrentTrack = (id: string | null, src?: string, play = true, ti
             cover,
         }
     }))
+    
+    logPlayer('track_change', {
+        track_id: id || undefined
+    });
+    
+    if (play) {
+        logPlayer('play', { track_id: id || undefined });
+    }
 }
 
 export const loadQueue = (tracks: Track[], startIndex = 0) => {
+    debugLog('[Player] Loading queue', { trackCount: tracks.length, startIndex });
+    
+    const safeIndex = Math.max(0, Math.min(startIndex, tracks.length - 1));
+    const currentTrack = tracks[safeIndex];
+    
     store.setState((state) => ({
         ...state,
         player: {
             ...state.player,
             queue: tracks,
-            currentIndex: Math.max(0, Math.min(startIndex, tracks.length - 1)),
-            currentTrackId: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.id ?? null,
-            src: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.src,
-            title: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.title,
-            artist: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.artist,
-            cover: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.cover,
+            currentIndex: safeIndex,
+            currentTrackId: currentTrack?.id ?? null,
+            src: currentTrack?.src,
+            title: currentTrack?.title,
+            artist: currentTrack?.artist,
+            cover: currentTrack?.cover,
             isVisible: true,
         }
     }))
+    
+    logPlayer('track_change', {
+        track_id: currentTrack?.id
+    });
 }
 
 export const playNext = () => {
@@ -63,6 +87,10 @@ export const playNext = () => {
         const nextIndex = currentIndex + 1
         if (nextIndex >= queue.length) return state
         const nextTrack = queue[nextIndex]
+        
+        debugLog('[Player] Playing next track', { nextIndex, trackId: nextTrack.id });
+        logPlayer('track_change', { track_id: nextTrack.id });
+        
         return {
             ...state,
             player: {
@@ -86,6 +114,10 @@ export const playPrev = () => {
         const prevIndex = currentIndex - 1
         if (prevIndex < 0) return state
         const prevTrack = queue[prevIndex]
+        
+        debugLog('[Player] Playing previous track', { prevIndex, trackId: prevTrack.id });
+        logPlayer('track_change', { track_id: prevTrack.id });
+        
         return {
             ...state,
             player: {
