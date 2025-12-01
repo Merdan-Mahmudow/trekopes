@@ -99,10 +99,14 @@ export type CreateGenerationRequest = {
   template_id?: string;
   template_artist_id?: string;
   metadata?: unknown[];
+  answers?: unknown[];
   tempo?: number;
   style?: string;
   mood?: string;
   voice?: string;
+  skip_lyrics_generation?: boolean;
+  lyrics?: string;
+  title?: string;
 };
 
 export type CreateGenerationResponseData = {
@@ -267,6 +271,27 @@ export type ClearChatMessagesResponse = ApiSuccessResponse<{
   success: boolean;
 }>;
 
+// Lyrics Generation types
+export type CreateLyricsGenerationRequest = {
+  prompt: string;
+  type: "suno" | "gpt";
+};
+
+export type LyricsGenerationStatus = "pending" | "processing" | "completed" | "failed";
+
+export type LyricsGenerationDto = {
+  id: string;
+  status: LyricsGenerationStatus;
+  lyrics: string;
+  created_at: string;
+  started_at: string;
+  completed_at: string;
+};
+
+export type CreateLyricsGenerationResponse = ApiSuccessResponse<LyricsGenerationDto>;
+
+export type GetLyricsGenerationResponse = ApiSuccessResponse<LyricsGenerationDto>;
+
 export type ChatMessageChunkEvent = {
   chunk?: string;
   done?: boolean;
@@ -276,11 +301,11 @@ export type ChatMessageChunkEvent = {
   error?: string;
 };
 
-// WebSocket Chat types
+
 export type WebSocketChatMessage = {
   role: "user" | "assistant";
   content: string;
-  sent: string; // ISO 8601 формат: "2024-01-01T12:00:00"
+  sent: string;
 };
 
 export type WebSocketHelpBoxItem = {

@@ -1,11 +1,13 @@
 // TrackLoadingScreen.tsx
-import { Box, Flex, Heading, Icon, Text, VStack } from "@chakra-ui/react";
+import { Box, Center, Flex, Heading, Icon, Text, VStack } from "@chakra-ui/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6";
 import { COLOR } from "../../../components/ui/colors";
-import { GrayButton } from "../../../components/ui/button";
+import { BrandButton, GrayButton } from "../../../components/ui/button";
 import { TbExternalLink } from "react-icons/tb";
+import { useNavigate } from "@tanstack/react-router";
+import { BsMusicNote } from "react-icons/bs";
 
 const MotionFlex = motion(Flex);
 
@@ -18,7 +20,7 @@ type StepStatus = "completed" | "current" | "upcoming";
 
 export const TrackLoadingScreen = () => {
   const reduceMotion = useReducedMotion();
-
+  const navigate = useNavigate();
   const steps = [
     { title: "Анализируем идею" },
     { title: "Готовим аранжировку" },
@@ -215,9 +217,14 @@ export const TrackLoadingScreen = () => {
           </VStack>
         </Box>
       </Box>
-      <GrayButton w="full" onClick={() => window.open("https://nika--art.ru?dog&tg")}>
-        Хочу портрет <Icon as={TbExternalLink} size={"sm"} />
-      </GrayButton>
+      <Center flexDirection="column" gap={4}>
+          <BrandButton w="300px" onClick={() => navigate({ to: "/profile" })}>
+            К трекам <Icon as={BsMusicNote} size={"sm"} />
+          </BrandButton>
+          <GrayButton w="300px" onClick={() => window.open("https://nika--art.ru?dog&tg")}>
+            Хочу портрет <Icon as={TbExternalLink} size={"sm"} />
+          </GrayButton>
+      </Center>
     </VStack>
   );
 };

@@ -11,7 +11,7 @@ const toCssSize = (v: number | string | undefined, fallback: string) =>
 
 const IconMicrophone: React.FC<IconMicrophoneProps> = ({ width, height, fillColor = "#fff", ...rest }) => {
     const w = toCssSize(width, "100%");
-    const h = toCssSize(height, "auto");
+    const h = toCssSize(height, "100%");
 
     return (
         <svg
