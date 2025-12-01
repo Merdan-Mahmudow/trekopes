@@ -8,6 +8,7 @@ import 'katex/dist/katex.min.css';
 import { Box, Text, Link, Code, Heading, IconButton } from '@chakra-ui/react';
 import { useColorModeValue } from "../ui/color-mode";
 import { BsClipboard, BsCheck2 } from 'react-icons/bs';
+import { logError } from '../../utils/logger';
 
 interface MarkdownRendererProps {
   content: string;
@@ -26,7 +27,7 @@ const CodeBlock = ({ children, className }: { children: React.ReactNode, classNa
       setHasCopied(true);
       setTimeout(() => setHasCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      logError('Failed to copy code to clipboard', err);
     }
   };
   

@@ -271,7 +271,8 @@ export function MusicList() {
         try {
             const pinned = localStorage.getItem(PINNED_TRACKS_KEY);
             return pinned ? JSON.parse(pinned) : [];
-        } catch {
+        } catch (error) {
+            debugWarn("Failed to get pinned tracks from localStorage", error);
             return [];
         }
     };

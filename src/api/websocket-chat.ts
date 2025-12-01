@@ -1,14 +1,15 @@
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import type { ChatMessageChunkEvent } from "../types/webapp";
+import { logError } from "../utils/logger";
 
 type WebSocketStatus = "connecting" | "connected" | "disconnected" | "error";
 
 type ChunkHandler = (event: ChatMessageChunkEvent) => void;
 type ErrorHandler = (error: Error) => void;
 type StatusChangeHandler = (status: WebSocketStatus) => void;
-type EchoInstance = Echo<any>;
-type EchoChannel = ReturnType<Echo<any>["channel"]>;
+type EchoInstance = Echo<unknown>;
+type EchoChannel = ReturnType<Echo<unknown>["channel"]>;
 
 const WS_KEY = import.meta.env.VITE_WS_KEY || "ga70dd0nakp1nrw0npza";
 const WS_HOST = import.meta.env.VITE_WS_HOST || "bot.tpekollec.ru";
@@ -205,16 +206,16 @@ export class WebSocketChatClient {
         try {
           handler(event);
         } catch (error) {
-          console.error("Ошибка в обработчике чанка:", error);
+          logError("Ошибка в обработчике чанка", error);
         }
       });
     });
 
     const channelWithError = this.channel as unknown as {
-      error?: (cb: (error: any) => void) => void;
+      error?: (cb: (error: unknown) => void) => void;
     };
 
-    channelWithError.error?.((error: any) => {
+    channelWithError.error?.((error: unknown) => {
       const err =
         error instanceof Error
           ? error
@@ -226,13 +227,13 @@ export class WebSocketChatClient {
   private getPusherConnection():
     | {
         state: string;
-        bind: (name: string, cb: (...args: any[]) => void) => void;
-        unbind: (name: string, cb?: (...args: any[]) => void) => void;
+        bind: (name: string, cb: (...args: unknown[]) => void) => void;
+        unbind: (name: string, cb?: (...args: unknown[]) => void) => void;
       }
     | null {
-    const connector = (this.echo as any)?.connector;
+    const connector = (this.echo as { connector?: unknown })?.connector as { pusher?: { connection?: unknown } } | undefined;
     const pusherConnection = connector?.pusher?.connection;
-    return pusherConnection ?? null;
+    return pusherConnection as ReturnType<typeof this.getPusherConnection> | null ?? null;
   }
 
   private emitError(error: Error): void {
@@ -240,7 +241,7 @@ export class WebSocketChatClient {
       try {
         handler(error);
       } catch (err) {
-        console.error("Ошибка в обработчике ошибок:", err);
+        logError("Ошибка в обработчике ошибок", err);
       }
     });
   }
@@ -255,7 +256,7 @@ export class WebSocketChatClient {
       try {
         handler(status);
       } catch (error) {
-        console.error("Ошибка в обработчике статуса:", error);
+        logError("Ошибка в обработчике статуса", error);
       }
     });
   }

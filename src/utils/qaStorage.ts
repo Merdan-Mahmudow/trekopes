@@ -1,3 +1,5 @@
+import { debugWarn } from "./logger";
+
 const SELECTED_CATEGORY_KEY = "qa_selected_category";
 const ACTIVE_CATEGORY_KEY = "qa_category";
 const QUEST_PREFIX = "qa_quest";
@@ -13,7 +15,8 @@ const safeGetItem = (key: string): string | null => {
     }
     try {
         return window.localStorage.getItem(key);
-    } catch {
+    } catch (error) {
+        debugWarn(`Failed to get item from localStorage: ${key}`, error);
         return null;
     }
 };
@@ -24,8 +27,8 @@ const safeSetItem = (key: string, value: string) => {
     }
     try {
         window.localStorage.setItem(key, value);
-    } catch {
-        // ignore write errors
+    } catch (error) {
+        debugWarn(`Failed to set item in localStorage: ${key}`, error);
     }
 };
 
@@ -35,8 +38,8 @@ const safeRemoveItem = (key: string) => {
     }
     try {
         window.localStorage.removeItem(key);
-    } catch {
-        // ignore remove errors
+    } catch (error) {
+        debugWarn(`Failed to remove item from localStorage: ${key}`, error);
     }
 };
 
@@ -46,7 +49,8 @@ const parseJSON = <T>(value: string | null, fallback: T): T => {
     }
     try {
         return JSON.parse(value) as T;
-    } catch {
+    } catch (error) {
+        debugWarn("Failed to parse JSON from localStorage", error);
         return fallback;
     }
 };

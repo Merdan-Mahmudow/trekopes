@@ -16,7 +16,7 @@ const isDebug = () => {
 /**
  * Логирование отладочной информации (только в debug режиме)
  */
-export const debugLog = (...args: any[]) => {
+export const debugLog = (...args: unknown[]) => {
   if (isDebug()) {
     console.log(...args);
   }
@@ -25,7 +25,7 @@ export const debugLog = (...args: any[]) => {
 /**
  * Логирование предупреждений (только в debug режиме)
  */
-export const debugWarn = (...args: any[]) => {
+export const debugWarn = (...args: unknown[]) => {
   if (isDebug()) {
     console.warn(...args);
   }
@@ -34,7 +34,7 @@ export const debugWarn = (...args: any[]) => {
 /**
  * Логирование ошибок (всегда, но с дополнительной информацией в debug режиме)
  */
-export const logError = (message: string, error?: any, context?: Record<string, any>) => {
+export const logError = (message: string, error?: unknown, context?: Record<string, unknown>) => {
   if (isDebug()) {
     console.error(`[ERROR] ${message}`, { error, context });
   } else {
@@ -46,7 +46,7 @@ export const logError = (message: string, error?: any, context?: Record<string, 
 /**
  * Логирование телеметрии (всегда, но с дополнительной информацией в debug режиме)
  */
-export const logTelemetry = (action: string, data?: any) => {
+export const logTelemetry = (action: string, data?: Record<string, unknown>) => {
   if (isDebug()) {
     console.log('[Telemetry]', action, data);
   }
@@ -57,7 +57,7 @@ export const logTelemetry = (action: string, data?: any) => {
 /**
  * Логирование аналитики событий (всегда)
  */
-export const logAnalytics = (event: string, data?: Record<string, any>) => {
+export const logAnalytics = (event: string, data?: Record<string, unknown>) => {
   if (isDebug()) {
     console.log(`[Analytics] ${event}`, data);
   }

@@ -40,17 +40,20 @@ export const setCurrentTrack = (id: string | null, src?: string, play = true, ti
 }
 
 export const loadQueue = (tracks: Track[], startIndex = 0) => {
+    const safeIndex = Math.max(0, Math.min(startIndex, tracks.length - 1));
+    const currentTrack = tracks[safeIndex];
+
     store.setState((state) => ({
         ...state,
         player: {
             ...state.player,
             queue: tracks,
-            currentIndex: Math.max(0, Math.min(startIndex, tracks.length - 1)),
-            currentTrackId: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.id ?? null,
-            src: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.src,
-            title: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.title,
-            artist: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.artist,
-            cover: tracks[Math.max(0, Math.min(startIndex, tracks.length - 1))]?.cover,
+            currentIndex: safeIndex,
+            currentTrackId: currentTrack?.id ?? null,
+            src: currentTrack?.src,
+            title: currentTrack?.title,
+            artist: currentTrack?.artist,
+            cover: currentTrack?.cover,
             isVisible: true,
         }
     }))

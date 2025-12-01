@@ -1,6 +1,7 @@
 import React from 'react';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
+import { debugWarn } from './logger';
 
 /**
  * Парсит текст и заменяет LaTeX формулы на компоненты KaTeX
@@ -72,7 +73,7 @@ export function renderWithKaTeX(text: string): React.ReactNode[] {
         currentIndex++;
       } catch (error) {
         // Если ошибка парсинга LaTeX, оставляем оригинальный текст
-        console.warn('Ошибка парсинга LaTeX:', error, 'Формула:', formula);
+        debugWarn('Ошибка парсинга LaTeX:', error, 'Формула:', formula);
         parts.push(formula);
       }
     } else {

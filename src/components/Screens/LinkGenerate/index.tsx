@@ -74,18 +74,41 @@ export function LinkGenerate({ onClose }: LinkGenerateProps) {
 
     const normalizeLink = (url: string): string => {
         const trimmed = url.trim();
-        
+
         // Если это просто username, добавляем домен
         if (/^[a-zA-Z0-9._-]+$/.test(trimmed)) {
             return `https://vk.com/${trimmed}`;
         }
-        
+
         // Если ссылка без протокола, добавляем https
         if (!trimmed.startsWith('http')) {
-            return `https://${trimmed}`;
+            const normalized = `https://${trimmed}`;
+            // Validate the URL after normalization
+            try {
+                const parsedUrl = new URL(normalized);
+                // Only allow http and https protocols
+                if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+                    throw new Error('Invalid protocol');
+                }
+                return normalized;
+            } catch {
+                // If URL is invalid, return as-is and let validation catch it
+                return trimmed;
+            }
         }
-        
-        return trimmed;
+
+        // Validate URLs that already have a protocol
+        try {
+            const parsedUrl = new URL(trimmed);
+            // Only allow http and https protocols
+            if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+                throw new Error('Invalid protocol');
+            }
+            return trimmed;
+        } catch {
+            // If URL is invalid, return as-is and let validation catch it
+            return trimmed;
+        }
     };
 
     const handleLinkSubmit = async () => {
