@@ -79,6 +79,7 @@ export function ChatInput({
         <Textarea
           value={value}
           ref={inputRef}
+          disabled={isDisabled}
           onChange={(e) => setValue(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}

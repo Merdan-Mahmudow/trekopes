@@ -1,27 +1,18 @@
-import { Flex, IconButton, Image, Text } from "@chakra-ui/react";
+import { Flex, IconButton, Text } from "@chakra-ui/react";
 import { useNavigate } from "@tanstack/react-router";
 import { LuPlus } from "react-icons/lu";
 import { BsChatDots } from "react-icons/bs";
 import { COLOR } from "../ui/colors";
 import { useStore } from "@tanstack/react-store";
 import store from "../../store";
-import { useIsPro } from "../../store/user";
-import { toaster, Toaster } from "../ui/toaster";
+import { Toaster } from "../ui/toaster";
+import { PiBoneBold } from "react-icons/pi";
 
 export function Balance() {
     const navigate = useNavigate();
-    const user = useStore(store, (state) => state.user);
-    const isPro = useIsPro();
+    const user = useStore(store, (state) => state.user)
 
     const handleChatClick = () => {
-        if (!isPro) {
-            toaster.create({
-                type: "info",
-                title: "Чат недоступен",
-                description: "Функция доступна только пользователям PRO",
-            });
-            return;
-        }
         navigate({ to: "/chat" });
     };
 
@@ -45,16 +36,12 @@ export function Balance() {
                 p={"2px 8px"}
                 alignItems={"center"}
                 bg={user.limit > 0 ? COLOR.kit.darkGray : 'rgb(228, 37, 72)'}
-                gap={"3"}
+                gap={"2"}
                 onClick={() => navigate({ to: "/tarrifs" })}
             >
                 {user.limit > 0 ? (
                     <>
-                       <Image
-                    w={"16px"}
-                    h={"16px"}
-                    src="https://storage.yandexcloud.net/trekopes/paw.svg"
-                />
+                      <PiBoneBold size={"20px"} color={COLOR.kit.orange} />
                 
                 <Text>{user.limit}</Text>
                 <LuPlus size={"20px"} color={COLOR.kit.orange} />

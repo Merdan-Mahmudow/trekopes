@@ -1,7 +1,7 @@
 import { Popup } from '../components/Popup'
 import { COLOR } from '../components/ui/colors'
 import { Box, Flex, Heading, Text, Grid, GridItem, Icon, } from '@chakra-ui/react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import { setDockActive } from '../store'
 import { TextGenerateScreen } from '../components/Screens/TextGenerate'
@@ -28,7 +28,7 @@ import {
 } from '../types/generation'
 import type { SongGenerationType } from '../types/webapp'
 import { useIsPro } from '../store/user'
-// import { toaster } from '../components/ui/toaster'
+import { toaster, Toaster } from '../components/ui/toaster'
 
 
 
@@ -44,6 +44,7 @@ function RouteComponent() {
     const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false)
     const [ genType, setGenType ] = useState<GenerationCardType | null>("text")
     const isPro = useIsPro()
+    const navigate = useNavigate()
 
 
     useEffect(() => {
@@ -60,14 +61,21 @@ function RouteComponent() {
             return;
         }
 
-        // if (!isPro && type !== "text") {
-        //     toaster.create({
-        //         type: "info",
-        //         title: "Только для PRO",
-        //         description: "Эта генерация доступна в подписке PRO",
-        //     })
-        //     return;
-        // }
+        if (!isPro && type !== "text") {
+            toaster.create({
+                type: "info",
+                title: "Только для PRO",
+                description: "Эта генерация доступна в подписке PRO",
+                action: {
+                    label: "Купить PRO",
+                    onClick: () => {
+                        navigate({ to: "/tarrifs", search: { tarrif: "pro" } })
+                        toaster.dismiss()
+                    }
+                }
+            })
+            return;
+        }
 
         const typeToGenerationMap: Record<Exclude<typeof type, null>, SongGenerationType> = {
             scenario: "scenario",
@@ -209,6 +217,7 @@ function RouteComponent() {
                 { genType == 'style' && <StyleGenerateScreen onClose={handleClosePopup} /> }
                 { genType == 'text' && <FastGenerateScreen onClose={handleClosePopup} /> }
             </Popup>
+            <Toaster />
         </>
     )
 }

@@ -123,6 +123,7 @@ export type ChatDto = {
   first_name?: string | null;
   last_name?: string | null;
   limit: number;
+  pack_id?: number | null;
   used_limit: number;
   bonus_limit: number;
   ref?: number | null;

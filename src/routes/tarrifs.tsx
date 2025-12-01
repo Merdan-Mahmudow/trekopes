@@ -316,12 +316,12 @@ function RouteComponent() {
         () => [ 
             {
                 id: 'subscription',
-                title: 'Подписка',
+                title: 'Подписки',
                 accent: ACCENTS.subscription,
             },
             {
                 id: 'tariffs',
-                title: 'Тарифы',
+                title: 'Разовые',
                 accent: ACCENTS.tariffs,
             },
            

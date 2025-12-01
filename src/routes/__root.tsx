@@ -5,18 +5,19 @@ import { useEffect, useState } from 'react';
 import type { Telegram } from "telegram-web-app";
 import { COLOR } from '../components/ui/colors';
 import { PreLoader } from '../components/PreLoader';
-// import { MaintenanceScreen } from '../components/MaintenanceScreen';
+import { MaintenanceScreen } from '../components/MaintenanceScreen';
 
 import { useAuth } from '../hooks/useUser';
-import { setAuthToken, setHasPayments, setIsProFromPayments, setScenarioTemplateId, setUserState } from '../store';
+import { setAuthToken, setHasPayments, setScenarioTemplateId, setUserState } from '../store';
 import { debugLog, logError } from '../utils/logger';
 import { useWebAppPayments } from '../hooks/useWebAppPayments';
 import { useGenerationTemplates } from '../hooks/useGenerationTemplates';
+import { setIsPro } from '../store/user';
 export const Route = createRootRoute({
   component: RootComponent,
 })
 
-// const TRACK_PRICE = 250;
+const TRACK_PRICE = 250;
 
 
 function RootComponent() {
@@ -28,8 +29,8 @@ function RootComponent() {
     isTokenSuccess,
     isUserSuccess,
     getToken,
-    // tokenError,
-    // isTokenError
+    tokenError,
+    isTokenError
   } = useAuth();
   const paymentsQuery = useWebAppPayments();
   const templatesQuery = useGenerationTemplates();
@@ -87,15 +88,16 @@ function RootComponent() {
   useEffect(() => {
     if (isUserSuccess && user?.data) {
       const userData = user.data;
+      const isPro = paymentsQuery.data?.data?.some((payment) => payment.status === "paid" && payment.amount > TRACK_PRICE);
+      setIsPro(Boolean(isPro));
       setUserState({
         ...userData,
-        isPro: true,
-        // isPro: Boolean(userData.isPro),
+        isPro: isPro,
       });
       setIsPreload(false);
 
     }
-  }, [isUserSuccess, user]);
+  }, [isUserSuccess, user, paymentsQuery.data]);
 
   useEffect(() => {
     const payments = paymentsQuery.data?.data;
@@ -105,12 +107,6 @@ function RootComponent() {
 
     const hasPayments = payments.some((payment) => payment.status === "paid");
     setHasPayments(hasPayments);
-
-    // const isProFromPayments = payments.some(
-    //   (payment) => payment.status === "paid" && payment.amount > TRACK_PRICE
-    // );
-    setIsProFromPayments(true);
-    // setIsProFromPayments(isProFromPayments);
   }, [paymentsQuery.data]);
 
   useEffect(() => {
@@ -157,13 +153,13 @@ function RootComponent() {
     return () => clearInterval(intervalId);
   }, [isTokenSuccess, getToken]);
 
-  // // Проверяем ошибки логина (500 или CORS)
-  // const isMaintenanceMode = isTokenError && (tokenError as any)?.isMaintenance;
+  // Проверяем ошибки логина (500 или CORS)
+  const isMaintenanceMode = isTokenError && (tokenError as any)?.isMaintenance;
 
-  // // Показываем экран технических работ при ошибке логина (500 или CORS)
-  // if (isMaintenanceMode) {
-  //   return <MaintenanceScreen />;
-  // }
+  // Показываем экран технических работ при ошибке логина (500 или CORS)
+  if (isMaintenanceMode) {
+    return <MaintenanceScreen />;
+  }
 
   return (
     <>

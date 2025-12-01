@@ -9,7 +9,10 @@ import {
   Container,
   Avatar,
   Float,
-  Circle
+  Circle,
+  Center,
+  Image,
+  VStack
 } from '@chakra-ui/react'
 import { useColorModeValue } from "../components/ui/color-mode"
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -27,6 +30,8 @@ import {
 } from "../api/webapp"
 import type { ChatMessage, ChatMessageChunkEvent } from "../types/webapp"
 import { COLOR } from '../components/ui/colors'
+import { useIsPro } from '../store/user'
+import { BrandButton } from '../components/ui/button'
 
 export const Route = createFileRoute('/chat')({
   component: RouteComponent,
@@ -50,6 +55,7 @@ function RouteComponent() {
   const wsClientRef = useRef(getWebSocketChatClient())
   const streamBufferRef = useRef("")
   const streamMessageIdRef = useRef<string | null>(null)
+  const isPro = useIsPro()
 
   // Состояние сообщений
   const [messages, setMessages] = useState<ChatMessageState[]>([])
@@ -392,58 +398,68 @@ function RouteComponent() {
           </Box>
         </Flex>
 
-        {/* <IconButton
-          variant="ghost"
-          onClick={handleClear}
-          aria-label="Очистить чат"
-          colorScheme="red"
-          size="sm"
-          rounded="full"
-          disabled={messages.length === 0 || isLoadingHistory}
-          title="Очистить историю чата"
-          color="gray.500"
-        >
-          <FaRegTrashAlt size="20px" />
-        </IconButton> */}
       </Flex>
 
       {/* Messages Area */}
-      <Box
-        ref={chatContainerRef}
-        flex={1}
-        overflowY="auto"
-        overflowX="hidden"
-        pt="80px" // Header height + padding
-        pb="140px" // Input height + padding
-        px={4}
-        onScroll={handleScroll}
-        css={{
-          scrollBehavior: 'smooth',
-          '&::-webkit-scrollbar': { width: '6px' },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: scrollbarThumbBg,
-            borderRadius: '3px'
-          },
-          '&::-webkit-scrollbar-track': { background: 'transparent' }
-        }}
-      >
-        <Container maxW="800px" p={0}>
-          {isLoadingHistory && messageProps.length === 0 ? (
-            <Flex justify="center" align="center" py={20}>
-              <Spinner size="xl" color={COLOR.kit.orange} borderWidth="3px" />
-            </Flex>
-          ) : connectionError && messageProps.length === 0 ? (
-            <Flex justify="center" align="center" direction="column" gap={3} py={20}>
-              <Text color="red.500" fontWeight="bold">Ошибка подключения</Text>
-              <Text fontSize="sm" color="gray.500">
-                {connectionError.message || "Попробуйте обновить страницу"}
-              </Text>
-            </Flex>
-          ) : (
-            <ChatList messages={messageProps} />
-          )}
-        </Container>
-      </Box>
+    {isPro ? (
+            <Box
+            ref={chatContainerRef}
+            flex={1}
+            overflowY="auto"
+            overflowX="hidden"
+            pt="80px" // Header height + padding
+            pb="140px" // Input height + padding
+            px={4}
+            onScroll={handleScroll}
+            css={{
+              scrollBehavior: 'smooth',
+              '&::-webkit-scrollbar': { width: '6px' },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: scrollbarThumbBg,
+                borderRadius: '3px'
+              },
+              '&::-webkit-scrollbar-track': { background: 'transparent' }
+            }}
+          >
+            <Container maxW="800px" p={0}>
+              {isLoadingHistory && messageProps.length === 0 ? (
+                <Flex justify="center" align="center" py={20}>
+                  <Spinner size="xl" color={COLOR.kit.orange} borderWidth="3px" />
+                </Flex>
+              ) : connectionError && messageProps.length === 0 ? (
+                <Flex justify="center" align="center" direction="column" gap={3} py={20}>
+                  <Text color="red.500" fontWeight="bold">Ошибка подключения</Text>
+                  <Text fontSize="sm" color="gray.500">
+                    {connectionError.message || "Попробуйте обновить страницу"}
+                  </Text>
+                </Flex>
+              ) : (
+                <ChatList messages={messageProps} />
+              )}
+            </Container>
+          </Box>
+    ) : (
+      <Center h="100dvh">
+        <VStack w={"11/12"} textAlign="center">
+          <Image
+            src="/pay_img.PNG"
+            alt="Chat Pro"
+            w="80%"
+            h="80%"
+            objectFit="contain"
+          />
+        
+        <Text fontSize="sm" color="gray.500" my={4} >
+          Для использования чата вам необходим тариф PRO или ULTRA
+        </Text>
+        <BrandButton
+          onClick={() => navigate({ to: "/tarrifs" })}
+        >
+          К тарифам
+        </BrandButton>
+        </VStack>
+      </Center>
+    )}
 
       {/* Scroll to Bottom Button */}
       {showScrollButton && (
@@ -486,7 +502,7 @@ function RouteComponent() {
         />
         <ChatInput
           onSend={handleSend}
-          isDisabled={isSending || !telegramChatId || isLoadingHistory || !token}
+          isDisabled={isSending || !telegramChatId || isLoadingHistory || !token || !isPro}
         />
       </Box>
     </Box>

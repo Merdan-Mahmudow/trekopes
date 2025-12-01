@@ -24,6 +24,7 @@ export type UserState = {
   bonus_limit: number;
   referrals_signup_count: number;
   referrals_purchase_count: number;
+  pack_id?: number | null;
   isPro?: boolean;
 };
 
@@ -64,6 +65,7 @@ const initialUserState: UserState = {
   bonus_limit: 0,
   referrals_signup_count: 0,
   referrals_purchase_count: 0,
+  pack_id: null,
 };
 
 const initialStoreState = {
@@ -167,10 +169,6 @@ export const setActiveTarrif = (id: TarrifId) => {
     ...state,
     subscription: { ...state.subscription, activeId: id }
   }));
-  if (id === "pro") {
-    // Поддержка существующего флага PRO
-    store.setState((state) => ({ ...state, user: { ...state.user, isPro: true } }));
-  }
 };
 
 export const setSubscriptionSaving = (isSaving: boolean) => {
