@@ -335,7 +335,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					<Button
 						w={"fit"}
 						rounded={"full"}
-						bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+						bg="linear-gradient(135deg,rgb(216, 44, 44) 0%,rgb(202, 85, 16) 100%)"
 						color={COLOR.kit.white}
 						_disabled={{ opacity: 0.5, cursor: "not-allowed" }}
 						_hover={{ 

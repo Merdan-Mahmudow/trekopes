@@ -46,7 +46,6 @@ type GenerationParamsAccordionProps = {
 const voiceOptions = [
     { value: "male", label: "Мужской" as const },
     { value: "female", label: "Женский" as const },
-    { value: "both", label: "Вместе" as const },
 ];
 
 export function GenerationParamsAccordion({
@@ -232,7 +231,7 @@ export function GenerationParamsAccordion({
     }
     return (
         <VStack gap={4} w="full" color="white">
-            <Box w="full" borderRadius="24px" p={6}>
+            <Box w="full" borderRadius="24px" py={6}>
                 <VStack gap={4} align="stretch">
                     <Box>
                         <Text fontSize="lg" fontWeight="bold" color={COLOR.kit.orange}>Параметры трека</Text>
@@ -373,7 +372,7 @@ export function GenerationParamsAccordion({
                                                 <Text fontSize="sm" fontWeight="medium">
                                                     {`Голос${voiceLabel ? `: ${voiceLabel}` : ""}`}
                                                 </Text>
-                                                <Grid templateColumns="repeat(3, minmax(0, 1fr))" gap={2} w="full">
+                                                <Grid templateColumns="repeat(auto-fit, minmax(60px, 1fr))" gap={2} w="full">
                                                     {voiceOptions.map((voice) => (
                                                         <Button
                                                             key={voice.value}
