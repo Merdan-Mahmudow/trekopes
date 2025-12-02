@@ -9,19 +9,50 @@ import { logError } from '../../utils/logger';
 const MotionIconButton = motion(IconButton);
 const MotionBox = motion(Box);
 
+type VoiceInputStatus = 'available' | 'telegram-blocked' | 'no-https' | 'unsupported';
+
 const Dictaphone = ({ onTranscript }: { onTranscript: (transcript: string) => void }) => {
     const [error, setError] = useState<string | null>(null);
+    const [voiceStatus, setVoiceStatus] = useState<VoiceInputStatus>('available');
     
+    // useSpeechRecognition НЕ принимает language/continuous/interimResults
+    // Эти параметры передаются в startListening()
     const {
         transcript,
         listening,
         browserSupportsSpeechRecognition,
         resetTranscript
-    } = useSpeechRecognition({ 
-        language: 'ru-RU',
-        continuous: true,
-        interimResults: true
-    });
+    } = useSpeechRecognition();
+
+    // Определяем статус голосового ввода при монтировании
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            setVoiceStatus('unsupported');
+            return;
+        }
+
+        const isTgWebApp = !!(window as any).Telegram?.WebApp;
+        const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+        
+        // В Telegram WebApp микрофон заблокирован на обеих платформах (iOS и Android)
+        if (isTgWebApp) {
+            setVoiceStatus('telegram-blocked');
+            return;
+        }
+
+        // Web Speech API требует HTTPS (кроме localhost)
+        if (!isSecure) {
+            setVoiceStatus('no-https');
+            return;
+        }
+
+        if (!browserSupportsSpeechRecognition) {
+            setVoiceStatus('unsupported');
+            return;
+        }
+
+        setVoiceStatus('available');
+    }, [browserSupportsSpeechRecognition]);
 
     const previousTranscriptRef = useRef('');
     const isInitialMountRef = useRef(true);
@@ -83,11 +114,23 @@ const Dictaphone = ({ onTranscript }: { onTranscript: (transcript: string) => vo
         }
     }, [listening, resetTranscript]);
 
-    if (!browserSupportsSpeechRecognition) {
-        return null; // Скрываем кнопку, если браузер не поддерживает распознавание
-    }
-
     const toggleListening = useCallback(async () => {
+        // Показываем информативное сообщение для заблокированных режимов
+        if (voiceStatus === 'telegram-blocked') {
+            setError('Голосовой ввод недоступен в Telegram. Откройте приложение в браузере.');
+            return;
+        }
+        
+        if (voiceStatus === 'no-https') {
+            setError('Голосовой ввод требует HTTPS соединения.');
+            return;
+        }
+        
+        if (voiceStatus === 'unsupported') {
+            setError('Ваш браузер не поддерживает голосовой ввод.');
+            return;
+        }
+
         if (listening) {
             try {
                 SpeechRecognition.stopListening();
@@ -102,17 +145,21 @@ const Dictaphone = ({ onTranscript }: { onTranscript: (transcript: string) => vo
             // Запрашиваем разрешение на микрофон перед началом распознавания
             try {
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                    const ua = navigator.userAgent.toLowerCase();
-                    const isIOS = /iphone|ipad|ipod/.test(ua);
-                    
-                    // На iOS в WebView getUserMedia может не работать, но пробуем
-                    if (!isIOS) {
-                        await navigator.mediaDevices.getUserMedia({ audio: true });
-                    }
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
                 }
             } catch (err: any) {
                 logError('Failed to get microphone access', err);
-                setError('Нет доступа к микрофону. Разрешите доступ в настройках браузера.');
+                
+                // Более детальная диагностика ошибки
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    setError('Доступ к микрофону запрещён. Разрешите в настройках браузера.');
+                } else if (err.name === 'NotFoundError') {
+                    setError('Микрофон не найден. Проверьте подключение устройства.');
+                } else if (err.name === 'NotReadableError') {
+                    setError('Микрофон занят другим приложением.');
+                } else {
+                    setError('Не удалось получить доступ к микрофону.');
+                }
                 return;
             }
             
@@ -129,7 +176,13 @@ const Dictaphone = ({ onTranscript }: { onTranscript: (transcript: string) => vo
                 setError('Не удалось запустить распознавание речи');
             }
         }
-    }, [listening, resetTranscript]);
+    }, [listening, resetTranscript, voiceStatus]);
+
+    // Скрываем кнопку только если браузер совсем не поддерживает
+    // В остальных случаях показываем кнопку, но с сообщением при клике
+    if (voiceStatus === 'unsupported' && !browserSupportsSpeechRecognition) {
+        return null;
+    }
 
     return (
         <Float placement={"bottom-end"} offsetX={10} offsetY={10}>
@@ -153,12 +206,13 @@ const Dictaphone = ({ onTranscript }: { onTranscript: (transcript: string) => vo
                 )}
                 <MotionBox
                     rounded={"full"}
-                    bg={listening ? COLOR.kit.orange : COLOR.kit.darkGray}
+                    bg={listening ? COLOR.kit.orange : (voiceStatus !== 'available' ? 'gray.600' : COLOR.kit.darkGray)}
                     w={"40px"}
                     h={"40px"}
                     display={"flex"}
                     alignItems={"center"}
                     justifyContent={"center"}
+                    opacity={voiceStatus !== 'available' ? 0.6 : 1}
                     animate={{
                         scale: listening ? [1, 1.15, 1] : 1
                     }}

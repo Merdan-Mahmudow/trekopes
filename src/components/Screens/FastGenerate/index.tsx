@@ -1,6 +1,6 @@
 import { Button, Heading, Text, Textarea, VStack, Box, Icon, HStack, IconButton} from "@chakra-ui/react"
 import { Toaster } from "../../ui/toaster"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useRef } from "react"
 import { useStore } from "@tanstack/react-store"
 import { COLOR } from "../../../components/ui/colors"
 import { TrackLoadingScreen } from "../TrackLoading"
@@ -23,7 +23,7 @@ import { createWebAppGeneration, createLyricsGeneration, getLyricsGenerationStat
 import { useTracks } from "../../../hooks/useTracks"
 import { toaster } from "../../ui/toaster"
 import { logError } from "../../../utils/logger"
-import { Dictaphone } from "../../ui/SpeechRecognitionButton"
+import { VoiceRecorder } from "../../ui/VoiceRecorder"
 import { TbSparkles, TbX } from "react-icons/tb"
 import { GenerationParamsAccordion } from "../GenerationParamsAccordion"
 import { useAuth } from "../../../hooks/useUser"
@@ -46,16 +46,22 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 		}
 	}, [scenarioState])
 
+	// Используем ref для отслеживания изменений prompt извне
+	const prevScenarioPromptRef = useRef<string | null>(null);
+
 	useEffect(() => {
 		if (scenarioState?.mode === "text") {
+			const scenarioPrompt = scenarioState.prompt;
+			// Только обновляем если prompt изменился извне (не из нашего компонента)
 			if (
-				typeof scenarioState.prompt === "string" &&
-				scenarioState.prompt !== prompt
+				typeof scenarioPrompt === "string" &&
+				prevScenarioPromptRef.current !== scenarioPrompt
 			) {
-				setPrompt(scenarioState.prompt)
+				prevScenarioPromptRef.current = scenarioPrompt;
+				setPrompt(scenarioPrompt);
 			}
 		}
-	}, [scenarioState, prompt])
+	}, [scenarioState]); // ✅ Убрали prompt из зависимостей
 
 	const patchFastScenario = useCallback(
 		(updater: (draft: FastGenerationDraft) => FastGenerationDraft) => {
@@ -313,10 +319,14 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					pb="48px"
 					maxLength={isGenerated ? undefined : 200}
 				/>
-				<Dictaphone
+				<VoiceRecorder
 					onTranscript={(transcript) => {
-						handlePromptChange(transcript)
-						setIsGenerated(false)
+						// Добавляем к существующему тексту (или заменяем если пустой)
+						const newText = prompt.trim() 
+							? `${prompt.trim()} ${transcript}` 
+							: transcript;
+						handlePromptChange(newText);
+						setIsGenerated(false);
 					}}
 				/>
 			</Box>

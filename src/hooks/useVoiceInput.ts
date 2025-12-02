@@ -22,19 +22,19 @@ interface UseVoiceInputResult {
 
 export function useVoiceInput({
   onText,
-  language = 'ru-RU',
-  continuous = true,
 }: UseVoiceInputOptions = {}): UseVoiceInputResult {
   const [error, setError] = useState<string | null>(null);
   const previousListeningRef = useRef(false);
 
   // базовый хук из react-speech-recognition
+  // Примечание: useSpeechRecognition() НЕ принимает language/continuous
+  // Эти параметры передаются в startListening()
   const {
     transcript,
     listening,
     browserSupportsSpeechRecognition,
     resetTranscript
-  } = useSpeechRecognition({ language, continuous });
+  } = useSpeechRecognition();
 
   // детект платформы
   const [mode, setMode] = useState<VoiceInputMode>('unsupported');

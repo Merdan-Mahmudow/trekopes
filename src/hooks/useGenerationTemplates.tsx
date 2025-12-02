@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useStore } from "@tanstack/react-store";
 import { getWebAppGenerationTemplates } from "../api/webapp";
 import type { GetGenerationTemplatesQuery } from "../types/webapp";
-import { useAuth } from "./useUser";
+import store from "../store";
 
 export function useGenerationTemplates(params?: GetGenerationTemplatesQuery) {
-  const { token } = useAuth();
+  const token = useStore(store, (state) => state.auth.token);
 
   return useQuery({
     queryKey: ["generation-templates", token, params?.limit, params?.offset],

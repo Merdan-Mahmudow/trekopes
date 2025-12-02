@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useStore } from "@tanstack/react-store";
 import {
   createWebAppPayment,
   getWebAppPayments,
@@ -8,7 +9,7 @@ import type {
   CreatePaymentRequest,
   GetPaymentsQuery,
 } from "../types/webapp";
-import { useAuth } from "./useUser";
+import store from "../store";
 import { logPayment, logError, debugLog } from "../utils/logger";
 
 // Маппинг тарифов на pack_id (разовые покупки)
@@ -28,7 +29,7 @@ export const SUBSCRIPTION_TO_PACK_ID: Record<"pro" | "ultra", number> = {
  * Хук для получения списка платежей пользователя
  */
 export function useWebAppPayments(params?: GetPaymentsQuery) {
-  const { token } = useAuth();
+  const token = useStore(store, (state) => state.auth.token);
 
   return useQuery({
     queryKey: ["webapp-payments", token, params?.limit, params?.offset],
@@ -45,7 +46,7 @@ export function useWebAppPayments(params?: GetPaymentsQuery) {
  * Хук для получения платежа по UUID
  */
 export function useWebAppPaymentByUUID(uuid: string | undefined) {
-  const { token } = useAuth();
+  const token = useStore(store, (state) => state.auth.token);
 
   return useQuery({
     queryKey: ["webapp-payment", token, uuid],
@@ -63,7 +64,7 @@ export function useWebAppPaymentByUUID(uuid: string | undefined) {
  * Хук для создания платежа
  */
 export function useCreateWebAppPayment() {
-  const { token } = useAuth();
+  const token = useStore(store, (state) => state.auth.token);
   const queryClient = useQueryClient();
 
   return useMutation({

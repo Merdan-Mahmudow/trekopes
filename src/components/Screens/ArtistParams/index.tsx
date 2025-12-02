@@ -1,6 +1,6 @@
 import { Box, Text, VStack, Input, Icon, Flex, Grid, GridItem, Button, Slider, Skeleton, Image } from "@chakra-ui/react";
 import { Toaster } from "../../ui/toaster";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { FaArrowRight, FaQuestion } from 'react-icons/fa';
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
@@ -109,31 +109,40 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
         [artists]
     );
 
+    // Используем ref для отслеживания предыдущего artistId, чтобы избежать циклических обновлений
+    const prevScenarioArtistIdRef = useRef<string | null>(null);
+    const isInitializedRef = useRef(false);
+
     useEffect(() => {
         const scenario = generationDraft?.scenario;
         if (!scenario) return;
 
         if ("artist" in scenario && scenario.artist) {
             const scenarioArtistId = scenario.artist.id ?? "none";
-            // Если артисты загружены, проверяем существование, иначе просто устанавливаем ID из scenario
-            if (!isLoadingArtists && artists.length > 0) {
-                const artistExists = artists.some(a => a.id === scenarioArtistId);
-                if (artistExists && selectedArtistId !== scenarioArtistId) {
+            
+            // Только обновляем если artistId действительно изменился извне (не из нашего компонента)
+            if (prevScenarioArtistIdRef.current !== scenarioArtistId) {
+                prevScenarioArtistIdRef.current = scenarioArtistId;
+                
+                if (!isLoadingArtists && artists.length > 0) {
+                    const artistExists = artists.some(a => a.id === scenarioArtistId);
+                    if (artistExists) {
+                        setSelectedArtistId(scenarioArtistId);
+                    } else {
+                        setSelectedArtistId("none");
+                    }
+                } else if (isLoadingArtists) {
                     setSelectedArtistId(scenarioArtistId);
-                } else if (!artistExists && selectedArtistId !== "none") {
-                    // Если артиста нет в списке, выбираем "Не выбрано"
-                    setSelectedArtistId("none");
                 }
-            } else if (isLoadingArtists && selectedArtistId !== scenarioArtistId) {
-                // Пока загружаются артисты, устанавливаем ID из scenario
-                setSelectedArtistId(scenarioArtistId);
             }
-        } else {
-            // Если артист не выбран в scenario, выбираем "Не выбрано" (первый элемент списка)
-            if (!isLoadingArtists && artists.length > 0 && selectedArtistId !== "none") {
+        } else if (!isInitializedRef.current) {
+            // Инициализация: если артист не выбран в scenario, выбираем "Не выбрано"
+            if (!isLoadingArtists && artists.length > 0) {
                 setSelectedArtistId("none");
+                isInitializedRef.current = true;
             }
         }
+        
         if ("params" in scenario && scenario.params) {
             setGenerationParams({
                 tempo: scenario.params.tempo ?? 105,
@@ -143,7 +152,7 @@ export function ArtistParams({ mode = "submit", displayMode = "full", onBack, on
             });
             setTempo(scenario.params.tempo ?? 105);
         }
-    }, [generationDraft, artists, isLoadingArtists, selectedArtistId]);
+    }, [generationDraft, artists, isLoadingArtists]); // ✅ Убрали selectedArtistId из зависимостей
 
     const handleParamsChange = useCallback((key: keyof GenerationParams, value: number | string | null) => {
         setGenerationParams(prev => {

@@ -25,7 +25,7 @@ import { createWebAppGeneration } from "../../../api/webapp";
 import { logError } from "../../../utils/logger";
 import { useTracks } from "../../../hooks/useTracks";
 import { toaster, Toaster } from "../../ui/toaster";
-import { Dictaphone } from "../../ui/SpeechRecognitionButton";
+import { VoiceRecorder } from "../../ui/VoiceRecorder";
 import { useAuth } from "../../../hooks/useUser";
 import { setUserState } from "../../../store";
 type StyleGenerateScreenProps = {
@@ -52,16 +52,22 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
         }
     }, [scenarioState]);
 
+    // Используем ref для отслеживания изменений prompt извне
+    const prevScenarioPromptRef = useRef<string | null>(null);
+
     useEffect(() => {
         if (scenarioState?.mode === "style") {
+            const scenarioPrompt = scenarioState.prompt;
+            // Только обновляем если prompt изменился извне (не из нашего компонента)
             if (
-                typeof scenarioState.prompt === "string" &&
-                scenarioState.prompt !== prompt
+                typeof scenarioPrompt === "string" &&
+                prevScenarioPromptRef.current !== scenarioPrompt
             ) {
-                setPrompt(scenarioState.prompt);
+                prevScenarioPromptRef.current = scenarioPrompt;
+                setPrompt(scenarioPrompt);
             }
         }
-    }, [scenarioState, prompt]);
+    }, [scenarioState]); // ✅ Убрали prompt из зависимостей
 
     const patchStyleScenario = useCallback(
         (updater: (draft: StyleGenerationDraft) => StyleGenerationDraft) => {
@@ -230,8 +236,14 @@ export function StyleGenerateScreen({ onClose }: StyleGenerateScreenProps) {
                                     pr="48px"
                                     pb="48px"
                                 />
-                                <Dictaphone
-                                onTranscript={(transcript) => handlePromptChange(transcript)}
+                                <VoiceRecorder
+                                    onTranscript={(transcript) => {
+                                        // Добавляем к существующему тексту
+                                        const newText = prompt.trim() 
+                                            ? `${prompt.trim()} ${transcript}` 
+                                            : transcript;
+                                        handlePromptChange(newText);
+                                    }}
                                 />
                             </Box>
                         </VStack>

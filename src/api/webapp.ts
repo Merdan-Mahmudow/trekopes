@@ -26,6 +26,7 @@ import type {
   SendChatMessageRequest,
   SendChatMessageResponse,
   StreamChatMessageResponse,
+  TranscribeAudioResponse,
 } from "../types/webapp";
 import { logGeneration, logChat, logPayment, debugLog, addBreadcrumb } from "../utils/logger";
 
@@ -327,5 +328,42 @@ export async function getLyricsGenerationStatus(
       headers: authHeaders(token),
     }
   );
+  return response.data;
+}
+
+/**
+ * Отправка аудио на сервер для распознавания речи (Speech-to-Text)
+ * Требует endpoint: POST /webapp/speech-to-text
+ */
+export async function transcribeAudio(
+  token: string,
+  audioBlob: Blob
+): Promise<TranscribeAudioResponse> {
+  debugLog('[API] Transcribing audio', { 
+    size: audioBlob.size, 
+    type: audioBlob.type 
+  });
+  addBreadcrumb('Transcribing audio', 'speech', 'info');
+  
+  const formData = new FormData();
+  formData.append('audio', audioBlob, 'recording.webm');
+  
+  const response = await request<TranscribeAudioResponse>(
+    "post",
+    `${WEBAPP_PREFIX}/speech-to-text`,
+    formData,
+    {
+      headers: {
+        ...authHeaders(token),
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000, // 30 секунд для обработки аудио
+    }
+  );
+  
+  debugLog('[API] Audio transcribed successfully', { 
+    textLength: response.data.data?.text?.length 
+  });
+  
   return response.data;
 }

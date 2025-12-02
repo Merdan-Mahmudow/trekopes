@@ -359,3 +359,12 @@ export type WebSocketResponse =
   | WebSocketAnswerResponse 
   | WebSocketErrorResponse 
   | WebSocketClearResponse;
+
+// Speech-to-Text types
+export type TranscribeAudioResponseData = {
+  text: string;
+  language?: string;
+  duration?: number;
+};
+
+export type TranscribeAudioResponse = ApiSuccessResponse<TranscribeAudioResponseData>;

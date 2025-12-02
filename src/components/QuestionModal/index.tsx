@@ -5,7 +5,7 @@ import { COLOR } from "../ui/colors";
 import { BrandButton, GrayButton } from "../ui/button";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { questions, type QuestionCategory, type QuestionSet } from "../ui/questions";
-import { Dictaphone } from "../ui/SpeechRecognitionButton";
+import { VoiceRecorder } from "../ui/VoiceRecorder";
 import { qaStorage } from "../../utils/qaStorage";
 
 type QuestionModalProps = {
@@ -208,8 +208,14 @@ export function QuestionModal({
                         pr="48px"
                         pb="48px"
                     />
-                    <Dictaphone 
-                    onTranscript={(transcript) => handleChange(transcript)}
+                    <VoiceRecorder 
+                        onTranscript={(transcript) => {
+                            // Добавляем к существующему тексту
+                            const newText = value.trim() 
+                                ? `${value.trim()} ${transcript}` 
+                                : transcript;
+                            handleChange(newText);
+                        }}
                     />
                 </Box>
 

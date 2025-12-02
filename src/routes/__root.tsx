@@ -122,21 +122,30 @@ function RootComponent() {
     }
   }, [isTokenSuccess, token]);
 
+  // Отдельный эффект для загрузки данных пользователя (БЕЗ paymentsQuery.data)
   useEffect(() => {
     if (isUserSuccess && user?.data) {
       const userData = user.data;
-      const isPro = paymentsQuery.data?.data?.some((payment) => payment.status === "paid" && payment.amount > TRACK_PRICE);
-      setIsPro(Boolean(isPro));
-      setUserState({
-        ...userData,
-        isPro: isPro,
-      });
+      setUserState(userData);
       setIsPreload(false);
       
-      debugLog('[App] User state loaded', { userId: userData.id, isPro });
+      debugLog('[App] User state loaded', { userId: userData.id });
       addBreadcrumb(`User loaded: ${userData.id}`, 'user', 'info');
     }
-  }, [isUserSuccess, user, paymentsQuery.data]);
+  }, [isUserSuccess, user]);
+
+  // Отдельный эффект для обновления isPro на основе платежей
+  useEffect(() => {
+    if (paymentsQuery.isSuccess && paymentsQuery.data?.data) {
+      const isPro = paymentsQuery.data.data.some((payment) => payment.status === "paid" && payment.amount > TRACK_PRICE);
+      setIsPro(Boolean(isPro));
+      
+      // Обновляем isPro в userState
+      setUserState({ isPro });
+      
+      debugLog('[App] isPro status updated', { isPro });
+    }
+  }, [paymentsQuery.isSuccess, paymentsQuery.data]);
 
   useEffect(() => {
     const payments = paymentsQuery.data?.data;
