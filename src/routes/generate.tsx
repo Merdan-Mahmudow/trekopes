@@ -224,7 +224,7 @@ function RouteComponent() {
                                     <Text color={COLOR.kit.smoke} mt={1} fontSize="sm">{card.description}</Text>
                                     {isLocked && (
                                         <Text color={COLOR.kit.orange} fontSize="sm" mt={2}>
-                                            Доступно только в PRO
+                                            Доступно в PRO и ULTRA
                                         </Text>
                                     )}
                                 </Box>

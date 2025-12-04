@@ -10,11 +10,12 @@ import {
     VStack,
     Slider,
 } from "@chakra-ui/react";
+import { useNavigate } from "@tanstack/react-router";
 import { Toaster } from "../../ui/toaster";
-import { FaPaw } from "react-icons/fa";
 import { COLOR } from "../../ui/colors";
 import { BrandButton, GrayButton } from "../../ui/button";
 import { TrackLoadingScreen } from "../TrackLoading";
+import { ProPayScreen } from "../ProPay";
 import type { GenerationDraft, GenerationParams } from "../../../types/generation";
 import { useStore } from "@tanstack/react-store";
 import store, {
@@ -33,6 +34,7 @@ import { moodOptions } from "../../../utils/moodPrompts";
 import { genreOptions } from "../../../utils/genrePrompts";
 import { useAuth } from "../../../hooks/useUser";
 import { setUserState } from "../../../store";
+import { TbBone } from "react-icons/tb";
 
 type GenerationParamsAccordionProps = {
     mode?: "collect" | "submit";
@@ -64,10 +66,12 @@ export function GenerationParamsAccordion({
     });
     const [isGenerating, setIsGenerating] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [showProPay, setShowProPay] = useState(false);
     const generationDraft = useGenerationDraft();
     const token = useStore(store, (state) => state.auth.token);
     const { loadTracks } = useTracks();
     const { getUser } = useAuth();
+    const navigate = useNavigate();
 
     const TEMPO_COLORS = useMemo(
         () => ({
@@ -214,6 +218,12 @@ export function GenerationParamsAccordion({
                 return;
             }
 
+            // Обработка ошибки 403 (Forbidden) - требуется PRO подписка
+            if (err?.response?.status === 403) {
+                setShowProPay(true);
+                return;
+            }
+
             const errorMessage = err instanceof Error ? err.message : "Не удалось запустить генерацию"
             toaster.dismiss()
             toaster.create({
@@ -225,6 +235,15 @@ export function GenerationParamsAccordion({
             setIsGenerating(false);
         }
     };
+
+    if (showProPay) {
+        return (
+            <ProPayScreen
+                onBack={() => setShowProPay(false)}
+                onPay={() => navigate({ to: '/subscription', search: { tarrif: 'pro', source: 'propay' } })}
+            />
+        );
+    }
 
     if (isLoading) {
         return <TrackLoadingScreen />;
@@ -407,7 +426,7 @@ export function GenerationParamsAccordion({
                                     <Text>Сгенерировать</Text>
                                     <Flex alignItems="center" gap={1}>
                                         <Text fontSize="md">-1</Text>
-                                        <Icon as={FaPaw} />
+                                        <Icon as={TbBone} />
                                     </Flex>
                                 </Flex>
                             </BrandButton>

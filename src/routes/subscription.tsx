@@ -180,17 +180,21 @@ function RouteComponent() {
                   bg={COLOR.kit.gray}
                   p={4}
                   borderRadius="xl"
-                  display="flex"
-                  alignItems="center"
                   gap={3}
                   transition="all 0.2s ease"
                 >
-                  <Flex flex={1} alignItems="center" justifyContent="space-between">
-                    <Image src="/robokassa-logo.svg" w="fit" h="18px" alt="Робокасса" mb={2} />
-                    <Flex gap={2} alignItems="flex-end" justifyContent="flex-end">
-                      <Image src="/visa.svg" h="16px" alt="Visa" />
-                      <Image src="/mastercard.svg" h="16px" alt="Mastercard" />
-                      <Image src="/mir.svg" h="16px" alt="Мир" />
+                  <Flex 
+                    flex={1} 
+                    alignItems={{ base: "flex-start", sm: "center" }}
+                    justifyContent="space-between"
+                    flexDirection={{ base: "row", sm: "row" }}
+                    gap={{ base: 3, sm: 2 }}
+                  >
+                    <Image src="/robokassa-logo.svg" w="fit" h={{ base: "14px", sm: "16px", md: "18px" }} alt="Робокасса" flexShrink={0} />
+                    <Flex gap={{ base: 1, sm: 2 }} alignItems="center" justifyContent={{ base: "flex-start", sm: "flex-end" }} flexWrap="wrap">
+                      <Image src="/visa.svg" h={{ base: "12px", sm: "14px", md: "16px" }} alt="Visa" />
+                      <Image src="/mastercard.svg" h={{ base: "12px", sm: "14px", md: "16px" }} alt="Mastercard" />
+                      <Image src="/mir.svg" h={{ base: "12px", sm: "14px", md: "16px" }} alt="Мир" />
                     </Flex>
                   </Flex>
                 </GridItem>

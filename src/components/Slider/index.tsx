@@ -89,7 +89,7 @@ function FMCarouselComponent({ onSlideSubmit }: FMCarouselProps) {
                     modules={[Navigation, Pagination, Autoplay]}
                     loop
                     pagination={{ clickable: true }}
-                    autoplay={{ delay: 4800, disableOnInteraction: false }}
+                    autoplay={{ delay: 10000, disableOnInteraction: false }}
                     speed={650}
                     className={styles.swiper}
 
