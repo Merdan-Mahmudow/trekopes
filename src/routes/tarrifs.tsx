@@ -2,7 +2,7 @@ import { motion, LayoutGroup, useSpring, useTransform, useVelocity } from 'frame
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Badge, Box, Flex, Float, Grid, GridItem, Heading, Stack, Text, List, chakra, Image } from '@chakra-ui/react'
+import { Badge, Box, Flex, Float, Grid, GridItem, Heading, Stack, Text, List, chakra } from '@chakra-ui/react'
 import IconMicrophone from '../assets/svg/microphone'
 import IconKorona from '../assets/svg/korona'
 import IconNote from '../assets/svg/music1'
