@@ -29,10 +29,25 @@ import { GenerationParamsAccordion } from "../GenerationParamsAccordion"
 import { useAuth } from "../../../hooks/useUser"
 import { setUserState } from "../../../store"
 
+const STORAGE_KEY_PROMPT = "fast_generate_prompt"
+const STORAGE_KEY_IS_GENERATED = "fast_generate_is_generated"
+
 export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void }) => {
-	const [prompt, setPrompt] = useState("")
+	const [prompt, setPrompt] = useState(() => {
+		try {
+			return localStorage.getItem(STORAGE_KEY_PROMPT) || ""
+		} catch {
+			return ""
+		}
+	})
 	const [screen, setScreen] = useState<"form" | "params" | "loading">("form")
-	const [isGenerated, setIsGenerated] = useState(false)
+	const [isGenerated, setIsGenerated] = useState(() => {
+		try {
+			return localStorage.getItem(STORAGE_KEY_IS_GENERATED) === "true"
+		} catch {
+			return false
+		}
+	})
 	const scenarioState = useGenerationScenario()
 	const generationDraft = useGenerationDraft()
 	const token = useStore(store, (state) => state.auth.token)
@@ -45,6 +60,23 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			setGenerationScenario(createFastGenerationDraft())
 		}
 	}, [scenarioState])
+
+	// Сохраняем prompt и isGenerated в localStorage
+	useEffect(() => {
+		try {
+			localStorage.setItem(STORAGE_KEY_PROMPT, prompt)
+		} catch {
+			// Ignore localStorage errors
+		}
+	}, [prompt])
+
+	useEffect(() => {
+		try {
+			localStorage.setItem(STORAGE_KEY_IS_GENERATED, isGenerated ? "true" : "false")
+		} catch {
+			// Ignore localStorage errors
+		}
+	}, [isGenerated])
 
 	// Используем ref для отслеживания изменений prompt извне
 	const prevScenarioPromptRef = useRef<string | null>(null);
@@ -102,6 +134,13 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			...draft,
 			prompt: "",
 		}))
+		// Очищаем localStorage
+		try {
+			localStorage.removeItem(STORAGE_KEY_PROMPT)
+			localStorage.removeItem(STORAGE_KEY_IS_GENERATED)
+		} catch {
+			// Ignore localStorage errors
+		}
 	}, [patchFastScenario])
 
 	const handleGenerateLyrics = useCallback(async () => {
@@ -110,7 +149,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			toaster.create({
 				type: "error",
 				title: "Ошибка",
-				description: "Введите описание для генерации лирики",
+				description: "Введите описание для генерации текста",
 			})
 			return
 		}
@@ -127,7 +166,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 
 		setIsGeneratingLyrics(true)
 		try {
-			// Создаем задачу генерации лирики
+			// Создаем задачу генерации текста
 			const response = await createLyricsGeneration(token, { prompt, type: "suno" })
 			const taskId = response.data.id
 
@@ -143,7 +182,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 
 				if (status === "completed") {
 					const generatedLyrics = statusResponse.data.lyrics
-					// Автоматически заменяем текст в textarea на сгенерированную лирику
+					// Автоматически заменяем текст в textarea на сгенерированный текст
 					setPrompt(generatedLyrics)
 					setGenerationPrompt(generatedLyrics)
 					setIsGenerated(true)
@@ -155,16 +194,23 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					toaster.dismiss()
 					toaster.create({
 						type: "success",
-						title: "Лирика сгенерирована!",
-						description: "Текст заменён на сгенерированную лирику",
+						title: "Текст сгенерирован!",
+						description: "Текст заменён на сгенерированный текст",
 					})
 					} else if (status === "failed") {
-						throw new Error("Генерация лирики завершилась с ошибкой")
+						setIsGeneratingLyrics(false)
+						toaster.dismiss()
+						toaster.create({
+							type: "error",
+							title: "Ошибка генерации текста",
+							description: "Генерация текста завершилась с ошибкой. Попробуйте ещё раз.",
+						})
+						return
 					} else if (attempts < maxAttempts) {
 						attempts++
 						setTimeout(pollStatus, pollInterval)
 					} else {
-						throw new Error("Превышено время ожидания генерации лирики")
+						throw new Error("Превышено время ожидания генерации текста")
 					}
 				} catch (err: any) {
 					if (err?.response?.status === 404 && attempts < maxAttempts) {
@@ -183,11 +229,11 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			logError("Failed to generate lyrics", err)
 			setIsGeneratingLyrics(false)
 			
-			const errorMessage = err instanceof Error ? err.message : "Не удалось сгенерировать лирику"
+			const errorMessage = err instanceof Error ? err.message : "Не удалось сгенерировать текст"
 			toaster.dismiss()
 			toaster.create({
 				type: "error",
-				title: "Ошибка генерации лирики",
+				title: "Ошибка генерации текста",
 				description: errorMessage,
 			})
 		}
@@ -222,7 +268,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 
 					const basePayload = buildCreateGenerationRequest(effectiveDraft)
 					
-					// Если лирика уже сгенерирована, извлекаем title и lyrics из текста
+					// Если текст уже сгенерирован, извлекаем title и lyrics из текста
 					let payload: typeof basePayload & { skip_lyrics_generation?: boolean; lyrics?: string; title?: string } = { ...basePayload }
 					
 					if (isGenerated && prompt.trim()) {
@@ -231,7 +277,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 						if (lines.length > 1) {
 							// Первая непустая строка - название песни
 							const title = lines[1].trim()
-							// Остальной текст - лирика
+							// Остальной текст - текст
 							const lyrics = lines.slice(1).join('\n').trim()
 							
 							payload = {
@@ -241,7 +287,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 								title: title,
 							}
 						} else {
-							// Если нет строк, используем весь текст как лирику
+							// Если нет строк, используем весь текст как текст
 							payload = {
 								...basePayload,
 								skip_lyrics_generation: true,
@@ -282,6 +328,15 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 					}
 
 					resetGenerationDraft()
+					
+					// Очищаем localStorage после успешной генерации
+					try {
+						localStorage.removeItem(STORAGE_KEY_PROMPT)
+						localStorage.removeItem(STORAGE_KEY_IS_GENERATED)
+					} catch {
+						// Ignore localStorage errors
+					}
+					
 					toaster.dismiss()
 					toaster.create({
 						type: "success",

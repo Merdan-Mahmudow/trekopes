@@ -1,7 +1,8 @@
-import { VStack, Text, Image, Grid, Box, Heading } from "@chakra-ui/react"
+import { VStack, Text, Image, Grid, Box, Heading, Icon } from "@chakra-ui/react"
 import { COLOR } from "../../ui/colors"
 import { BrandButton, GrayButton } from "../../ui/button"
 import { Container } from "../../ui/container"
+import { FaArrowRight } from "react-icons/fa"
 
 type ProPayScreenProps = {
     onBack?: () => void
@@ -90,7 +91,7 @@ export const ProPayScreen = ({ onBack, onPay }: ProPayScreenProps) => {
                             w="full" 
                             onClick={onPay}
                         >
-                            💳 Оплатить PRO
+                            К тарифам <Icon as={FaArrowRight} size={"sm"} pos={"relative"} top={"2px"} />
                         </BrandButton>
                         <GrayButton 
                             w="full" 

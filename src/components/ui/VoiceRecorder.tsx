@@ -1,4 +1,4 @@
-import { Float, Box, Spinner } from '@chakra-ui/react';
+import { Float, Box, Spinner, Text } from '@chakra-ui/react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { MdMic, MdStop } from 'react-icons/md';
 import { motion } from 'framer-motion';
@@ -7,6 +7,7 @@ import { logError, debugLog } from '../../utils/logger';
 import { transcribeAudio } from '../../api/webapp';
 import { useStore } from '@tanstack/react-store';
 import store from '../../store';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const MotionBox = motion(Box);
 
@@ -14,12 +15,13 @@ type RecordingState = 'idle' | 'recording' | 'processing';
 
 interface VoiceRecorderProps {
     onTranscript: (transcript: string) => void;
-    maxDuration?: number; // Максимальная длительность записи в секундах
+    maxDuration?: number;
 }
 
 /**
- * Компонент для записи голоса через MediaRecorder API
- * Работает в Telegram WebApp (в отличие от Web Speech API)
+ * Компонент для распознавания речи в реальном времени
+ * Использует react-speech-recognition (Web Speech API) где поддерживается
+ * Fallback на MediaRecorder + серверное распознавание для iOS и других браузеров
  */
 export const VoiceRecorder = ({ 
     onTranscript, 
@@ -28,8 +30,9 @@ export const VoiceRecorder = ({
     const [state, setState] = useState<RecordingState>('idle');
     const [error, setError] = useState<string | null>(null);
     const [duration, setDuration] = useState(0);
-    const [isSupported, setIsSupported] = useState(true);
+    const [useFallback, setUseFallback] = useState(false);
     
+    // Refs для MediaRecorder fallback
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
@@ -38,54 +41,144 @@ export const VoiceRecorder = ({
     
     const token = useStore(store, (state) => state.auth.token);
 
+    // react-speech-recognition hooks
+    const {
+        transcript,
+        listening,
+        resetTranscript,
+        browserSupportsSpeechRecognition,
+        isMicrophoneAvailable,
+    } = useSpeechRecognition();
+
     // Обновляем ref при изменении колбэка
     useEffect(() => {
         onTranscriptRef.current = onTranscript;
     }, [onTranscript]);
 
-    // Проверяем поддержку MediaRecorder при монтировании
+    // Определяем, нужен ли fallback
     useEffect(() => {
         const checkSupport = () => {
-            if (typeof window === 'undefined') {
-                setIsSupported(false);
+            // Проверяем поддержку Web Speech API
+            if (!browserSupportsSpeechRecognition) {
+                debugLog('[VoiceRecorder] Web Speech API not supported, using fallback');
+                setUseFallback(true);
                 return;
             }
-            
-            const hasMediaRecorder = 'MediaRecorder' in window;
-            const hasGetUserMedia = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-            
-            debugLog('[VoiceRecorder] Support check', { hasMediaRecorder, hasGetUserMedia });
-            
-            setIsSupported(hasMediaRecorder && hasGetUserMedia);
-        };
-        
-        checkSupport();
-    }, []);
 
-    // Очистка при размонтировании
+            // Проверяем iOS - Web Speech API не работает стабильно
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS) {
+                debugLog('[VoiceRecorder] iOS detected, using fallback');
+                setUseFallback(true);
+                return;
+            }
+
+            debugLog('[VoiceRecorder] Using Web Speech API');
+            setUseFallback(false);
+        };
+
+        checkSupport();
+    }, [browserSupportsSpeechRecognition]);
+
+    // Синхронизируем состояние с listening
     useEffect(() => {
+        if (!useFallback) {
+            if (listening) {
+                setState('recording');
+            } else if (state === 'recording') {
+                setState('idle');
+            }
+        }
+    }, [listening, useFallback, state]);
+
+    // Таймер для Web Speech API
+    useEffect(() => {
+        if (!useFallback && listening) {
+            timerRef.current = setInterval(() => {
+                setDuration(prev => {
+                    if (prev >= maxDuration) {
+                        stopRecording();
+                        return prev;
+                    }
+                    return prev + 1;
+                });
+            }, 1000);
+        } else if (!useFallback && !listening) {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+        }
+
         return () => {
-            stopRecording();
             if (timerRef.current) {
                 clearInterval(timerRef.current);
             }
         };
+    }, [listening, useFallback, maxDuration]);
+
+    // Очистка при размонтировании
+    useEffect(() => {
+        return () => {
+            if (!useFallback) {
+                SpeechRecognition.abortListening();
+            }
+            stopMediaRecorder();
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, [useFallback]);
+
+    const stopMediaRecorder = useCallback(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+        }
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
     }, []);
 
-    // Автоматическая остановка при достижении maxDuration
-    useEffect(() => {
-        if (state === 'recording' && duration >= maxDuration) {
-            stopRecording();
-        }
-    }, [duration, maxDuration, state]);
+    // === Web Speech API методы ===
+    const startWebSpeech = useCallback(async () => {
+        setError(null);
+        resetTranscript();
+        setDuration(0);
 
-    const startRecording = useCallback(async () => {
+        try {
+            await SpeechRecognition.startListening({
+                continuous: true,
+                language: 'ru-RU',
+                interimResults: true,
+            });
+            debugLog('[VoiceRecorder] Web Speech started');
+        } catch (err: any) {
+            logError('Failed to start Web Speech', err);
+            setError('Не удалось начать запись');
+        }
+    }, [resetTranscript]);
+
+    const stopWebSpeech = useCallback(() => {
+        SpeechRecognition.stopListening();
+        setDuration(0);
+        
+        // Отправляем финальный транскрипт
+        if (transcript.trim()) {
+            debugLog('[VoiceRecorder] Sending transcript', { length: transcript.length });
+            onTranscriptRef.current(transcript.trim());
+            resetTranscript();
+        }
+    }, [transcript, resetTranscript]);
+
+    // === MediaRecorder Fallback методы ===
+    const startFallbackRecording = useCallback(async () => {
         setError(null);
         audioChunksRef.current = [];
         setDuration(0);
 
         try {
-            debugLog('[VoiceRecorder] Requesting microphone access');
+            debugLog('[VoiceRecorder] Requesting microphone access (fallback)');
             
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
@@ -106,7 +199,7 @@ export const VoiceRecorder = ({
                 mimeType = 'audio/mp4';
             }
             if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = ''; // Использовать дефолтный
+                mimeType = '';
             }
 
             debugLog('[VoiceRecorder] Using MIME type', { mimeType });
@@ -124,19 +217,16 @@ export const VoiceRecorder = ({
             mediaRecorder.onstop = async () => {
                 debugLog('[VoiceRecorder] Recording stopped, processing audio');
                 
-                // Останавливаем таймер
                 if (timerRef.current) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
                 }
 
-                // Останавливаем стрим
                 if (streamRef.current) {
                     streamRef.current.getTracks().forEach(track => track.stop());
                     streamRef.current = null;
                 }
 
-                // Если есть данные, отправляем на распознавание
                 if (audioChunksRef.current.length > 0) {
                     setState('processing');
                     
@@ -188,15 +278,20 @@ export const VoiceRecorder = ({
             };
 
             mediaRecorderRef.current = mediaRecorder;
-            mediaRecorder.start(1000); // Собираем данные каждую секунду
+            mediaRecorder.start(1000);
             setState('recording');
 
-            // Запускаем таймер
             timerRef.current = setInterval(() => {
-                setDuration(prev => prev + 1);
+                setDuration(prev => {
+                    if (prev >= maxDuration) {
+                        stopMediaRecorder();
+                        return prev;
+                    }
+                    return prev + 1;
+                });
             }, 1000);
 
-            debugLog('[VoiceRecorder] Recording started');
+            debugLog('[VoiceRecorder] Recording started (fallback)');
 
         } catch (err: any) {
             logError('Failed to start recording', err);
@@ -213,22 +308,32 @@ export const VoiceRecorder = ({
             
             setState('idle');
         }
-    }, [token, maxDuration]);
+    }, [token, maxDuration, stopMediaRecorder]);
+
+    // === Общие методы ===
+    const startRecording = useCallback(() => {
+        if (useFallback) {
+            startFallbackRecording();
+        } else {
+            startWebSpeech();
+        }
+    }, [useFallback, startFallbackRecording, startWebSpeech]);
 
     const stopRecording = useCallback(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            mediaRecorderRef.current.stop();
+        if (useFallback) {
+            stopMediaRecorder();
+        } else {
+            stopWebSpeech();
         }
-    }, []);
+    }, [useFallback, stopMediaRecorder, stopWebSpeech]);
 
     const toggleRecording = useCallback(() => {
-        if (state === 'recording') {
+        if (state === 'recording' || listening) {
             stopRecording();
         } else if (state === 'idle') {
             startRecording();
         }
-        // Если processing — игнорируем клик
-    }, [state, startRecording, stopRecording]);
+    }, [state, listening, startRecording, stopRecording]);
 
     const formatDuration = (seconds: number): string => {
         const mins = Math.floor(seconds / 60);
@@ -236,10 +341,17 @@ export const VoiceRecorder = ({
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Скрываем если MediaRecorder не поддерживается
+    // Проверяем общую поддержку
+    const isSupported = useFallback 
+        ? (typeof window !== 'undefined' && 'MediaRecorder' in window && navigator.mediaDevices?.getUserMedia)
+        : browserSupportsSpeechRecognition;
+
     if (!isSupported) {
         return null;
     }
+
+    const isRecording = state === 'recording' || listening;
+    const isProcessing = state === 'processing';
 
     return (
         <Float placement="bottom-end" offsetX={10} offsetY={10}>
@@ -263,13 +375,48 @@ export const VoiceRecorder = ({
                     </Box>
                 )}
 
-                {/* Индикатор времени при записи */}
-                {state === 'recording' && (
+                {/* Транскрипция в реальном времени (только для Web Speech API) */}
+                {!useFallback && listening && transcript && (
                     <Box
                         position="absolute"
                         bottom="100%"
                         right={0}
                         mb={2}
+                        p={2}
+                        bg={COLOR.kit.darkGray}
+                        color="white"
+                        borderRadius="md"
+                        fontSize="xs"
+                        zIndex={1000}
+                        border={`1px solid ${COLOR.kit.orange}`}
+                    >
+                        <Text 
+                            opacity={0.9}
+                            overflowY="auto"
+                            overflowX="auto"
+                            whiteSpace="nowrap"
+                            textOverflow="ellipsis"
+                            maxW="200px"
+                            maxH="100px"
+                            css={{
+                                '&::-webkit-scrollbar': {
+                                    display: 'none',
+                                },
+                            }}
+                        >
+                            {transcript}
+                        </Text>
+                    </Box>
+                )}
+
+                {/* Индикатор времени при записи */}
+                {isRecording && (
+                    <Box
+                        position="absolute"
+                        bottom="100%"
+                        right={!useFallback && transcript ? "auto" : 0}
+                        left={!useFallback && transcript ? 0 : "auto"}
+                        mb={!useFallback && transcript ? 14 : 2}
                         px={2}
                         py={1}
                         bg={COLOR.kit.orange}
@@ -282,29 +429,48 @@ export const VoiceRecorder = ({
                     </Box>
                 )}
 
+                {/* Микрофон недоступен */}
+                {!useFallback && !isMicrophoneAvailable && (
+                    <Box
+                        position="absolute"
+                        bottom="100%"
+                        right={0}
+                        mb={2}
+                        p={2}
+                        bg="orange.700"
+                        color="white"
+                        borderRadius="md"
+                        fontSize="xs"
+                        maxW="200px"
+                        zIndex={1000}
+                    >
+                        Разрешите доступ к микрофону
+                    </Box>
+                )}
+
                 <MotionBox
                     rounded="full"
-                    bg={state === 'recording' ? 'red.500' : (state === 'processing' ? 'gray.600' : COLOR.kit.darkGray)}
+                    bg={isRecording ? 'red.500' : (isProcessing ? 'gray.600' : COLOR.kit.darkGray)}
                     w="40px"
                     h="40px"
                     display="flex"
                     alignItems="center"
                     justifyContent="center"
-                    cursor={state === 'processing' ? 'wait' : 'pointer'}
+                    cursor={isProcessing ? 'wait' : 'pointer'}
                     animate={{
-                        scale: state === 'recording' ? [1, 1.15, 1] : 1
+                        scale: isRecording ? [1, 1.15, 1] : 1
                     }}
                     transition={{
                         duration: 1,
-                        repeat: state === 'recording' ? Infinity : 0,
+                        repeat: isRecording ? Infinity : 0,
                         ease: "easeInOut"
                     }}
                     onClick={toggleRecording}
                 >
-                    {state === 'processing' ? (
+                    {isProcessing ? (
                         <Spinner size="sm" color="white" />
                     ) : (
-                        <Box as={state === 'recording' ? MdStop : MdMic} fontSize={20} color="white" />
+                        <Box as={isRecording ? MdStop : MdMic} fontSize={20} color="white" />
                     )}
                 </MotionBox>
             </Box>
@@ -313,6 +479,3 @@ export const VoiceRecorder = ({
 };
 
 export default VoiceRecorder;
-
-
-

@@ -25,7 +25,7 @@ declare module 'react-speech-recognition' {
     ): UseSpeechRecognitionReturn;
 
     interface SpeechRecognitionStatic {
-        startListening: (options?: SpeechRecognitionOptions) => void;
+        startListening: (options?: SpeechRecognitionOptions) => Promise<void>;
         stopListening: () => void;
         abortListening: () => void;
         getRecognition: () => any;
