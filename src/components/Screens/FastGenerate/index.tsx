@@ -650,7 +650,8 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 	// Определяем maxLength в зависимости от режима и состояния
 	const getMaxLength = () => {
 		if (isGenerated) return undefined
-		if (generationMode === "custom_text") return 2000
+		if (generationMode === "custom_text") return 5000
+		if (generationMode === "trust_trekopes") return 5000
 		return 200
 	}
 
