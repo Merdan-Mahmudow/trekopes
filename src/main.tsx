@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { Provider } from "./components/ui/provider"
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query"
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import {YMInitializer} from 'react-yandex-metrika';
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -102,7 +102,7 @@ if (!rootElement.innerHTML) {
           <Provider>
             <RouterProvider router={router} />
           </Provider>
-          <ReactQueryDevtools initialIsOpen={false} />
+          {/* <ReactQueryDevtools initialIsOpen={false} /> */}
         </QueryClientProvider>
       </ErrorBoundary>
     </StrictMode>,

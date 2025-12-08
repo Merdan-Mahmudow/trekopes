@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { FaCircleCheck, FaRegCircleCheck } from "react-icons/fa6";
 import { COLOR } from "../../../components/ui/colors";
-import { BrandButton, GrayButton } from "../../../components/ui/button";
+import { BrandButton, GrayButton } from "../../ui/custom-button";
 import { TbExternalLink } from "react-icons/tb";
 import { useNavigate } from "@tanstack/react-router";
 import { BsMusicNote } from "react-icons/bs";

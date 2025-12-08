@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
-import { Box, Flex, Heading, Text, List, Grid, GridItem, Input, Stack, Image } from '@chakra-ui/react'
+import { Box, Flex, Heading, Text, List, Grid, GridItem, Stack, Image } from '@chakra-ui/react'
 import { COLOR } from '../components/ui/colors'
-import { BrandButton } from '../components/ui/button'
-import { useEffect, useMemo, useState } from 'react'
+import { BrandButton } from '../components/ui/custom-button'
+import { useEffect, useMemo } from 'react'
 import { usePlans, useActiveTarrifId, useSelectedTarrifId, setSelectedTarrif, useIsSavingSubscription, setSubscriptionSaving } from '../store/subscription'
 import { useCreateWebAppPayment, createPaymentFromTariff } from '../hooks/useWebAppPayments'
 import { FaAngleLeft } from "react-icons/fa6";
@@ -54,7 +54,6 @@ function RouteComponent() {
   const selectedId = useSelectedTarrifId()
   const isSavingStore = useIsSavingSubscription()
   const createPayment = useCreateWebAppPayment()
-  const [email, setEmail] = useState('')
 
   // Синхронизируем состояние загрузки из store и mutation
   const isSaving = isSavingStore || createPayment.isPending
@@ -117,7 +116,7 @@ function RouteComponent() {
       const paymentRequest = createPaymentFromTariff(
         current.id as 'track' | 'pro' | 'ultra',
         isSubscription,
-        email || undefined
+        undefined
       )
 
       const response = await createPayment.mutateAsync(paymentRequest)
@@ -137,7 +136,7 @@ function RouteComponent() {
         })
       }
     } catch (error: any) {
-      logError('payment_create_error', error, { id: current.id, isSubscription, email })
+      logError('payment_create_error', error, { id: current.id, isSubscription })
       setSubscriptionSaving(false)
       const errorMessage = error?.response?.data?.message || error?.message || 'Ошибка создания платежа'
       toaster.dismiss()
@@ -163,80 +162,42 @@ function RouteComponent() {
       </Flex>
 
       <Grid w="11/12" templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={6}>
-        {/* Левая колонка: способ оплаты + email */}
+        {/* Левая колонка: способ оплаты */}
         <GridItem>
-          <Stack gap={4}>
-            <Box
-              bg="var(--layer-transparent, rgba(24,24,24,0.72))"
-              border="1px solid var(--border, rgba(255,255,255,0.12))"
-              p={6}
-              borderRadius="24px"
-            >
-              <Heading size="md" mb={4} color={COLOR.kit.white}>
-                Способ оплаты
-              </Heading>
-              <Grid templateColumns={{ base: '1fr' }} gap={3}>
-                <GridItem
-                  bg={COLOR.kit.gray}
-                  p={4}
-                  borderRadius="xl"
-                  gap={3}
-                  transition="all 0.2s ease"
+          <Box
+            bg="var(--layer-transparent, rgba(24,24,24,0.72))"
+            border="1px solid var(--border, rgba(255,255,255,0.12))"
+            p={6}
+            borderRadius="24px"
+          >
+            <Heading size="md" mb={4} color={COLOR.kit.white}>
+              Способ оплаты
+            </Heading>
+            <Grid templateColumns={{ base: '1fr' }} gap={3}>
+              <GridItem
+                bg={COLOR.kit.gray}
+                p={4}
+                borderRadius="xl"
+                gap={3}
+                transition="all 0.2s ease"
+              >
+                <Flex 
+                  flex={1} 
+                  alignItems="center"
+                  justifyContent="space-between"
+                  flexDirection="row"
+                  gap={2}
                 >
-                  <Flex 
-                    flex={1} 
-                    alignItems={{ base: "flex-start", sm: "center" }}
-                    justifyContent="space-between"
-                    flexDirection={{ base: "row", sm: "row" }}
-                    gap={{ base: 3, sm: 2 }}
-                  >
-                    <Image src="/robokassa-logo.svg" w="fit" h={{ base: "14px", sm: "16px", md: "18px" }} alt="Робокасса" flexShrink={0} />
-                    <Flex gap={{ base: 1, sm: 2 }} alignItems="center" justifyContent={{ base: "flex-start", sm: "flex-end" }} flexWrap="wrap">
-                      <Image src="/visa.svg" h={{ base: "12px", sm: "14px", md: "16px" }} alt="Visa" />
-                      <Image src="/mastercard.svg" h={{ base: "12px", sm: "14px", md: "16px" }} alt="Mastercard" />
-                      <Image src="/mir.svg" h={{ base: "12px", sm: "14px", md: "16px" }} alt="Мир" />
-                    </Flex>
+                  <Image src="/robokassa-logo.svg" w="fit" h={{ base: "16px", sm: "18px", md: "20px" }} alt="Робокасса" flexShrink={0} />
+                  <Flex gap={2} alignItems="center" justifyContent="flex-end" flexWrap="nowrap">
+                    <Image src="/visa.svg" h={{ base: "14px", sm: "16px", md: "18px" }} alt="Visa" />
+                    <Image src="/mastercard.svg" h={{ base: "14px", sm: "16px", md: "18px" }} alt="Mastercard" />
+                    <Image src="/mir.svg" h={{ base: "14px", sm: "16px", md: "18px" }} alt="Мир" />
                   </Flex>
-                </GridItem>
-              </Grid>
-            </Box>
-
-            <Box
-              bg="var(--layer-transparent, rgba(24,24,24,0.72))"
-              border="1px solid var(--border, rgba(255,255,255,0.12))"
-              p={6}
-              borderRadius="24px"
-            >
-              <Heading size="md" mb={4} color={COLOR.kit.white}>
-                Контактные данные
-              </Heading>
-              <Box>
-                <Text mb={3} color={COLOR.kit.smoke} fontSize="sm" fontWeight="medium">
-                  Электронная почта
-                </Text>
-                <Input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  bg="rgba(36, 35, 35, 0.8)"
-                  borderRadius="xl"
-                  px={4}
-                  py={3}
-                  fontSize="md"
-                  outline="none"
-                  color={COLOR.kit.white}
-                  _placeholder={{ color: 'rgba(255,255,255,0.4)' }}
-                  _focus={{
-                    borderColor: COLOR.kit.orange,
-                    boxShadow: `0 0 0 1px ${COLOR.kit.orange}40`,
-                  }}
-                />
-                <Text mt={2} fontSize="xs" color={COLOR.kit.smoke}>
-                  На эту почту придёт подтверждение оплаты
-                </Text>
-              </Box>
-            </Box>
-          </Stack>
+                </Flex>
+              </GridItem>
+            </Grid>
+          </Box>
         </GridItem>
 
         {/* Правая колонка: карточка плана */}
@@ -313,7 +274,7 @@ function RouteComponent() {
             <BrandButton
               w="full"
               onClick={handleConfirm}
-              disabled={isSaving || !email}
+              disabled={isSaving}
               size="lg"
               fontSize="md"
               py={6}

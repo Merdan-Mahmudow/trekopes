@@ -2,7 +2,7 @@ import { Box, Heading, Text, VStack, Input, Icon, Flex, Grid } from "@chakra-ui/
 import { useCallback, useEffect, useState } from "react";
 import { FaLink } from 'react-icons/fa';
 import { COLOR } from "../../../components/ui/colors";
-import { BrandButton, GrayButton } from "../../../components/ui/button";
+import { BrandButton, GrayButton } from "../../ui/custom-button";
 import { GenerationParamsAccordion } from "../GenerationParamsAccordion";
 import { ProPayScreen } from "../ProPay";
 import { useIsPro } from "../../../store/user";

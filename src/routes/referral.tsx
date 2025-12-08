@@ -1,7 +1,7 @@
 import { COLOR } from '../components/ui/colors'
 import { Box, Flex, Text, Clipboard, IconButton, Grid, GridItem, Avatar } from '@chakra-ui/react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { BrandButton } from '../components/ui/button'
+import { BrandButton } from '../components/ui/custom-button'
 import type { Telegram } from 'telegram-web-app'
 import { RiTelegram2Line } from 'react-icons/ri'
 import { useEffect } from 'react'

@@ -2,7 +2,7 @@ import { Box, Text, VStack, Grid, Textarea } from "@chakra-ui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "@tanstack/react-store";
 import { COLOR } from "../../ui/colors";
-import { BrandButton, GrayButton } from "../../ui/button";
+import { BrandButton, GrayButton } from "../../ui/custom-button";
 import { ProPayScreen } from "../ProPay";
 import { useIsPro } from "../../../store/user";
 import { ArtistParams } from "../ArtistParams";

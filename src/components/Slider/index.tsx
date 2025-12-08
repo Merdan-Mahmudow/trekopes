@@ -10,7 +10,7 @@ import "swiper/css/pagination"
 import { Box, Flex, VStack, Text, Heading, Badge } from "@chakra-ui/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { COLOR } from "../ui/colors"
-import { BrandButton } from "../ui/button"
+import { BrandButton } from "../ui/custom-button"
 
 type SlideItem = {
     id: string
@@ -32,7 +32,7 @@ const slides: SlideItem[] = [
         id: "1",
         badge: "ПЕСНЯ ПО АРТИСТУ",
         title: "Трек голосом популярного артиста",
-        description: `«Выбери одного из популярных артистов, а Трекопёс подберёт звук, подачу и фирменные фишки стиля.
+        description: `Выбери одного из популярных артистов, а Трекопёс подберёт звук, подачу и фирменные фишки стиля.
 В итоге трек звучит так, будто любимый артист записал его по твоим мыслям 🐾`,
         image: "/slider-1.jpeg",
         onSubmit: () => {

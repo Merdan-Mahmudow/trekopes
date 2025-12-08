@@ -1,6 +1,6 @@
 import { VStack, Text, Image, Grid, Box, Heading, Icon } from "@chakra-ui/react"
 import { COLOR } from "../../ui/colors"
-import { BrandButton, GrayButton } from "../../ui/button"
+import { BrandButton, GrayButton } from "../../ui/custom-button"
 import { Container } from "../../ui/container"
 import { FaArrowRight } from "react-icons/fa"
 

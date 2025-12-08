@@ -1,12 +1,11 @@
-import { createRootRoute, useRouter } from '@tanstack/react-router'
+import { createRootRoute, useRouter, useLocation } from '@tanstack/react-router'
 
 import { Layout } from '../components/Layout';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import type { Telegram } from "telegram-web-app";
 import { COLOR } from '../components/ui/colors';
 import { PreLoader } from '../components/PreLoader';
 import { MaintenanceScreen } from '../components/MaintenanceScreen';
-
 import { useAuth } from '../hooks/useUser';
 import { setAuthToken, setHasPayments, setScenarioTemplateId, setUserState } from '../store';
 import { debugLog, logError, logNavigation, addBreadcrumb } from '../utils/logger';
@@ -21,13 +20,17 @@ export const Route = createRootRoute({
 
 const TRACK_PRICE = 250;
 
+// Роуты, на которых BackButton скрыт (основные страницы с Dock)
+const ROUTES_WITHOUT_BACK_BUTTON = ['/', '/generate', '/profile', '/welcome', '/referral'];
 
 function RootComponent() {
   const router = useRouter();
+  const location = useLocation();
   const [tg, setTg] = useState<Telegram | null>(null);
   const [isPreload, setIsPreload] = useState<boolean>(true);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const previousRouteRef = useRef<string>('/');
+  const historyLengthRef = useRef<number>(0);
   const {
     token,
     user,
@@ -50,6 +53,9 @@ function RootComponent() {
         logNavigation(from, to, 'programmatic');
         addBreadcrumb(`Navigate: ${from} → ${to}`, 'navigation', 'info');
         
+        // Увеличиваем счетчик истории
+        historyLengthRef.current++;
+        
         // Измеряем время загрузки страницы
         setTimeout(() => {
           const navigationDuration = Math.round(performance.now() - navigationStart);
@@ -64,6 +70,49 @@ function RootComponent() {
       unsubscribe();
     };
   }, [router]);
+
+  // Обработчик нажатия BackButton
+  const handleBackButtonClick = useCallback(() => {
+    debugLog('[App] BackButton clicked', { 
+      currentPath: location.pathname, 
+      historyLength: historyLengthRef.current 
+    });
+    addBreadcrumb('BackButton clicked', 'navigation', 'info');
+    
+    // Если есть история навигации внутри приложения, идем назад
+    if (historyLengthRef.current > 0) {
+      historyLengthRef.current--;
+      router.history.back();
+    } else {
+      // Иначе переходим на главную страницу
+      router.navigate({ to: '/generate' });
+    }
+  }, [router, location.pathname]);
+
+  // Управление Telegram BackButton
+  useEffect(() => {
+    if (!tg?.WebApp?.BackButton) {
+      return;
+    }
+
+    const backButton = tg.WebApp.BackButton;
+    const currentPath = location.pathname;
+    const shouldShowBackButton = !ROUTES_WITHOUT_BACK_BUTTON.includes(currentPath);
+
+    if (shouldShowBackButton) {
+      backButton.show();
+      backButton.onClick(handleBackButtonClick);
+      debugLog('[App] BackButton shown', { path: currentPath });
+    } else {
+      backButton.hide();
+      debugLog('[App] BackButton hidden', { path: currentPath });
+    }
+
+    return () => {
+      // Убираем обработчик при размонтировании или смене роута
+      backButton.offClick(handleBackButtonClick);
+    };
+  }, [tg, location.pathname, handleBackButtonClick]);
 
   // Ждём загрузки Telegram WebApp
   useEffect(() => {

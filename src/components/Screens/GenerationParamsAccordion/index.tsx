@@ -13,7 +13,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { Toaster } from "../../ui/toaster";
 import { COLOR } from "../../ui/colors";
-import { BrandButton, GrayButton } from "../../ui/button";
+import { BrandButton, GrayButton } from "../../ui/custom-button";
 import { TrackLoadingScreen } from "../TrackLoading";
 import { ProPayScreen } from "../ProPay";
 import type { GenerationDraft, GenerationParams } from "../../../types/generation";

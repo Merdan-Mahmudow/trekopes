@@ -4,7 +4,7 @@ import { Box, Text, Separator, Grid, Flex, IconButton, Input } from '@chakra-ui/
 import { questions as allQuestions, type QuestionCategory, type QuestionSet } from '../components/ui/questions'
 import { MdEdit, MdCheck } from 'react-icons/md'
 import { COLOR } from '../components/ui/colors'
-import { BrandButton } from '../components/ui/button'
+import { BrandButton } from '../components/ui/custom-button'
 import { qaStorage } from '../utils/qaStorage'
 
 export const Route = createFileRoute('/questionsFinish')({

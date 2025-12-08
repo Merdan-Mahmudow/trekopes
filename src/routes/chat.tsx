@@ -18,7 +18,6 @@ import { useColorModeValue } from "../components/ui/color-mode"
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useCallback, useLayoutEffect, useState } from 'react'
 import type React from 'react'
-import type { Telegram } from "telegram-web-app"
 import { IoChevronBack, IoArrowDown } from "react-icons/io5"
 // import { FaRegTrashAlt } from "react-icons/fa"
 import { useAuth } from "../hooks/useUser"
@@ -31,7 +30,7 @@ import {
 import type { ChatMessage, ChatMessageChunkEvent } from "../types/webapp"
 import { COLOR } from '../components/ui/colors'
 import { useIsPro } from '../store/user'
-import { BrandButton } from '../components/ui/button'
+import { BrandButton } from '../components/ui/custom-button'
 import { logChat, logError, debugLog, addBreadcrumb, logUserAction } from '../utils/logger'
 
 export const Route = createFileRoute('/chat')({
@@ -49,7 +48,6 @@ interface ChatMessageState {
 }
 
 function RouteComponent() {
-  const tg: Telegram | undefined = window.Telegram
   const navigate = useNavigate()
   const { user, token } = useAuth()
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -264,19 +262,6 @@ function RouteComponent() {
     navigate({ to: '/' })
   }, [navigate])
 
-  useEffect(() => {
-    if (!tg?.WebApp) return
-
-    tg.WebApp.BackButton.show()
-    tg.WebApp.BackButton.onClick(handleBackClick)
-
-    return () => {
-      if (tg?.WebApp) {
-        tg.WebApp.BackButton.offClick(handleBackClick)
-        tg.WebApp.BackButton.hide()
-      }
-    }
-  }, [tg, handleBackClick])
 
   /* ----------------- Авто-скролл ----------------- */
   const scrollToBottom = useCallback((smooth = true) => {

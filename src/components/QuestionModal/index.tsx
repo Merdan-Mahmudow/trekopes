@@ -2,7 +2,7 @@ import { Box, Flex, Grid, Text, Textarea } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 import { COLOR } from "../ui/colors";
-import { BrandButton, GrayButton } from "../ui/button";
+import { BrandButton, GrayButton } from "../ui/custom-button";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { questions, type QuestionCategory, type QuestionSet } from "../ui/questions";
 import { VoiceRecorder } from "../ui/VoiceRecorder";

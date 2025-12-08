@@ -31,8 +31,8 @@ export function Player() {
   const seekingRef = useRef(false)
   const coverCacheRef = useRef<Map<string, string | null>>(new Map())
   const MAX_CACHE_SIZE = 50
-  // const progressRef = useRef<HTMLDivElement | null>(null)
-  // const [isScrubbing, setIsScrubbing] = useState(false)
+  const progressRef = useRef<HTMLDivElement | null>(null)
+  const [_isScrubbing, setIsScrubbing] = useState(false)
 
   // Initialize audio element
   useEffect(() => {
@@ -282,19 +282,19 @@ export function Player() {
 
 const HAVE_METADATA = 1;
 
-// function getClientX(e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>): number | null {
-//   // Сначала тач, потом мышь
-//   // На touchend клиентХ лежит в changedTouches
-//   // На некоторых девайсах событие может прилететь дважды (tap -> click) — снаружи отсей.
-//   // Здесь просто извлекаем координату.
-//   // @ts-ignore
-//   if ('changedTouches' in e && e.changedTouches?.[0]) return e.changedTouches[0].clientX;
-//   // @ts-ignore
-//   if ('touches' in e && e.touches?.[0]) return e.touches[0].clientX;
-//   // @ts-ignore
-//   if ('clientX' in e && typeof e.clientX === 'number') return e.clientX;
-//   return null;
-// }
+function getClientX(e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>): number | null {
+  // Сначала тач, потом мышь
+  // На touchend клиентХ лежит в changedTouches
+  // На некоторых девайсах событие может прилететь дважды (tap -> click) — снаружи отсей.
+  // Здесь просто извлекаем координату.
+  // @ts-ignore
+  if ('changedTouches' in e && e.changedTouches?.[0]) return e.changedTouches[0].clientX;
+  // @ts-ignore
+  if ('touches' in e && e.touches?.[0]) return e.touches[0].clientX;
+  // @ts-ignore
+  if ('clientX' in e && typeof e.clientX === 'number') return e.clientX;
+  return null;
+}
 
 function resolveDuration(a: HTMLAudioElement, fallback?: number): number | null {
   // Нормальная duration
@@ -361,52 +361,52 @@ const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
   }
 }, [duration, playerState.currentTrackId])
 
-// const seekByClientX = useCallback((clientX: number | null, emitTelemetry: boolean) => {
-//   const bar = progressRef.current
-//   if (!bar) return
-//   if (!Number.isFinite(clientX)) return
-//   const rect = bar.getBoundingClientRect()
-//   const width = rect?.width ?? 0
-//   if (!Number.isFinite(width) || width <= 0) return
-//   const x = (clientX as number) - rect.left
-//   const percentRaw = x / width
-//   seekToPercent(percentRaw, emitTelemetry)
-// }, [seekToPercent])
+const seekByClientX = useCallback((clientX: number | null, emitTelemetry: boolean) => {
+  const bar = progressRef.current
+  if (!bar) return
+  if (!Number.isFinite(clientX)) return
+  const rect = bar.getBoundingClientRect()
+  const width = rect?.width ?? 0
+  if (!Number.isFinite(width) || width <= 0) return
+  const x = (clientX as number) - rect.left
+  const percentRaw = x / width
+  seekToPercent(percentRaw, emitTelemetry)
+}, [seekToPercent])
 
-// const handleSeek = useCallback((
-//   e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
-// ) => {
-//   e.preventDefault()
-//   e.stopPropagation()
-//   seekingRef.current = true
-//   const cx = getClientX(e)
-//   seekByClientX(cx, true)
-//   seekingRef.current = false
-// }, [seekByClientX])
+const handleSeek = useCallback((
+  e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>
+) => {
+  e.preventDefault()
+  e.stopPropagation()
+  seekingRef.current = true
+  const cx = getClientX(e)
+  seekByClientX(cx, true)
+  seekingRef.current = false
+}, [seekByClientX])
 
-// const handleProgressPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-//   if (!duration) return
-//   e.preventDefault()
-//   e.stopPropagation()
-//   seekingRef.current = true
-//   setIsScrubbing(true)
-//   seekByClientX(e.clientX, false)
+const handleProgressPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  if (!duration) return
+  e.preventDefault()
+  e.stopPropagation()
+  seekingRef.current = true
+  setIsScrubbing(true)
+  seekByClientX(e.clientX, false)
 
-//   const handleMove = (event: PointerEvent) => {
-//     seekByClientX(event.clientX, false)
-//   }
+  const handleMove = (event: PointerEvent) => {
+    seekByClientX(event.clientX, false)
+  }
 
-//   const handleUp = (event: PointerEvent) => {
-//     seekByClientX(event.clientX, true)
-//     seekingRef.current = false
-//     setIsScrubbing(false)
-//     document.removeEventListener('pointermove', handleMove)
-//     document.removeEventListener('pointerup', handleUp)
-//   }
+  const handleUp = (event: PointerEvent) => {
+    seekByClientX(event.clientX, true)
+    seekingRef.current = false
+    setIsScrubbing(false)
+    document.removeEventListener('pointermove', handleMove)
+    document.removeEventListener('pointerup', handleUp)
+  }
 
-//   document.addEventListener('pointermove', handleMove)
-//   document.addEventListener('pointerup', handleUp)
-// }, [duration, seekByClientX])
+  document.addEventListener('pointermove', handleMove)
+  document.addEventListener('pointerup', handleUp)
+}, [duration, seekByClientX])
 
   const handleNext = useCallback(() => {
     if (playerState.queue && playerState.currentIndex !== undefined) {
@@ -705,10 +705,14 @@ const seekToPercent = useCallback((percent: number, emitTelemetry: boolean) => {
 
       {/* Progress bar */}
       <Box
+        ref={progressRef}
         position="relative"
         h="3px"
         bg="#2a2a2d"
         cursor="pointer"
+        onPointerDown={handleProgressPointerDown}
+        onClick={handleSeek}
+        onTouchEnd={handleSeek}
       >
         {/* Hover indicator */}
         <Box

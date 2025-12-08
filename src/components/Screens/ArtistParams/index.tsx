@@ -3,7 +3,7 @@ import { Toaster } from "../../ui/toaster";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { FaArrowRight, FaQuestion } from 'react-icons/fa';
 import { COLOR } from "../../ui/colors";
-import { BrandButton, GrayButton } from "../../ui/button";
+import { BrandButton, GrayButton } from "../../ui/custom-button";
 import { TrackLoadingScreen } from "../TrackLoading";
 import type { Artist, GenerationParams, GenerationDraft } from "../../../types/generation";
 import { useStore } from "@tanstack/react-store";

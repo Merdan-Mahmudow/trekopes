@@ -40,7 +40,14 @@ export function ChatInput({
     if (!textarea) return;
 
     textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`; // Max height approx 8 lines
+    const newHeight = Math.min(textarea.scrollHeight, 200);
+    textarea.style.height = `${newHeight}px`;
+    // Если высота достигла максимума, включаем скролл
+    if (textarea.scrollHeight > 200) {
+      textarea.style.overflowY = "auto";
+    } else {
+      textarea.style.overflowY = "hidden";
+    }
   }, [value]);
 
   const send = () => {
@@ -90,12 +97,13 @@ export function ChatInput({
           _focus={{ boxShadow: "none", borderColor: "transparent" }}
           resize="none"
           minH="44px"
+          maxH="200px"
           py={2.5}
           px={3}
           fontSize="16px"
           lineHeight="1.5"
           rows={1}
-          overflow="hidden"
+          overflowY="auto"
           flex={1}
           outline="none"
         />

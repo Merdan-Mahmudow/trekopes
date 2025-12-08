@@ -10,7 +10,7 @@ import { QuestionModal } from "../../../components/QuestionModal";
 import { questions as allQuestions, type QuestionCategory, type QuestItem } from "../../../components/ui/questions";
 import { ResultsComponent } from '../../../routes/questionsFinish'
 import { GenerationParamsAccordion } from '../GenerationParamsAccordion'
-import { BrandButton, GrayButton } from '../../../components/ui/button'
+import { BrandButton, GrayButton } from '../../ui/custom-button'
 import { DiaologWindow } from '../../../components/Dialog'
 import { ProPayScreen } from '../ProPay'
 import { TrackLoadingScreen } from '../TrackLoading'

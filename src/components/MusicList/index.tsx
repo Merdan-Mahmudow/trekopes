@@ -12,10 +12,17 @@ import {
     Skeleton,
     Portal,
     Spinner,
+    Flex,
 } from "@chakra-ui/react";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+} from "../ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { FaPlay } from "react-icons/fa";
-import type { GenerationDto } from "../../types/webapp";
+import type { GenerationDto, SongGenerationType } from "../../types/webapp";
 import { updatePlayerState, setCurrentTrack, loadQueue } from "../../store/player";
 import type { Track } from "../../types/player";
 import store from '../../store';
@@ -27,7 +34,7 @@ import { Link } from "@tanstack/react-router";
 import { HiOutlineDownload } from "react-icons/hi";
 import { debugLog, logError } from "../../utils/logger";
 import { TbTextRecognition } from "react-icons/tb";
-import { MdPushPin, MdShare, MdReport, MdDelete } from "react-icons/md";
+import { MdPushPin, MdShare, MdReport, MdDelete, MdStar, MdStarBorder, MdPhoto, MdTextFields, MdPerson, MdLink, MdAutoAwesome } from "react-icons/md";
 import { useState, useRef, useEffect } from "react";
 import type { Telegram } from "telegram-web-app";
 import { Popup } from "../Popup";
@@ -150,6 +157,43 @@ export function MusicList() {
         return `${min}:${sec.toString().padStart(2, "0")}`;
     };
 
+    const getGenerationTypeLabel = (type: SongGenerationType): string => {
+        const labels: Record<SongGenerationType, string> = {
+            scenario: "По сценарию",
+            photo: "По фото",
+            text: "Быстро",
+            style: "По артисту",
+            link: "По ссылке",
+        };
+        return labels[type] || "Неизвестно";
+    };
+
+    const getGenerationTypeIcon = (type: SongGenerationType) => {
+        const icons: Record<SongGenerationType, React.ReactNode> = {
+            scenario: <MdAutoAwesome size={12} />,
+            photo: <MdPhoto size={12} />,
+            text: <MdTextFields size={12} />,
+            style: <MdPerson size={12} />,
+            link: <MdLink size={12} />,
+        };
+        return icons[type] || <MdAutoAwesome size={12} />;
+    };
+
+    const handleRateTrack = async (generation: GenerationDto, rating: number) => {
+        const songId = generation.song?.id;
+        if (!songId || !token) return;
+
+        try {
+            // TODO: Добавить API endpoint для оценки трека
+            // await rateTrack(token, songId, rating);
+            debugLog('Rating track', { songId, rating });
+            // Обновляем локальное состояние для оптимистичного обновления
+            // В реальном приложении нужно обновить через API
+        } catch (error) {
+            logError('Failed to rate track', error, { songId, rating });
+        }
+    };
+
     const playerState = useStore(store, (s) => s.player)
 
     const handlePlay = (generation: GenerationDto, allGenerations?: GenerationDto[]) => {
@@ -206,26 +250,26 @@ export function MusicList() {
         if (!('touches' in event)) {
             event.preventDefault();
         }
-        
+
         const trackId = generation.song?.id ?? generation.id;
         setLongPressingId(trackId);
-        
+
         const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
         const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
-    
+
         longPressTimerRef.current = window.setTimeout(() => {
             // Виброотдача при долгом нажатии
             const tg: Telegram | undefined = window.Telegram;
             if (tg?.WebApp?.HapticFeedback) {
                 tg.WebApp.HapticFeedback.impactOccurred("heavy");
             }
-    
+
             // Позиционирование меню с учетом границ экрана
             const menuWidth = 200;
             const menuHeight = 120;
             const x = Math.min(clientX, window.innerWidth - menuWidth - 10);
             const y = Math.min(clientY, window.innerHeight - menuHeight - 10);
-            
+
             setContextMenu({
                 open: true,
                 x: Math.max(10, x),
@@ -285,7 +329,7 @@ export function MusicList() {
     const handlePinTrack = (generation: GenerationDto) => {
         const trackId = generation.song?.id ?? generation.id;
         const pinned = [...pinnedTracksState];
-        
+
         if (isTrackPinned(trackId)) {
             // Открепляем
             const updated = pinned.filter(id => id !== trackId);
@@ -297,14 +341,14 @@ export function MusicList() {
             localStorage.setItem(PINNED_TRACKS_KEY, JSON.stringify(pinned));
             setPinnedTracksState(pinned);
         }
-        
+
         handleContextMenuClose();
     };
 
     const handleShareTrack = (generation: GenerationDto) => {
         const tg: Telegram | undefined = window.Telegram;
         const url = getTrackUrl(generation);
-        
+
         if (!tg?.WebApp || !url) {
             logError("Telegram WebApp not available or track URL missing", undefined, { hasTg: !!tg, hasUrl: !!url });
             return;
@@ -315,7 +359,7 @@ export function MusicList() {
         // Формат: https://t.me/share/url?url=<audio_url>
         const shareLink = `https://t.me/share/url?url=${encodeURIComponent(url)}`;
         tg.WebApp.openTelegramLink(shareLink);
-        
+
         handleContextMenuClose();
     };
 
@@ -323,14 +367,14 @@ export function MusicList() {
         const trackId = generation.song?.id ?? generation.id;
         const reportText = `Жалоба на трек ID: ${trackId}`;
         const reportUrl = `https://t.me/Help_llec_bot?text=${encodeURIComponent(reportText)}`;
-        
+
         const tg: Telegram | undefined = window.Telegram;
         if (tg?.WebApp) {
             tg.WebApp.openTelegramLink(reportUrl);
         } else {
             window.open(reportUrl, '_blank', 'noopener,noreferrer');
         }
-        
+
         handleContextMenuClose();
     };
 
@@ -357,11 +401,11 @@ export function MusicList() {
                         const filteredGenerations = generations.filter(
                             (generation: GenerationDto) => generation.song?.status !== 'failed' && generation.status !== 'failed'
                         );
-                        
-                        const pinned = filteredGenerations.filter((gen: GenerationDto) => 
+
+                        const pinned = filteredGenerations.filter((gen: GenerationDto) =>
                             pinnedTracksState.includes(gen.song?.id ?? gen.id)
                         );
-                        const unpinned = filteredGenerations.filter((gen: GenerationDto) => 
+                        const unpinned = filteredGenerations.filter((gen: GenerationDto) =>
                             !pinnedTracksState.includes(gen.song?.id ?? gen.id)
                         );
 
@@ -370,111 +414,171 @@ export function MusicList() {
                                 {pinned.length > 0 && (
                                     <>
                                         {pinned.map((generation: GenerationDto) => {
-                                        const url = getTrackUrl(generation);
-                                        const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
-                                        const author = generation.song?.author ?? "Трекопёс";
-                                        const status = generation.status;
-                                        if (status === 'processing' || status === 'pending') {
-                                            return (
-                                                <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" position="relative" display="flex" alignItems="center" justifyContent="center">
-                                                    <Skeleton position="absolute" inset={0} />
-                                                    <Text fontSize="sm" color={COLOR.kit.smoke} position="relative" zIndex={1}>генерируется</Text>
-                                                </Box>
-                                            )
-                                        }
-                                        const trackId = generation.song?.id ?? generation.id;
-                                        const isPinned = isTrackPinned(trackId);
-                                        const isLongPressing = longPressingId === trackId;
-                                        
-                                        return (
-                                            <MotionBox
-                                                key={generation.id}
-                                                p={3}
-                                                bg={isPinned ? "gray.800": COLOR.kit.darkGray}
-                                                borderRadius="2xl"
-                                                onTouchStart={(e) => handleLongPressStart(generation, e)}
-                                                onTouchEnd={handleLongPressEnd}
-                                                onTouchCancel={handleLongPressEnd}
-                                                onMouseDown={(e) => handleLongPressStart(generation, e)}
-                                                onMouseUp={handleLongPressEnd}
-                                                onMouseLeave={handleLongPressEnd}
-                                                onContextMenu={handleContextMenu}
-                                                position="relative"
-                                                userSelect="none"
-                                                animate={{
-                                                    scale: isLongPressing ? 0.95 : 1,
-                                                }}
-                                                transition={{
-                                                    duration: LONG_PRESS_DURATION / 1000,
-                                                    ease: "easeOut",
-                                                }}
-                                            >
-                                                <HStack justify="space-between">
-                                                    <HStack gap={3} align="center">
-                                                        <Button
-                                                            onClick={() => handlePlay(generation, generations)}
-                                                            aria-label={`Play ${title}`}
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            colorScheme="orange"
-                                                        >
-                                                            {playerState.currentTrackId === (generation.song?.id ?? generation.id) && playerState.isPlaying ? (
-                                                                <><BsPauseFill /></>
-                                                            ) : (
-                                                                <><FaPlay /></>
-                                                            )}
-                                                        </Button>
-                                                        <Box flex={1}>
-                                                            <HStack gap={2} align="center">
-                                                                <Box flex={1}>
-                                                                    <Text fontWeight={600} lineClamp={1}>{title}</Text>
-                                                                    <Text fontSize="sm" color="gray.300">
-                                                                        {author}
-                                                                    </Text>
-                                                                </Box>
-                                                            </HStack>
-                                                        </Box>
-                                                    </HStack>
+                                            const url = getTrackUrl(generation);
+                                            const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
+                                            const status = generation.status;
+                                            if (status === 'processing' || status === 'pending') {
+                                                return (
+                                                    <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" position="relative" display="flex" alignItems="center" justifyContent="center">
+                                                        <Skeleton position="absolute" inset={0} />
+                                                        <Text fontSize="sm" color={COLOR.kit.smoke} position="relative" zIndex={1}>генерируется</Text>
+                                                    </Box>
+                                                )
+                                            }
+                                            const trackId = generation.song?.id ?? generation.id;
+                                            const isPinned = isTrackPinned(trackId);
+                                            const isLongPressing = longPressingId === trackId;
 
-                                                    <HStack>
-                                                        <Text color="gray.300">{formatDuration(generation.song?.duration)}</Text>
-                                                        {(
-                                                            generation.generated_lyrics ||
-                                                            generation.song?.lyrics
-                                                        ) && (
-                                                                <IconButton
-                                                                    aria-label="show-lyrics"
-                                                                    size="md"
-                                                                    variant={"ghost"}
-                                                                    onClick={() =>
-                                                                        setLyricsModal({
-                                                                            title,
-                                                                            lyrics:
-                                                                                generation.generated_lyrics ||
-                                                                                generation.song?.lyrics ||
-                                                                                "",
-                                                                            style:
-                                                                                generation.generated_style ||
-                                                                                generation.song?.style ||
-                                                                                undefined,
-                                                                            status: generation.status,
-                                                                        })
-                                                                    }
-                                                                >
-                                                                    <TbTextRecognition />
-                                                                </IconButton>
+                                            return (
+                                                <MotionBox
+                                                    key={generation.id}
+                                                    p={3}
+                                                    bg={isPinned ? "gray.800" : COLOR.kit.darkGray}
+                                                    borderRadius="2xl"
+                                                    onTouchStart={(e) => handleLongPressStart(generation, e)}
+                                                    onTouchEnd={handleLongPressEnd}
+                                                    onTouchCancel={handleLongPressEnd}
+                                                    onMouseDown={(e) => handleLongPressStart(generation, e)}
+                                                    onMouseUp={handleLongPressEnd}
+                                                    onMouseLeave={handleLongPressEnd}
+                                                    onContextMenu={handleContextMenu}
+                                                    position="relative"
+                                                    userSelect="none"
+                                                    animate={{
+                                                        scale: isLongPressing ? 0.95 : 1,
+                                                    }}
+                                                    transition={{
+                                                        duration: LONG_PRESS_DURATION / 1000,
+                                                        ease: "easeOut",
+                                                    }}
+                                                >
+                                                    <HStack justify="space-between" align="center" gap={3} w="100%">
+                                                        {/* Левая часть: кнопка воспроизведения и информация */}
+                                                        <HStack gap={3} align="center" flex={1} minW={0}>
+                                                            <Button
+                                                                onClick={() => handlePlay(generation, generations)}
+                                                                aria-label={`Play ${title}`}
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                colorScheme="orange"
+                                                                flexShrink={0}
+                                                            >
+                                                                {playerState.currentTrackId === (generation.song?.id ?? generation.id) && playerState.isPlaying ? (
+                                                                    <BsPauseFill />
+                                                                ) : (
+                                                                    <FaPlay />
+                                                                )}
+                                                            </Button>
+                                                            <Box flex={1} minW={0}>
+                                                                <Text fontWeight={600} fontSize="md" lineClamp={1}>
+                                                                    {title}
+                                                                </Text>
+                                                                <HStack gap={1.5} mt={0.5}>
+                                                                    <Text fontSize="xs" color="gray.400">
+                                                                        {formatDuration(generation.song?.duration)}
+                                                                    </Text>
+                                                                    {/* Бейдж способа генерации */}
+                                                                    <Flex
+                                                                        gap={0.5}
+                                                                        bg="rgba(255, 152, 0, 0.12)"
+                                                                        borderRadius="full"
+                                                                        px={1.5}
+                                                                        py={0.5}
+                                                                        align="center"
+                                                                    >
+                                                                        <Icon color={COLOR.kit.orange} fontSize="10px">
+                                                                            {getGenerationTypeIcon(generation.generation_type)}
+                                                                        </Icon>
+                                                                        <Text fontSize="10px" color={COLOR.kit.orange}>
+                                                                            {getGenerationTypeLabel(generation.generation_type)}
+                                                                        </Text>
+                                                                    </Flex>
+                                                                </HStack>
+                                                            </Box>
+                                                        </HStack>
+
+                                                        {/* Правая часть: звёздочки и действия */}
+                                                        <HStack gap={2} align="center" flexShrink={0}>
+                                                            {/* Звёздочка рейтинга */}
+                                                            <IconButton
+                                                                aria-label="Rate track"
+                                                                size="xs"
+                                                                variant="ghost"
+                                                                minW="24px"
+                                                                h="24px"
+                                                                p={0}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleRateTrack(generation, (generation.song?.rating ?? 0) > 0 ? 0 : 1);
+                                                                }}
+                                                                _hover={{ transform: "scale(1.1)" }}
+                                                            >
+                                                                {(generation.song?.rating ?? 0) > 0 ? (
+                                                                    <MdStar size={18} color={COLOR.kit.orange} />
+                                                                ) : (
+                                                                    <MdStarBorder size={18} color="#666" />
+                                                                )}
+                                                            </IconButton>
+                                                            {(
+                                                                generation.generated_lyrics ||
+                                                                generation.song?.lyrics
+                                                            ) && (
+                                                                    <IconButton
+                                                                        aria-label="show-lyrics"
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() =>
+                                                                            setLyricsModal({
+                                                                                title,
+                                                                                lyrics:
+                                                                                    generation.generated_lyrics ||
+                                                                                    generation.song?.lyrics ||
+                                                                                    "",
+                                                                                style:
+                                                                                    generation.generated_style ||
+                                                                                    generation.song?.style ||
+                                                                                    undefined,
+                                                                                status: generation.status,
+                                                                            })
+                                                                        }
+                                                                    >
+                                                                        <TbTextRecognition size={18} />
+                                                                    </IconButton>
+                                                                )}
+                                                            {url && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Box as="button" aria-label="share">
+                                                                            <IconButton aria-label="share" size="sm" variant="ghost">
+                                                                                <MdShare size={18} />
+                                                                            </IconButton>
+                                                                        </Box>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent
+                                                                        side="bottom"
+                                                                        align="end"
+                                                                        sideOffset={8}
+                                                                        alignOffset={0}
+                                                                    >
+                                                                        <DropdownMenuItem onClick={() => handleShareTrack(generation)}>
+                                                                            <HStack gap={2}>
+                                                                                <Icon><MdShare /></Icon>
+                                                                                <Text>Поделиться</Text>
+                                                                            </HStack>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem asChild>
+                                                                            <a href={url} target="_blank" rel="noopener noreferrer" download style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                                <Icon><HiOutlineDownload /></Icon>
+                                                                                <Text>Скачать</Text>
+                                                                            </a>
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
                                                             )}
-                                                        {url && (
-                                                            <a href={url} target="_blank" rel="noopener noreferrer">
-                                                                <IconButton aria-label="download" size="md" variant={"ghost"}>
-                                                                    <HiOutlineDownload />
-                                                                </IconButton>
-                                                            </a>
-                                                        )}
+                                                        </HStack>
                                                     </HStack>
-                                                </HStack>
-                                            </MotionBox>
-                                        );
+                                                </MotionBox>
+                                            );
                                         })}
                                         {unpinned.length > 0 && (
                                             <>
@@ -486,135 +590,197 @@ export function MusicList() {
                                 {unpinned.length > 0 && (
                                     <>
                                         {unpinned.map((generation: GenerationDto) => {
-                                        const url = getTrackUrl(generation);
-                                        const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
-                                        const author = generation.song?.author ?? "Трекопёс";
-                                        const status = generation.status;
-                                        if (status === 'processing' || status === 'pending') {
-                                            return (
-                                                <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" position="relative" display="flex" alignItems="center" justifyContent="center">
-                                                    <Skeleton position="absolute" inset={0} borderRadius="2xl" />
-                                                    <Box display="flex" alignItems="center" gap={2}><Spinner size="sm" /><TextType text="Генерирую..."  cursorCharacter="_" textColors={[COLOR.kit.orange, COLOR.kit.orangeWhite]}/></Box>
-                                                </Box>
-                                            )
-                                        }
-                                        const trackId = generation.song?.id ?? generation.id;
-                                        const isPinned = isTrackPinned(trackId);
-                                        const isLongPressing = longPressingId === trackId;
-                                        
-                                        return (
-                                            <MotionBox
-                                                key={generation.id}
-                                                p={3}
-                                                bg={COLOR.kit.darkGray}
-                                                borderRadius="2xl"
-                                                onTouchStart={(e) => handleLongPressStart(generation, e)}
-                                                onTouchEnd={handleLongPressEnd}
-                                                onTouchCancel={handleLongPressEnd}
-                                                onMouseDown={(e) => handleLongPressStart(generation, e)}
-                                                onMouseUp={handleLongPressEnd}
-                                                onMouseLeave={handleLongPressEnd}
-                                                onContextMenu={handleContextMenu}
-                                                position="relative"
-                                                userSelect="none"
-                                                WebkitUserSelect={"none"}
-                                                WebkitTouchCallout={"none"}
-                                                touchAction={"manipulation"}
-                                                animate={{
-                                                    scale: isLongPressing ? 0.95 : 1,
-                                                }}
-                                                transition={{
-                                                    duration: LONG_PRESS_DURATION / 1000,
-                                                    ease: "easeOut",
-                                                    delay: isLongPressing ? 0.3 : LONG_PRESS_DURATION / 1200,
-                                                }}
-                                            >
-                                                <HStack justify="space-between">
-                                                    <HStack gap={3} align="center">
-                                                        <Button
-                                                            onClick={() => handlePlay(generation, generations)}
-                                                            aria-label={`Play ${title}`}
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            colorScheme="orange"
-                                                        >
-                                                            {playerState.currentTrackId === (generation.song?.id ?? generation.id) && playerState.isPlaying ? (
-                                                                <><BsPauseFill /></>
-                                                            ) : (
-                                                                <><FaPlay /></>
-                                                            )}
-                                                        </Button>
-                                                        <Box flex={1}>
-                                                            <HStack gap={2} align="center">
-                                                                {isPinned && (
-                                                                    <Icon fontSize="sm" color={COLOR.kit.orange}>
-                                                                        <MdPushPin />
-                                                                    </Icon>
-                                                                )}
-                                                                <Box flex={1}>
-                                                                    <Text fontWeight={600} lineClamp={1}>{title}</Text>
-                                                                    <Text fontSize="sm" color="gray.300">
-                                                                        {author}
-                                                                    </Text>
-                                                                </Box>
-                                                            </HStack>
-                                                        </Box>
-                                                    </HStack>
+                                            const url = getTrackUrl(generation);
+                                            const title = generation.song?.title ?? generation.generated_title ?? "Без названия";
+                                            const status = generation.status;
+                                            if (status === 'processing' || status === 'pending') {
+                                                return (
+                                                    <Box key={generation.id} p={3} bg={COLOR.kit.darkGray} borderRadius="2xl" h="70px" position="relative" display="flex" alignItems="center" justifyContent="center">
+                                                        <Skeleton position="absolute" inset={0} borderRadius="2xl" />
+                                                        <Box display="flex" alignItems="center" gap={2}><Spinner size="sm" /><TextType text="Генерирую..." cursorCharacter="_" textColors={[COLOR.kit.orange, COLOR.kit.orangeWhite]} /></Box>
+                                                    </Box>
+                                                )
+                                            }
+                                            const trackId = generation.song?.id ?? generation.id;
+                                            const isPinned = isTrackPinned(trackId);
+                                            const isLongPressing = longPressingId === trackId;
 
-                                                    <HStack>
-                                                        <Text color="gray.300">{formatDuration(generation.song?.duration)}</Text>
-                                                        {(
-                                                            generation.generated_lyrics ||
-                                                            generation.song?.lyrics
-                                                        ) && (
-                                                                <IconButton
-                                                                    aria-label="show-lyrics"
-                                                                    size="md"
-                                                                    variant={"ghost"}
-                                                                    onClick={() =>
-                                                                        setLyricsModal({
-                                                                            title,
-                                                                            lyrics:
-                                                                                generation.generated_lyrics ||
-                                                                                generation.song?.lyrics ||
-                                                                                "",
-                                                                            style:
-                                                                                generation.generated_style ||
-                                                                                generation.song?.style ||
-                                                                                undefined,
-                                                                            status: generation.status,
-                                                                        })
-                                                                    }
-                                                                >
-                                                                    <TbTextRecognition />
-                                                                </IconButton>
+                                            return (
+                                                <MotionBox
+                                                    key={generation.id}
+                                                    p={3}
+                                                    bg={COLOR.kit.darkGray}
+                                                    borderRadius="2xl"
+                                                    onTouchStart={(e) => handleLongPressStart(generation, e)}
+                                                    onTouchEnd={handleLongPressEnd}
+                                                    onTouchCancel={handleLongPressEnd}
+                                                    onMouseDown={(e) => handleLongPressStart(generation, e)}
+                                                    onMouseUp={handleLongPressEnd}
+                                                    onMouseLeave={handleLongPressEnd}
+                                                    onContextMenu={handleContextMenu}
+                                                    position="relative"
+                                                    userSelect="none"
+                                                    WebkitUserSelect={"none"}
+                                                    WebkitTouchCallout={"none"}
+                                                    touchAction={"manipulation"}
+                                                    animate={{
+                                                        scale: isLongPressing ? 0.95 : 1,
+                                                    }}
+                                                    transition={{
+                                                        duration: LONG_PRESS_DURATION / 1000,
+                                                        ease: "easeOut",
+                                                        delay: isLongPressing ? 0.3 : LONG_PRESS_DURATION / 1200,
+                                                    }}
+                                                >
+                                                    <HStack justify="space-between" align="center" gap={3} w="100%">
+                                                        {/* Левая часть: кнопка воспроизведения и информация */}
+                                                        <HStack gap={3} align="center" flex={1} minW={0}>
+                                                            <Button
+                                                                onClick={() => handlePlay(generation, generations)}
+                                                                aria-label={`Play ${title}`}
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                colorScheme="orange"
+                                                                flexShrink={0}
+                                                            >
+                                                                {playerState.currentTrackId === (generation.song?.id ?? generation.id) && playerState.isPlaying ? (
+                                                                    <BsPauseFill />
+                                                                ) : (
+                                                                    <FaPlay />
+                                                                )}
+                                                            </Button>
+                                                            <Box flex={1} minW={0}>
+                                                                <HStack gap={1} align="center">
+                                                                    {isPinned && (
+                                                                        <Icon fontSize="xs" color={COLOR.kit.orange} flexShrink={0}>
+                                                                            <MdPushPin />
+                                                                        </Icon>
+                                                                    )}
+                                                                    <Text fontWeight={600} fontSize="md" lineClamp={1} flex={1}>
+                                                                        {title}
+                                                                    </Text>
+                                                                </HStack>
+                                                                <HStack gap={1.5} mt={0.5}>
+                                                                    <Text fontSize="xs" color="gray.400">
+                                                                        {formatDuration(generation.song?.duration)}
+                                                                    </Text>
+                                                                    {/* Бейдж способа генерации */}
+                                                                    <Flex
+                                                                        gap={0.5}
+                                                                        bg="rgba(255, 152, 0, 0.12)"
+                                                                        borderRadius="full"
+                                                                        px={1.5}
+                                                                        py={0.5}
+                                                                        align="center"
+                                                                    >
+                                                                        <Icon color={COLOR.kit.orange} fontSize="10px">
+                                                                            {getGenerationTypeIcon(generation.generation_type)}
+                                                                        </Icon>
+                                                                        <Text fontSize="10px" color={COLOR.kit.orange}>
+                                                                            {getGenerationTypeLabel(generation.generation_type)}
+                                                                        </Text>
+                                                                    </Flex>
+                                                                </HStack>
+                                                            </Box>
+                                                        </HStack>
+
+                                                        {/* Правая часть: звёздочка и действия */}
+                                                        <HStack gap={2} align="center" flexShrink={0}>
+                                                            {/* Звёздочка рейтинга */}
+                                                            <IconButton
+                                                                aria-label="Rate track"
+                                                                size="xs"
+                                                                variant="ghost"
+                                                                minW="24px"
+                                                                h="24px"
+                                                                p={0}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleRateTrack(generation, (generation.song?.rating ?? 0) > 0 ? 0 : 1);
+                                                                }}
+                                                                _hover={{ transform: "scale(1.1)" }}
+                                                            >
+                                                                {(generation.song?.rating ?? 0) > 0 ? (
+                                                                    <MdStar size={18} color={COLOR.kit.orange} />
+                                                                ) : (
+                                                                    <MdStarBorder size={18} color="#666" />
+                                                                )}
+                                                            </IconButton>
+                                                            {(
+                                                                generation.generated_lyrics ||
+                                                                generation.song?.lyrics
+                                                            ) && (
+                                                                    <IconButton
+                                                                        aria-label="show-lyrics"
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() =>
+                                                                            setLyricsModal({
+                                                                                title,
+                                                                                lyrics:
+                                                                                    generation.generated_lyrics ||
+                                                                                    generation.song?.lyrics ||
+                                                                                    "",
+                                                                                style:
+                                                                                    generation.generated_style ||
+                                                                                    generation.song?.style ||
+                                                                                    undefined,
+                                                                                status: generation.status,
+                                                                            })
+                                                                        }
+                                                                    >
+                                                                        <TbTextRecognition size={18} />
+                                                                    </IconButton>
+                                                                )}
+                                                            {url && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Box as="button" aria-label="share">
+                                                                            <IconButton aria-label="share" size="sm" variant="ghost">
+                                                                                <MdShare size={18} />
+                                                                            </IconButton>
+                                                                        </Box>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent
+                                                                        side="bottom"
+                                                                        align="end"
+                                                                        sideOffset={8}
+                                                                        alignOffset={0}
+                                                                    >
+                                                                        <DropdownMenuItem onClick={() => handleShareTrack(generation)}>
+                                                                            <HStack gap={2}>
+                                                                                <Icon><MdShare /></Icon>
+                                                                                <Text>Поделиться</Text>
+                                                                            </HStack>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem asChild>
+                                                                            <a href={url} target="_blank" rel="noopener noreferrer" download style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                                <Icon><HiOutlineDownload /></Icon>
+                                                                                <Text>Скачать</Text>
+                                                                            </a>
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
                                                             )}
-                                                        {url && (
-                                                            <a href={url} target="_blank" rel="noopener noreferrer">
-                                                                <IconButton aria-label="download" size="md" variant={"ghost"}>
-                                                                    <HiOutlineDownload />
-                                                                </IconButton>
-                                                            </a>
-                                                        )}
+                                                        </HStack>
                                                     </HStack>
-                                                </HStack>
-                                            </MotionBox>
-                                        );
+                                                </MotionBox>
+                                            );
                                         })}
                                     </>
                                 )}
                                 {pinned.length === 0 && unpinned.length === 0 && (
-                                <Grid gridTemplateRows={"repeat(3, 1fr)"} justifyContent={"center"} h={"80dvh"}>
-                                    <GridItem></GridItem>
-                                    <GridItem display={"flex"} color={COLOR.kit.orange}>
-                                        <Link to='/generate' style={{ display: "flex", alignItems: "center", flexDirection: "column", width: "100%" }}>
-                                            <Icon fontSize={"6xl"} children={<LuCopyPlus />} />
-                                            <Text color={COLOR.kit.orange} fontSize={"xl"} fontWeight={"bolder"}>Создать трек</Text>
-                                        </Link>
-                                    </GridItem>
-                                    <GridItem></GridItem>
+                                    <Grid gridTemplateRows={"repeat(3, 1fr)"} justifyContent={"center"} h={"80dvh"}>
+                                        <GridItem></GridItem>
+                                        <GridItem display={"flex"} color={COLOR.kit.orange}>
+                                            <Link to='/generate' style={{ display: "flex", alignItems: "center", flexDirection: "column", width: "100%" }}>
+                                                <Icon fontSize={"6xl"} children={<LuCopyPlus />} />
+                                                <Text color={COLOR.kit.orange} fontSize={"xl"} fontWeight={"bolder"}>Создать трек</Text>
+                                            </Link>
+                                        </GridItem>
+                                        <GridItem></GridItem>
 
-                                </Grid>
+                                    </Grid>
                                 )}
                             </>
                         );
@@ -717,8 +883,8 @@ export function MusicList() {
                                                 <MdPushPin />
                                             </Icon>
                                             <Text>
-                                                {isTrackPinned(contextMenu.generation.song?.id ?? contextMenu.generation.id) 
-                                                    ? 'Открепить' 
+                                                {isTrackPinned(contextMenu.generation.song?.id ?? contextMenu.generation.id)
+                                                    ? 'Открепить'
                                                     : 'Закрепить'}
                                             </Text>
                                         </HStack>
@@ -744,7 +910,7 @@ export function MusicList() {
                                         </Button>
                                     )}
 
-                                    <Box h="1px" bg="rgba(255,255,255,0.12)"/>
+                                    <Box h="1px" bg="rgba(255,255,255,0.12)" />
 
                                     {/* Пожаловаться */}
                                     <Button
