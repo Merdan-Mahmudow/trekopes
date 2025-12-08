@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef, useState, createElement, useMemo, useCallback } from 'react';
 import type { ComponentType, HTMLAttributes } from 'react';
 import { gsap } from 'gsap';

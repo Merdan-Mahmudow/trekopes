@@ -211,7 +211,7 @@ export const PromptInput = ({
 							<Icon
 								as={Settings2}
 								boxSize={4}
-								color={isDropdownOpen ? COLOR.kit.orange : COLOR.kit.smoke}
+								color={isDropdownOpen ? COLOR.kit.orange : COLOR.kit.white}
 							/>
 						</Box>
 
@@ -325,15 +325,15 @@ export const PromptInput = ({
 						gap={1.5}
 						px={3}
 						py={1.5}
-						bg="rgba(115, 115, 115, 0.1)"
+						bg="rgb(44, 19, 5)"
 						rounded="full"
 						cursor="pointer"
 						transition="all 0.2s ease"
 						_hover={{ bg: "rgba(115, 115, 115, 0.2)" }}
 						onClick={() => !disabled && !isLoading && setIsDropdownOpen(!isDropdownOpen)}
 					>
-						{CurrentModeIcon && <Icon as={CurrentModeIcon} boxSize={3.5} color={COLOR.kit.smoke} />}
-						<Text fontSize="xs" fontWeight="medium" color={COLOR.kit.smoke} whiteSpace="nowrap">
+						{CurrentModeIcon && <Icon as={CurrentModeIcon} boxSize={3.5} color={COLOR.kit.orange} />}
+						<Text fontSize="xs" fontWeight="medium" color={COLOR.kit.orange} whiteSpace="nowrap">
 							{currentModeLabel}
 						</Text>
 					</HStack>
