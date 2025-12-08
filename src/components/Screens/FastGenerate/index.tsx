@@ -33,7 +33,6 @@ import { PromptInput, type GenerationMode } from "../../PromptInput"
 
 const STORAGE_KEY_PROMPT = "fast_generate_prompt"
 const STORAGE_KEY_IS_GENERATED = "fast_generate_is_generated"
-const STORAGE_KEY_MODE = "fast_generate_mode"
 const STORAGE_KEY_GENERATED_TEXT = "fast_generate_generated_text"
 const STORAGE_KEY_USER_MESSAGE = "fast_generate_user_message"
 
@@ -288,17 +287,7 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 			return ""
 		}
 	})
-	const [generationMode, setGenerationMode] = useState<GenerationMode>(() => {
-		try {
-			const saved = localStorage.getItem(STORAGE_KEY_MODE)
-			if (saved === "trust_trekopes" || saved === "custom_text" || saved === "generate") {
-				return saved
-			}
-			return "trust_trekopes"
-		} catch {
-			return "trust_trekopes"
-		}
-	})
+	const [generationMode, setGenerationMode] = useState<GenerationMode>("generate")
 	const scenarioState = useGenerationScenario()
 	const generationDraft = useGenerationDraft()
 	const token = useStore(store, (state) => state.auth.token)
@@ -347,14 +336,6 @@ export const FastGenerateScreen = ({ onClose: _onClose }: { onClose: () => void 
 		}
 	}, [isGenerated])
 
-	// Сохраняем режим генерации в localStorage
-	useEffect(() => {
-		try {
-			localStorage.setItem(STORAGE_KEY_MODE, generationMode)
-		} catch {
-			// Ignore localStorage errors
-		}
-	}, [generationMode])
 
 	// Сохраняем сгенерированный текст в localStorage
 	useEffect(() => {
