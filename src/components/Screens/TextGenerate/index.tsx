@@ -636,14 +636,14 @@ export function TextGenerateScreen() {
                         <GenerationParamsAccordion
                             onBack={() => setStep('results')}
                             onCancel={handleBackToCategories}
-                            onGenerate={async () => {
-                                // Если баланс пустой и пользователь не PRO, переходим на экран оплаты после нажатия "Утвердить"
+                            onGenerate={() => {
+                                // Если баланс пустой и пользователь не PRO, отправляем на оплату и блокируем генерацию
                                 if (!isPro && hasEmptyBalance) {
-                                    // Переходим на экран оплаты после нажатия кнопки "Сгенерировать"
                                     setStep('pro-pay');
-                                    return false; // Блокируем генерацию
+                                    return false;
                                 }
-                                return true; // Продолжаем генерацию если баланс есть
+                                // Возвращаем undefined, чтобы GenerationParamsAccordion продолжил стандартный флоу генерации
+                                return undefined;
                             }}
                             onLoadingStart={() => setIsLoading(true)}
                         />
